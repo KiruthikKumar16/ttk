@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  await page.goto('http://127.0.0.1:3001', { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle', timeout: 30000 });
   const bodyText = await page.locator('body').innerText();
   console.log('TITLE=' + await page.title());
   console.log('HAS_THOORIGAI=' + /THOORIGAI/i.test(bodyText));
@@ -37,7 +37,7 @@ const { chromium } = require('playwright');
   await page.getByRole('button', { name: /TAI\//i }).first().click();
   const downloadResponse = await downloadResponsePromise;
   console.log('PDF_DOWNLOAD=' + (downloadResponse.status() === 200));
-  await page.goto('http://127.0.0.1:3001', { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle', timeout: 30000 });
 
   await page.getByRole('button', { name: /Dashboard/i }).first().click();
   await page.getByRole('button', { name: /View all/i }).click();

@@ -1,61 +1,196 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2 } from 'lucide-react'
-
+import { useMemo, useState, useEffect } from 'react'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { initialPayments, initialStudents } from '@/lib/mock-data'
 
-const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n)
-function Status({ status }: { status: Student['status'] }) { return <span className={`status ${status === 'Fully Paid' ? 'status-paid' : 'status-pending'}`}><span className="status-dot" />{status}</span> }
-function Sidebar({ view, setView }: { view: View; setView: (v: View) => void }) { const nav: [View, typeof LayoutDashboard][] = [['Dashboard', LayoutDashboard], ['Students', Users], ['Certificates', FileCheck2], ['Invoices', FileText], ['Reports', BarChart3]]; return <aside className="sidebar"><div className="brand"><div className="brand-mark">TAI</div><div><div className="brand-name">THOORIGAI</div><div className="brand-sub">INFOTECH LLP</div></div></div><div className="workspace-label">WORKSPACE</div><nav>{nav.map(([label, Icon]) => <button key={label} className={`nav-item ${view === label ? 'active' : ''}`} onClick={() => setView(label)}><Icon size={17} strokeWidth={1.8} /><span>{label}</span>{label === 'Students' && <span className="nav-count">48</span>}</button>)}</nav><div className="sidebar-bottom"><button className="nav-item"><Settings size={17} /><span>Settings</span></button><div className="account"><div className="avatar">AK</div><div><strong>Admin account</strong><small>ThoorigAI Infotech LLP</small></div><ChevronDown size={15} /></div></div></aside> }
-function Topbar({ view, onMenu }: { view: View; onMenu: () => void }) { return <header className="topbar"><button className="mobile-menu" onClick={onMenu} aria-label="Open navigation"><Menu size={20} /></button><div className="crumb"><span>Workspace</span><span>/</span><strong>{view}</strong></div><div className="top-actions"><div className="top-search"><Search size={16} /><input placeholder="Search anything" /></div><button className="icon-button" aria-label="Notifications"><Bell size={18} /><i /></button><div className="top-avatar">AK</div></div></header> }
-function PaymentsTable({ payments, onInvoice }: { payments: Payment[]; onInvoice?: (p: Payment) => void }) { return <div className="data-wrap"><table><thead><tr><th>Receipt ID</th><th>Student</th><th>Method</th><th>Date</th><th className="align-right">Amount</th><th>Invoice</th></tr></thead><tbody>{payments.map(p => <tr key={p.id}><td className="mono">{p.id}</td><td><strong>{p.student}</strong></td><td><span className="method">{p.method}</span></td><td>{p.date}</td><td className="align-right amount">{money(p.amount)}</td><td><button className="row-link" onClick={() => onInvoice ? onInvoice(p) : window.location.assign(`/api/invoices/${encodeURIComponent(p.invoice)}/download`)}>{p.invoice}</button></td></tr>)}</tbody></table></div> }
-function Dashboard({ students, payments, setView, onInvoice }: { students: Student[]; payments: Payment[]; setView: (v: View) => void; onInvoice?: (p: Payment) => void }) { const revenue = students.reduce((s, x) => s + x.paid, 0); const outstanding = students.reduce((s, x) => s + x.total - x.paid, 0); return <><div className="page-heading"><div><p className="eyebrow">MONDAY, 15 SEPTEMBER 2026</p><h1>Good morning, Admin</h1><p className="subcopy">Here&apos;s what&apos;s happening across ThoorigAI Infotech LLP.</p></div><button className="primary-button" onClick={() => setView('Students')}><Plus size={16} /> Add student</button></div><div className="stats-grid"><div className="stat-card"><div className="stat-head"><span>Total students</span><Users size={17} /></div><div className="stat-value">{students.length}</div></div><div className="stat-card"><div className="stat-head"><span>Revenue collected</span><CircleDollarSign size={17} /></div><div className="stat-value">{money(revenue)}</div></div><div className="stat-card"><div className="stat-head"><span>Outstanding balance</span><ArrowDownRight size={17} /></div><div className="stat-value">{money(outstanding)}</div></div><div className="stat-card"><div className="stat-head"><span>Certificate eligible</span><ShieldCheck size={17} /></div><div className="stat-value">{students.filter(s => s.status === 'Fully Paid').length}</div></div></div><section className="panel table-panel"><div className="panel-header"><div><h2>Recent payments</h2><p>Latest transactions across all students</p></div><button className="text-button" onClick={() => setView('Invoices')}>View all <ArrowUpRight size={14} /></button></div><PaymentsTable payments={payments} onInvoice={onInvoice} /></section></> }
-function Students({ students, onAdd, onSelect }: { students: Student[]; onAdd: () => void; onSelect: (s: Student) => void }) { const [query, setQuery] = useState(''); const [filter, setFilter] = useState('All status'); const filtered = useMemo(() => students.filter(s => (s.name.toLowerCase().includes(query.toLowerCase()) || String(s.registerId).includes(query)) && (filter === 'All status' || s.status === filter)), [students, query, filter]); return <><div className="page-heading"><div><p className="eyebrow">ACADEMY RECORDS</p><h1>Students</h1><p className="subcopy">Manage enrollment, fees, and student records.</p></div><button className="primary-button" onClick={onAdd}><Plus size={16} /> Add student</button></div><section className="panel"><div className="toolbar"><div className="filter-search"><Search size={16} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name or register ID" /></div><select value={filter} onChange={e => setFilter(e.target.value)}><option>All status</option><option>Fully Paid</option><option>Pending</option></select></div><div className="data-wrap"><table><thead><tr><th>Register ID</th><th>Student</th><th>Course</th><th>Batch start</th><th className="align-right">Total fees</th><th className="align-right">Balance</th><th>Status</th><th></th></tr></thead><tbody>{filtered.map(s => <tr key={s.registerId} className="clickable-row" onClick={() => onSelect(s)}><td className="mono">TAI-{s.registerId}</td><td><div className="student-cell"><div className="mini-avatar">{s.name.split(' ').map(x => x[0]).join('')}</div><div><strong>{s.name}</strong><small>{s.phone}</small></div></div></td><td>{s.course}</td><td>{s.batch}</td><td className="align-right">{money(s.total)}</td><td className="align-right amount">{money(s.total - s.paid)}</td><td><Status status={s.status} /></td><td><button className="kebab" onClick={e => { e.stopPropagation(); onSelect(s) }}>•••</button></td></tr>)}</tbody></table></div><div className="table-summary">Showing <strong>{filtered.length}</strong> students</div></section></> }
-function StudentDetail({ student, payments, onBack, onPayment, onCertificate }: { student: Student; payments: Payment[]; onBack: () => void; onPayment: (amount: number, method: string) => Receipt | string; onCertificate: () => void }) { const [amount, setAmount] = useState(''); const [method, setMethod] = useState('UPI'); const [receipt, setReceipt] = useState<Receipt | null>(null); const [error, setError] = useState(''); const balance = student.total - student.paid; const history = payments.filter(p => p.studentId === student.registerId); const submit = () => { const value = Number(amount); if (!value || value <= 0) return setError('Enter a payment amount greater than zero.'); if (value > balance) return setError(`Payment cannot exceed the remaining balance of ${money(balance)}.`); const result = onPayment(value, method); if (typeof result === 'string') return setError(result); setReceipt(result); setAmount(''); setError('') }; return <><div className="page-heading"><div><button className="back-link" onClick={onBack}>← Back to students</button><p className="eyebrow">STUDENT DETAIL · TAI-{student.registerId}</p><h1>{student.name}</h1><p className="subcopy">{student.course} · Batch started {student.batch}</p></div><Status status={student.status} /></div><div className="detail-grid"><section className="panel fee-summary"><div className="panel-header"><div><h2>Fee summary</h2><p>Live account balance</p></div></div><div className="fee-numbers"><div><span>Total fees</span><strong>{money(student.total)}</strong></div><div><span>Paid</span><strong className="paid-number">{money(student.paid)}</strong></div><div><span>Balance</span><strong className={balance === 0 ? 'paid-number' : 'balance-number'}>{money(balance)}</strong></div></div></section><section className="panel payment-panel"><div className="panel-header"><div><h2>Record Payment</h2><p>Post a payment and issue its GST invoice</p></div><CircleDollarSign size={21} /></div>{receipt && balance === 0 ? <div className="certificate-inline"><div className="receipt-check"><CheckCircle2 size={18} /><strong>Payment recorded</strong></div><p>Balance cleared. Certificate generation is ready below.</p></div> : receipt ? <div className="receipt-confirmation"><div className="receipt-check"><CheckCircle2 size={18} /><strong>Payment recorded</strong></div><div className="receipt-meta"><span>Invoice <b>{receipt.invoice}</b></span><span>Amount <b>{money(receipt.amount)}</b></span></div><div className="gst-breakdown"><span>Taxable value <b>{money(receipt.amount - receipt.cgst - receipt.sgst)}</b></span><span>CGST (9%) <b>{money(receipt.cgst)}</b></span><span>SGST (9%) <b>{money(receipt.sgst)}</b></span><span>Total paid <b>{money(receipt.amount)}</b></span></div></div> : <div className="payment-fields"><label>Amount<input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder={money(balance)} /></label><label>Payment method<select value={method} onChange={e => setMethod(e.target.value)}><option>UPI</option><option>Bank Transfer</option><option>Cash</option><option>Card</option></select></label><button className="primary-button" onClick={submit}>Record payment <ArrowUpRight size={15} /></button>{error && <p className="error">{error}</p>}</div>}</section></div>{receipt && student.total - student.paid === 0 ? <section className="certificate-banner"><div><p className="eyebrow">PAYMENT COMPLETE</p><h2>Eligible for Course Completion Certificate</h2><p>{student.name}&apos;s balance is fully cleared. Generate the completion certificate now.</p></div><button className="primary-button" onClick={onCertificate}><FileCheck2 size={16} /> Generate certificate</button></section> : null}<section className="panel"><div className="panel-header"><div><h2>Payment history</h2><p>{history.length} payment{history.length === 1 ? '' : 's'} · Most recent first</p></div></div><PaymentsTable payments={history} /></section></> }
-function LegacyInvoicePrint({ payment, onBack }: { payment: Payment; onBack: () => void }) {
-  const invoiceStudent = { registerId: payment.studentId, name: payment.student, course: 'Course fee payment', batch: payment.date, total: payment.amount, paid: payment.amount, phone: '—', status: 'Fully Paid' as const };
-  const gross = Math.round((payment.amount / 1.18) * 100) / 100;
-  const gst = Math.round((payment.amount - gross) * 100) / 100;
-  const downloadUrl = `/api/invoices/${encodeURIComponent(payment.invoice)}/download`;
-  const downloadInvoice = async () => {
-    const response = await fetch(downloadUrl);
-    if (!response.ok) throw new Error('Invoice download failed');
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${payment.invoice.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
-  return (
-    <div className="invoice-route">
-      <div className="invoice-toolbar">
-        <button className="secondary-button" onClick={onBack}>← Back to invoices</button>
-        <div className="invoice-actions">
-          <button className="primary-button" onClick={downloadInvoice}>Download PDF</button>
-          <button className="primary-button" onClick={() => window.print()}>Print / Save as PDF</button>
-        </div>
-      </div>
-      <article className="ttk-invoice-paper">
-        <InvoiceCopy payment={payment} student={invoiceStudent} gross={gross} gst={gst} copy="Customer Copy" />
-        <InvoiceCopy payment={payment} student={invoiceStudent} gross={gross} gst={gst} copy="Office Copy" />
-      </article>
-    </div>
-  );
-}
-function LegacyCertificatePrint({ student, onBack }: { student: Student; onBack: () => void }) { return null }
+import { Sidebar } from '@/components/Sidebar'
+import { Topbar } from '@/components/Topbar'
+import { Dashboard } from '@/components/Dashboard'
+import { Students } from '@/components/Students'
+import { StudentDetail } from '@/components/StudentDetail'
+import { CertificatePrint } from '@/components/CertificatePrint'
+import { InvoicePrint } from '@/components/InvoicePrint'
+import { AddStudent } from '@/components/AddStudent'
+import { SimpleView } from '@/components/SimpleView'
 
-const certificateSkills = ['Project Development', 'Data Analysis', 'Team Collaboration', 'Problem Solving']
-const numberWords = (value: number): string => { const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']; const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']; if (value < 20) return ones[value]; if (value < 100) return tens[Math.floor(value / 10)] + (value % 10 ? ` ${ones[value % 10]}` : ''); if (value < 1000) return `${ones[Math.floor(value / 100)]} Hundred${value % 100 ? ` ${numberWords(value % 100)}` : ''}`; if (value < 100000) return `${numberWords(Math.floor(value / 1000))} Thousand${value % 1000 ? ` ${numberWords(value % 1000)}` : ''}`; if (value < 10000000) return `${numberWords(Math.floor(value / 100000))} Lakh${value % 100000 ? ` ${numberWords(value % 100000)}` : ''}`; return `${numberWords(Math.floor(value / 10000000))} Crore${value % 10000000 ? ` ${numberWords(value % 10000000)}` : ''}` }
-const amountInWords = (amount: number) => { const whole = Math.floor(amount); const paise = Math.round((amount - whole) * 100); return `Indian Rupees ${numberWords(whole)}${paise ? ` and ${numberWords(paise)} Paise` : ''} Only.` }
-function CertificatePrint({ student, onBack }: { student: Student; onBack: () => void }) { const issueDate = '15 September 2026'; return <div className="certificate-route"><div className="certificate-toolbar"><button className="secondary-button" onClick={onBack}>← Back to certificates</button><button className="primary-button" onClick={() => window.print()}>Print / Save as PDF</button></div><article className="ttk-certificate"><div className="ttk-cert-corner ttk-corner-tl" /><div className="ttk-cert-corner ttk-corner-tr" /><div className="ttk-cert-corner ttk-corner-bl" /><div className="ttk-cert-corner ttk-corner-br" /><div className="ttk-cert-frame"><header className="ttk-cert-header"><div className="ttk-cert-logo">TAI</div><div className="ttk-cert-brand">THOORIGAI <span>INFOTECH</span><small>LLP</small></div><p>CERTIFICATE OF COMPLETION</p><h1>Certificate of Achievement</h1><div className="ttk-cert-divider">✦</div></header><main className="ttk-cert-body"><p>This certificate is proudly presented to</p><h2>{student.name}</h2><div className="ttk-name-rule" /><p>for successfully completing the <strong>{student.course}</strong> Program at <strong>ThoorigAI Infotech LLP</strong>, from <strong>{student.batch}</strong> to <strong>{issueDate}</strong>.</p><p className="ttk-cert-note">During the course, the candidate demonstrated dedication, professionalism, and technical proficiency in:</p><ul>{certificateSkills.map(skill => <li key={skill}>{skill}</li>)}</ul></main><footer className="ttk-cert-footer"><div className="ttk-cert-id"><span>Certificate ID</span><strong>TAI-{new Date().getFullYear()}-{String(student.registerId).padStart(4, '0')}</strong></div><div className="ttk-signature"><span className="ttk-signature-script">Ananya Krishnan</span><div>Director</div></div><div className="ttk-seal">★<small>CERTIFIED</small></div><div className="ttk-signature"><span className="ttk-signature-script">R. Thoorigai</span><div>Trainer</div></div><div className="ttk-cert-id ttk-cert-date"><span>Date Issued</span><strong>{issueDate}</strong></div></footer></div></article></div> }
-function InvoiceCopy({ payment, student, gross, gst, copy }: { payment: Payment; student: Student; gross: number; gst: number; copy: string }) { return <section className="ttk-invoice-copy"><div className="ttk-invoice-top"><div><h2>INVOICE - {payment.invoice}</h2><span>Receipt ID - [ {payment.id} ]</span></div><b>{copy}</b></div><header className="ttk-invoice-brand"><div className="ttk-invoice-logo">TAI</div><div><h1>ThoorigAI Infotech LLP</h1><p>127, Ettayapuram Road, Melur Tuticorin, Tamil Nadu - 628002</p><p>Phone: {student.phone} | Professional Learning &amp; Training</p><strong>GST No: 33AAZFT3654J1ZI</strong></div></header><div className="ttk-invoice-meta"><span><b>Customer:</b> {student.name}</span><span><b>Mobile:</b> {student.phone}</span><span><b>ID:</b> TAI-{student.registerId}</span><span><b>Date:</b> {payment.date}</span></div><p className="ttk-course-line"><b>Course:</b> {student.course}</p><div className="ttk-invoice-grid"><table><thead><tr><th>S.No</th><th>Particular</th><th>Gross Amount</th></tr></thead><tbody><tr><td>1</td><td>Course fee payment ({payment.method})</td><td>{money(gross)}</td></tr><tr className="ttk-gst-row"><td /><td>GST (18%)</td><td>{money(gst)}</td></tr><tr className="ttk-total-row"><td /><td>Grand Total</td><td>{money(payment.amount)}</td></tr></tbody></table><div className="ttk-payment-aside"><span>Payment Mode</span><strong>{payment.method}</strong><span>Transaction ID</span><strong>{payment.id}</strong></div></div><p className="ttk-amount-words">{amountInWords(payment.amount)}</p><div className="ttk-invoice-terms"><b>Terms &amp; Conditions</b><ol><li>GST is included in the grand total shown above.</li><li>Students must pay the full fees before completing the course.</li><li>Agreed instalment dates help students complete the course on schedule.</li><li>Registration fees are non-refundable once paid.</li><li>Refunds are not allowed under normal circumstances.</li></ol></div><div className="ttk-authorized">Authorized Signature</div></section> }
-function InvoicePrint({ payment, student, onBack }: { payment: Payment; student?: Student; onBack: () => void }) { const invoiceStudent = student ?? { registerId: payment.studentId, name: payment.student, course: 'Course fee payment', batch: payment.date, total: payment.amount, paid: payment.amount, phone: '—', status: 'Fully Paid' as const }; const gross = Math.round((payment.amount / 1.18) * 100) / 100; const gst = Math.round((payment.amount - gross) * 100) / 100; const downloadUrl = `/api/invoices/${encodeURIComponent(payment.invoice)}/download`; const downloadInvoice = async () => { const response = await fetch(downloadUrl); if (!response.ok) throw new Error('Invoice download failed'); const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `${payment.invoice.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000) }; return <div className="invoice-route"><div className="invoice-toolbar"><button className="secondary-button" onClick={onBack}>← Back to invoices</button><div className="invoice-actions"><button className="primary-button" onClick={downloadInvoice}>Download PDF</button><button className="primary-button" onClick={() => window.print()}>Print / Save as PDF</button></div></div><article className="ttk-invoice-paper"><InvoiceCopy payment={payment} student={invoiceStudent} gross={gross} gst={gst} copy="Customer Copy" /><InvoiceCopy payment={payment} student={invoiceStudent} gross={gross} gst={gst} copy="Office Copy" /></article></div> }
-function SimpleView({ view, students, payments, selectedCertificate, onCertificate, onInvoice }: { view: View; students: Student[]; payments: Payment[]; selectedCertificate?: Student | null; onCertificate: (s: Student) => void; onInvoice?: (p: Payment) => void }) { if (view === 'Invoices') return <><div className="page-heading"><div><p className="eyebrow">FINANCE</p><h1>Invoices</h1><p className="subcopy">GST invoices created automatically from payments.</p></div></div><section className="panel"><PaymentsTable payments={payments} onInvoice={onInvoice} /></section></>; if (view === 'Reports') { const revenue = students.reduce((sum, student) => sum + student.paid, 0); const outstanding = students.reduce((sum, student) => sum + student.total - student.paid, 0); const methods = payments.reduce<Record<string, number>>((summary, payment) => { summary[payment.method] = (summary[payment.method] ?? 0) + payment.amount; return summary }, {}); const download = () => { const rows = [['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status'], ...students.map(student => [student.name, `TAI-${student.registerId}`, student.course, String(student.total), String(student.paid), String(student.total - student.paid), student.status])]; const csv = rows.map(row => row.map(value => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = `thoorigai-report-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(url) }; return <><div className="page-heading"><div><p className="eyebrow">OPERATIONS REPORTING</p><h1>Reports</h1><p className="subcopy">Live collection, balance, eligibility, and payment-method reporting.</p></div><button className="primary-button" onClick={download}><FileText size={16} /> Download CSV</button></div><div className="stats-grid"><div className="stat-card"><div className="stat-head"><span>Revenue collected</span><CircleDollarSign size={17} /></div><div className="stat-value">{money(revenue)}</div></div><div className="stat-card"><div className="stat-head"><span>Outstanding balance</span><ArrowDownRight size={17} /></div><div className="stat-value">{money(outstanding)}</div></div><div className="stat-card"><div className="stat-head"><span>Students</span><Users size={17} /></div><div className="stat-value">{students.length}</div></div><div className="stat-card"><div className="stat-head"><span>Certificate eligible</span><ShieldCheck size={17} /></div><div className="stat-value">{students.filter(student => student.status === 'Fully Paid').length}</div></div></div><div className="report-grid"><section className="panel report-main"><div className="panel-header"><div><h2>Payment method totals</h2><p>Collected amount grouped by payment method</p></div></div><div className="distribution">{Object.entries(methods).map(([method, total]) => <div className="dist-row" key={method}><div><span>{method}</span><strong>{money(total)}</strong></div><div className="bar"><i style={{ width: `${revenue ? Math.min(100, (total / revenue) * 100) : 0}%` }} /></div></div>)}</div></section><section className="panel report-side"><div className="panel-header"><div><h2>Recent transactions</h2><p>{payments.length} payment records loaded</p></div></div><PaymentsTable payments={payments.slice(0, 5)} onInvoice={onInvoice} /></section></div></> }; if (view === 'Certificates') { const eligible = students.filter(s => s.status === 'Fully Paid'); return <><div className="page-heading"><div><p className="eyebrow">COMPLETION RECORDS</p><h1>Certificates</h1><p className="subcopy">Generate certificates for students with cleared balances.</p></div></div><section className="panel"><div className="panel-header"><div><h2>Eligible students</h2><p>{eligible.length} students ready for certificate generation</p></div></div><div className="data-wrap"><table><thead><tr><th>Student</th><th>Register ID</th><th>Course</th><th></th></tr></thead><tbody>{eligible.map(s => <tr key={s.registerId}><td><strong>{s.name}</strong></td><td className="mono">TAI-{s.registerId}</td><td>{s.course}</td><td><button className="primary-button compact" onClick={() => onCertificate(s)}>{selectedCertificate?.registerId === s.registerId ? 'Selected' : 'Generate'}</button></td></tr>)}</tbody></table></div></section></> }; return <div className="empty-state"><BarChart3 size={24} /><h2>Reports</h2><p>Reports will reflect live payment activity as it is recorded.</p></div> }
-function AddStudent({ onClose, onSave }: { onClose: () => void; onSave: (s: Student) => void }) { const [name, setName] = useState(''); const [phone, setPhone] = useState(''); const [total, setTotal] = useState(''); const [paid, setPaid] = useState(''); const balance = Math.max(0, Number(total || 0) - Number(paid || 0)); return <div className="modal-backdrop"><div className="modal"><div className="modal-head"><div><p className="eyebrow">NEW RECORD</p><h2>Add student</h2></div><button onClick={onClose} className="icon-button"><X size={18} /></button></div><div className="form-grid"><label>Student name<input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" /></label><label>Phone number<input value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit number" /></label><label>Total fees<input type="number" value={total} onChange={e => setTotal(e.target.value)} placeholder="0" /></label><label>Initial payment<input type="number" value={paid} onChange={e => setPaid(e.target.value)} placeholder="0" /></label></div><div className="balance-preview"><span>Balance after initial payment</span><strong>{money(balance)}</strong></div><div className="modal-actions"><button className="secondary-button" onClick={onClose}>Cancel</button><button className="primary-button" disabled={!name || phone.length !== 10 || !total || Number(paid) > Number(total)} onClick={() => onSave({ registerId: 1049, name, course: 'Professional Course', batch: '15 Sep 2026', total: Number(total), paid: Number(paid || 0), phone, status: Number(paid || 0) === Number(total) ? 'Fully Paid' : 'Pending' })}>Save student</button></div></div></div> }
-export default function Page() { const [view, setView] = useState<View>('Dashboard'); const [students, setStudents] = useState(initialStudents); const [payments, setPayments] = useState(initialPayments); const [selectedId, setSelectedId] = useState<number | null>(null); const [selectedCertificate, setSelectedCertificate] = useState<Student | null>(null); const [adding, setAdding] = useState(false); const [mobileOpen, setMobileOpen] = useState(false); const [selectedInvoice, setSelectedInvoice] = useState<Payment | null>(null); const selected = students.find(s => s.registerId === selectedId) ?? null; const save = (s: Student) => { setStudents(current => [s, ...current]); setAdding(false); setView('Students') }; const recordPayment = (amount: number, method: string): Receipt | string => { if (!selected) return 'Select a student first.'; const currentBalance = selected.total - selected.paid; if (amount > currentBalance) return 'Payment exceeds the live balance.'; const next = payments.length + 87; const payment: Payment = { id: `RCPT-${next}`, student: selected.name, studentId: selected.registerId, method, date: '15 Sep 2026', amount, invoice: `TAI/2026/INV${String(next).padStart(3, '0')}` }; const cgst = Math.round(amount * 9 / 118); const receipt = { ...payment, cgst, sgst: cgst }; setPayments(current => [payment, ...current]); setStudents(current => current.map(s => s.registerId === selected.registerId ? { ...s, paid: s.paid + amount, status: s.paid + amount >= s.total ? 'Fully Paid' : 'Pending' } : s)); return receipt }; if (selectedInvoice) return <InvoicePrint payment={selectedInvoice} student={students.find(s => s.registerId === selectedInvoice.studentId)} onBack={() => setSelectedInvoice(null)} />; if (selectedCertificate) return <CertificatePrint student={selectedCertificate} onBack={() => setSelectedCertificate(null)} />; return <div className="app-shell"><div className={`sidebar-mobile ${mobileOpen ? 'open' : ''}`} onClick={() => setMobileOpen(false)}><div onClick={e => e.stopPropagation()}><Sidebar view={view} setView={v => { setView(v); setMobileOpen(false) }} /></div></div><Sidebar view={view} setView={setView} /><main className="main-area"><Topbar view={selected ? 'Students' : view} onMenu={() => setMobileOpen(true)} /><div className="content">{selected ? <StudentDetail key={selected.registerId} student={selected} payments={payments} onBack={() => setSelectedId(null)} onPayment={recordPayment} onCertificate={() => { setSelectedCertificate(selected); setSelectedId(null); setView('Certificates') }} /> : view === 'Dashboard' ? <Dashboard students={students} payments={payments} setView={setView} /> : view === 'Students' ? <Students students={students} onAdd={() => setAdding(true)} onSelect={s => setSelectedId(s.registerId)} /> : <SimpleView view={view} students={students} payments={payments} selectedCertificate={selectedCertificate} onCertificate={setSelectedCertificate} />}</div></main>{adding && <AddStudent onClose={() => setAdding(false)} onSave={save} />}</div> }
+export default function Page() {
+  const [view, setView] = useState<View>('Dashboard')
+  const [students, setStudents] = useState<Student[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedCertificate, setSelectedCertificate] = useState<Student | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<Payment | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const selected = students.find(s => s.registerId === selectedId) ?? null
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const [studentsRes, paymentsRes] = await Promise.all([
+          fetch('/api/students').then(res => res.json()),
+          fetch('/api/payments').then(res => res.json())
+        ])
+        if (studentsRes.data) setStudents(studentsRes.data)
+        if (paymentsRes.data) setPayments(paymentsRes.data)
+      } catch (err) {
+        setError('Failed to load data')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  // Refetch after mutations
+  const refetch = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [studentsRes, paymentsRes] = await Promise.all([
+        fetch('/api/students').then(res => res.json()),
+        fetch('/api/payments').then(res => res.json())
+      ])
+      if (studentsRes.data) setStudents(studentsRes.data)
+      if (paymentsRes.data) setPayments(paymentsRes.data)
+    } catch (err) {
+      setError('Failed to reload data')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const save = async (s: Omit<Student, 'registerId'>) => {
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(s)
+      })
+      if (!res.ok) throw new Error('Failed to create student')
+      const result = await res.json()
+      await refetch()
+      setAdding(false)
+      if (result.payment) {
+        setSelectedInvoice(result.payment)
+      } else if (result.data?.registerId) {
+        setSelectedId(result.data.registerId)
+      } else {
+        setView('Students')
+      }
+    } catch (err) {
+      setError('Failed to save student')
+      console.error(err)
+    }
+  }
+
+  const recordPayment = async (amount: number, method: string): Promise<Receipt | string> => {
+    if (!selected) return 'Select a student first.'
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: selected.registerId,
+          amount,
+          method,
+          date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+        })
+      })
+      if (!res.ok) throw new Error('Failed to record payment')
+      const data = await res.json()
+      await refetch()
+      return data as Receipt
+    } catch (err) {
+      if (err instanceof Error) return err.message
+      return 'Unknown error'
+    }
+  }
+
+  if (loading) return <div className="loading">Loading...</div>
+  if (error) return <div className="error">Error: {error}</div>
+
+  const renderContent = () => {
+    if (selectedInvoice) return (
+      <InvoicePrint
+        payment={selectedInvoice}
+        student={students.find(s => s.registerId === selectedInvoice.studentId)!}
+        onBack={() => setSelectedInvoice(null)}
+      />
+    )
+    if (selectedCertificate) return (
+      <CertificatePrint
+        student={selectedCertificate}
+        onBack={() => setSelectedCertificate(null)}
+      />
+    )
+    if (adding) return (
+      <AddStudent
+        onClose={() => setAdding(false)}
+        onSave={save}
+      />
+    )
+    if (selectedId !== null) {
+      const selectedStudent = students.find(s => s.registerId === selectedId)!
+      return (
+        <StudentDetail
+          student={selectedStudent}
+          payments={payments}
+          onBack={() => setSelectedId(null)}
+          onPayment={recordPayment}
+          onCertificate={() => setSelectedCertificate(selectedStudent)}
+          onInvoice={setSelectedInvoice}
+        />
+      )
+    }
+    if (view === 'Dashboard') return (
+      <Dashboard students={students} payments={payments} setView={handleSetView} onInvoice={setSelectedInvoice} />
+    )
+    if (view === 'Students') return (
+      <Students students={students} onAdd={() => setAdding(true)} onSelect={(s: Student) => setSelectedId(s.registerId)} />
+    )
+    return (
+      <SimpleView
+        view={view}
+        students={students}
+        payments={payments}
+        selectedCertificate={selectedCertificate}
+        onCertificate={setSelectedCertificate}
+        onInvoice={setSelectedInvoice}
+      />
+    )
+  }
+
+  const handleSetView = (newView: View) => {
+    setSelectedId(null)
+    setSelectedInvoice(null)
+    setSelectedCertificate(null)
+    setAdding(false)
+    setView(newView)
+  }
+
+  return (
+    <div className="app-shell">
+      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} />
+      <div className="main-area">
+        <Topbar view={view} onMenu={() => setSidebarCollapsed(c => !c)} />
+        <main className="content">
+          {renderContent()}
+        </main>
+      </div>
+      <div className={'sidebar-mobile ' + (mobileOpen ? 'open' : '')} onClick={e => e.stopPropagation()}>
+        <div onClick={e => e.stopPropagation()}></div>
+      </div>
+    </div>
+  )
+}

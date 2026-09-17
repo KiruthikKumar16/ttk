@@ -26,12 +26,54 @@ export async function POST(req: Request) {
 
     const registerId = Number(body.registerId ?? Date.now())
     const student = { registerId, name, phone, course, batch, total, paid, status: paid >= total ? 'Fully Paid' : 'Pending' as const }
+    
+    let createdPayment = null
+    const next = Date.now()
+    const paymentId = `RCPT-${next}`
+    const invoice = `TAI/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
+    const paymentDate = new Date().toISOString().slice(0, 10)
+
     if (supabase) {
       const { data, error } = await supabase.from('students').insert({ register_id: registerId, name, phone, course, batch, total, paid, status: student.status }).select().single()
       if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-      return NextResponse.json({ message: 'Student created successfully', data: studentFromApiRow(data), source: 'supabase' }, { status: 201 })
+
+      if (paid > 0) {
+        const { data: pData } = await supabase.from('payments').insert({
+          id: paymentId,
+          student_id: data.id,
+          student_register_id: registerId,
+          method: 'Initial Payment',
+          amount: paid,
+          invoice,
+          payment_date: paymentDate
+        }).select().single()
+
+        if (pData) {
+          createdPayment = { ...pData, student: name, studentId: registerId, date: paymentDate, amount: paid, invoice }
+        }
+      }
+
+      return NextResponse.json({ message: 'Student created successfully', data: studentFromApiRow(data), payment: createdPayment, source: 'supabase' }, { status: 201 })
     }
-    return NextResponse.json({ message: 'Student created successfully', data: student, source: 'mock' }, { status: 201 })
+    
+    // In-memory mock data mutation
+    const { initialStudents, initialPayments } = require('@/lib/mock-data');
+    initialStudents.unshift(student);
+
+    if (paid > 0) {
+      createdPayment = {
+        id: paymentId,
+        student: name,
+        method: 'Initial Payment',
+        date: paymentDate,
+        amount: paid,
+        invoice,
+        studentId: registerId,
+      }
+      initialPayments.unshift(createdPayment)
+    }
+    
+    return NextResponse.json({ message: 'Student created successfully', data: student, payment: createdPayment, source: 'mock' }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create student' }, { status: 500 })
   }

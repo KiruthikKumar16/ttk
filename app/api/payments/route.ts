@@ -19,16 +19,39 @@ export async function POST(req: Request) {
     const method = String(body.method ?? '').trim()
     if (!Number.isFinite(studentRegisterId) || !Number.isFinite(amount) || amount <= 0 || !method) return NextResponse.json({ error: 'Student, payment amount, and method are required.' }, { status: 400 })
 
-    if (!supabase) return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 503 })
-    const { data: student, error: studentError } = await supabase.from('students').select('*').eq('register_id', studentRegisterId).single()
-    if (studentError || !student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
-    const balance = Number(student.total) - Number(student.paid)
-    if (amount > balance) return NextResponse.json({ error: `Payment exceeds the remaining balance of ${balance}.` }, { status: 400 })
-
     const next = Date.now()
     const id = `RCPT-${next}`
     const invoice = `TAI/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
     const paymentDate = String(body.date ?? new Date().toISOString().slice(0, 10))
+
+    if (!supabase) {
+      const { initialStudents, initialPayments } = require('@/lib/mock-data')
+      const student = initialStudents.find((s: any) => s.registerId === studentRegisterId)
+      if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
+      const balance = Number(student.total) - Number(student.paid)
+      if (amount > balance) return NextResponse.json({ error: `Payment exceeds the remaining balance of ${balance}.` }, { status: 400 })
+
+      student.paid = Number(student.paid) + amount
+      student.status = student.paid >= Number(student.total) ? 'Fully Paid' : 'Pending'
+
+      const newPayment = {
+        id,
+        student: student.name,
+        method,
+        date: paymentDate,
+        amount,
+        invoice,
+        studentId: studentRegisterId,
+      }
+      initialPayments.unshift(newPayment)
+
+      return NextResponse.json({ data: newPayment, source: 'mock' }, { status: 201 })
+    }
+
+    const { data: student, error: studentError } = await supabase.from('students').select('*').eq('register_id', studentRegisterId).single()
+    if (studentError || !student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
+    const balance = Number(student.total) - Number(student.paid)
+    if (amount > balance) return NextResponse.json({ error: `Payment exceeds the remaining balance of ${balance}.` }, { status: 400 })
     const { data: payment, error: paymentError } = await supabase.from('payments').insert({ id, student_id: student.id, student_register_id: studentRegisterId, method, amount, invoice, payment_date: paymentDate }).select().single()
     if (paymentError) return NextResponse.json({ error: paymentError.message }, { status: 400 })
     const paid = Number(student.paid) + amount
