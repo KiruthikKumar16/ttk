@@ -16,6 +16,7 @@ export function StudentDetail({
   onPayment,
   onCertificate,
   onInvoice,
+  gstRate = 18,
 }: {
   student: Student
   payments: Payment[]
@@ -23,6 +24,7 @@ export function StudentDetail({
   onPayment: (amount: number, method: string) => Promise<Receipt | string>
   onCertificate: () => void
   onInvoice?: (p: Payment) => void
+  gstRate?: number
 }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('UPI');
@@ -111,14 +113,21 @@ export function StudentDetail({
               </div>
               <div className="receipt-meta">
                 <span>Invoice <b>{receipt.invoice}</b></span>
-                <span>Amount <b>{money(receipt.amount)}</b></span>
+                <span>Taxable Amount <b>{money(receipt.amount)}</b></span>
               </div>
-              <div className="gst-breakdown">
-                <span>Taxable value <b>{money(receipt.amount - receipt.cgst - receipt.sgst)}</b></span>
-                <span>CGST (9%) <b>{money(receipt.cgst)}</b></span>
-                <span>SGST (9%) <b>{money(receipt.sgst)}</b></span>
-                <span>Total paid <b>{money(receipt.amount)}</b></span>
-              </div>
+              {gstRate > 0 ? (
+                <div className="gst-breakdown">
+                  <span>Taxable Base <b>{money(receipt.amount)}</b></span>
+                  <span>CGST ({(gstRate / 2)}%) <b>{money(Math.round(receipt.amount * (gstRate / 200)))}</b></span>
+                  <span>SGST ({(gstRate / 2)}%) <b>{money(Math.round(receipt.amount * (gstRate / 200)))}</b></span>
+                  <span>Grand Total <b>{money(receipt.amount + Math.round(receipt.amount * (gstRate / 100)))}</b></span>
+                </div>
+              ) : (
+                <div className="gst-breakdown">
+                  <span>Total Paid <b>{money(receipt.amount)}</b></span>
+                  <span>GST <b>Exempt</b></span>
+                </div>
+              )}
               {onInvoice && (
                 <div className="mt-3">
                   <Button

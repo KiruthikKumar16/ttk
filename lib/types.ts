@@ -1,4 +1,18 @@
-export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Invoices' | 'Reports'
+export type View = 'Dashboard' | 'Students' | 'Courses' | 'Certificates' | 'Invoices' | 'Reports' | 'Settings'
+
+export type GstSettings = {
+  rate: number
+  gstin: string
+  enabled: boolean
+}
+
+export type Course = {
+  id: string
+  name: string
+  fee: number
+  duration: string
+  description?: string
+}
 
 export type StudentStatus = 'Fully Paid' | 'Pending'
 

@@ -1,4 +1,10 @@
-import type { Payment, Student } from './types'
+import type { Course, GstSettings, Payment, Student } from './types'
+
+export const gstSettings: GstSettings = {
+  rate: 18,
+  gstin: '33AAZFT3654J1ZI',
+  enabled: true,
+}
 
 export const initialStudents: Student[] = [
   { registerId: 1048, name: 'Kavya Srinivasan', course: 'Professional Course', batch: '12 Aug 2026', total: 42000, paid: 42000, phone: '9876543210', status: 'Fully Paid' },
@@ -14,3 +20,15 @@ export const initialPayments: Payment[] = [
   { id: 'RCPT-1084', student: 'Meena Lakshmi', method: 'Cash', date: '11 Sep 2026', amount: 12000, invoice: 'TAI/2026/INV084', studentId: 1046 },
   { id: 'RCPT-1083', student: 'Rohit Kumar', method: 'UPI', date: '09 Sep 2026', amount: 9000, invoice: 'TAI/2026/INV083', studentId: 1045 },
 ]
+
+export const initialCourses: Course[] = [
+  { id: 'CRS-01', name: 'Professional Course', fee: 42000, duration: '6 Months', description: 'Comprehensive industry-aligned software engineering and architecture training.' },
+  { id: 'CRS-02', name: 'ThoorigAI Course - Internship', fee: 36000, duration: '3 Months', description: 'Hands-on live client project internship focusing on AI-assisted application design.' },
+  { id: 'CRS-03', name: 'Crash Course (1.5 Months)', fee: 24000, duration: '1.5 Months', description: 'Fast-paced intensive program covering modern web development fundamentals.' },
+  { id: 'CRS-04', name: 'Slash Course (1 Month)', fee: 18000, duration: '1 Month', description: 'Foundational boot-camp focusing on UI design and frontend fundamentals.' },
+  { id: 'CRS-05', name: 'Full Stack Development', fee: 48000, duration: '6 Months', description: 'Complete MERN & Next.js ecosystem training with cloud database deployments.' },
+  { id: 'CRS-06', name: 'Data Science & AI', fee: 52000, duration: '6 Months', description: 'Practical machine learning, LLMs, data analytics, and Python frameworks.' },
+  { id: 'CRS-07', name: 'UI/UX Design Masterclass', fee: 30000, duration: '2 Months', description: 'Figma to frontend design systems, typography, micro-interactions, and prototyping.' },
+]
+
+

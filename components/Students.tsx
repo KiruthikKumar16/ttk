@@ -45,7 +45,6 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
                 <th className="align-right">Total fees</th>
                 <th className="align-right">Balance</th>
                 <th>Status</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -66,11 +65,6 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
                   <td className="align-right">{money(s.total)}</td>
                   <td className="align-right amount">{money(s.total - s.paid)}</td>
                   <td><Status status={s.status} /></td>
-                  <td>
-                    <Button variant="default" size="default" onClick={e => { e.stopPropagation(); onSelect(s) }}>
-                      <MoreHorizontal size={16} />
-                    </Button>
-                  </td>
                 </tr>
               ))}
             </tbody>

@@ -89,7 +89,8 @@ p { margin: 0; }
   height: 100vh;
   position: sticky;
   top: 0;
-  overflow-y: auto;
+  padding: 24px 16px 20px;
+  box-sizing: border-box;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               flex-basis 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -99,12 +100,12 @@ p { margin: 0; }
   width: 64px; flex: 0 0 64px;
   padding: 24px 8px 16px;
 }
-.sidebar-collapsed .brand { justify-content: center; padding-bottom: 24px; }
+.sidebar-collapsed .brand { justify-content: center; padding-bottom: 24px; padding-left: 0; padding-right: 0; }
 .sidebar-collapsed .nav-item { justify-content: center; padding: 10px; }
 .sidebar-collapsed .nav-item:hover { transform: none; }
 .sidebar-collapsed .account { justify-content: center; padding: 12px 0 0; }
 
-.brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 32px; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 0 4px 28px; }
 .brand-mark {
   width: 36px; height: 36px;
   border: 1.5px solid var(--gold); border-radius: 50%;
@@ -624,7 +625,7 @@ td strong { color: #0f172a; font-weight: 600; }
 /* ═══════════════════════════════════════
    REPORTS
    ═══════════════════════════════════════ */
-.report-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 /* Distribution bars */
 .distribution { padding: 4px 20px 20px; }
@@ -896,9 +897,15 @@ td strong { color: #0f172a; font-weight: 600; }
 .cert-sig-role { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
 .cert-seal {
   width: 72px; height: 72px; border-radius: 50%;
-  display: grid; place-items: center;
+  display: grid; place-items: center; align-content: center;
   justify-self: center;
+  background: var(--navy);
+  border: 2px solid var(--gold-deep);
+  color: #fbbf24;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
 }
+.cert-seal .seal-star { font-size: 22px; line-height: 1; }
+.cert-seal .seal-text { font-size: 8px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
 
 /* ═══════════════════════════════════════
    INVOICE PRINT

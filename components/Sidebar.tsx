@@ -1,5 +1,4 @@
-import { Button } from '@/components/ui/button'
-import { BarChart3, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users } from 'lucide-react'
+import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users } from 'lucide-react'
 import type { View } from '@/lib/types'
 import React from 'react'
 
@@ -7,6 +6,7 @@ export function Sidebar({ view, setView, collapsed }: { view: View; setView: (v:
   const nav: [View, typeof LayoutDashboard, string][] = [
     ['Dashboard', LayoutDashboard, 'Dashboard'],
     ['Students', Users, 'Students'],
+    ['Courses', BookOpen, 'Courses'],
     ['Certificates', FileCheck2, 'Certificates'],
     ['Invoices', FileText, 'Invoices'],
     ['Reports', BarChart3, 'Reports'],
@@ -32,17 +32,14 @@ export function Sidebar({ view, setView, collapsed }: { view: View; setView: (v:
         ))}
       </nav>
       <div className="sidebar-bottom">
-        {!collapsed && (
-          <Button variant="default" size="default" onClick={() => {/* Settings action */}}>
-            <Settings size={17} />
-            <span className="ml-2">Settings</span>
-          </Button>
-        )}
-        {collapsed && (
-          <button className="nav-item" title="Settings">
-            <Settings size={18} />
-          </button>
-        )}
+        <button
+          className={`nav-item${view === 'Settings' ? ' active' : ''}`}
+          onClick={() => setView('Settings')}
+          title="Settings"
+        >
+          <Settings size={18} className="mr-2" />
+          {!collapsed && <span className="flex-1 text-left">Settings</span>}
+        </button>
         <div className="account">
           <div className="avatar">AK</div>
           {!collapsed && (

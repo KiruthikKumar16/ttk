@@ -107,7 +107,11 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
               </thead>
               <tbody>
                 {invoices.map(inv => (
-                  <tr key={inv.invoice}>
+                  <tr
+                    key={inv.invoice}
+                    className="clickable-row"
+                    onClick={() => onInvoice && onInvoice(inv.payment)}
+                  >
                     <td className="mono">{inv.invoice}</td>
                     <td><strong>{inv.studentName}</strong></td>
                     <td>{inv.date}</td>
@@ -118,15 +122,8 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
                           variant="ghost"
                           size="sm"
                           className="btn-ghost"
-                          onClick={() => onInvoice && onInvoice(inv.payment)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="btn-ghost"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (onInvoice) {
                               onInvoice(inv.payment);
                               setTimeout(() => window.print(), 600);
@@ -208,27 +205,33 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
             <h1>Reports</h1>
             <p className="subcopy">Live collection, balance, eligibility, and payment-method reporting.</p>
           </div>
-          <div className="toolbar">
-            <div className="filter-search">
-              <label htmlFor="start-date">From</label>
-              <input
-                id="start-date"
-                type="date"
-                value={startDate.toISOString().split('T')[0]}
-                onChange={(e) => setStartDate(new Date(e.target.value))}
-              />
-              <label htmlFor="end-date">To</label>
-              <input
-                id="end-date"
-                type="date"
-                value={endDate.toISOString().split('T')[0]}
-                onChange={(e) => setEndDate(new Date(e.target.value))}
-              />
-              <Button variant="default" size="default" onClick={download}>
-                <FileText size={16} />
-                <span className="ml-2">Download CSV</span>
-              </Button>
+          <div className="flex items-center gap-3 flex-wrap shrink-0">
+            <div className="date-filter-group">
+              <span className="date-filter-label">From</span>
+              <div className="date-input-wrap">
+                <Calendar size={15} />
+                <input
+                  id="rep-start-date"
+                  type="date"
+                  value={startDate.toISOString().split('T')[0]}
+                  onChange={(e) => setStartDate(new Date(e.target.value))}
+                />
+              </div>
+              <span className="date-filter-label">To</span>
+              <div className="date-input-wrap">
+                <Calendar size={15} />
+                <input
+                  id="rep-end-date"
+                  type="date"
+                  value={endDate.toISOString().split('T')[0]}
+                  onChange={(e) => setEndDate(new Date(e.target.value))}
+                />
+              </div>
             </div>
+            <Button variant="default" size="default" onClick={download} className="shrink-0">
+              <FileText size={16} />
+              <span className="ml-2">Download CSV</span>
+            </Button>
           </div>
         </div>
         <div className="stats-grid">
@@ -278,7 +281,7 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
                 <p>{filteredPayments.length} payment records in selected period</p>
               </div>
             </div>
-            <PaymentsTable payments={filteredPayments.slice(0, 5)} onInvoice={onInvoice} />
+            <PaymentsTable payments={filteredPayments.slice(0, 5)} onInvoice={onInvoice} compact />
           </section>
         </div>
       </>
