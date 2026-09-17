@@ -13,6 +13,43 @@ const DEFAULT_COURSE_OPTIONS = [
   'UI/UX Design Masterclass',
 ]
 
+const LEAD_SOURCES = [
+  'Walk-in',
+  'Website',
+  'Social Media',
+  'Reference',
+  'Call / WhatsApp',
+  'Campus Drive',
+  'Google Search',
+  'Poster / Banner',
+  'Other',
+]
+
+const CITIES = [
+  'Tuticorin',
+  'Tirunelveli',
+  'Madurai',
+  'Chennai',
+  'Coimbatore',
+  'Trichy',
+  'Salem',
+  'Nagercoil',
+  'Other',
+]
+
+const AVAILABLE_TAGS = [
+  'Python',
+  'Web Dev',
+  'React',
+  'AI/ML',
+  'Full Stack',
+  'UI/UX',
+  'Internship',
+  'College Student',
+  'Job Seeker',
+  'Beginner',
+]
+
 export function AddStudent({
   courses,
   onClose,
@@ -28,6 +65,7 @@ export function AddStudent({
   const initialCourse = courseList[0]
   const initialFee = courses?.find(c => c.name === initialCourse)?.fee
 
+  // Core fields
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [course, setCourse] = useState(initialCourse)
@@ -35,6 +73,21 @@ export function AddStudent({
   const [total, setTotal] = useState(initialFee ? String(initialFee) : '')
   const [paid, setPaid] = useState('')
   const [error, setError] = useState('')
+
+  // New Lead fields matching reference design
+  const [gender, setGender] = useState<'Male' | 'Female' | 'Others'>('Male')
+  const [dob, setDob] = useState('')
+  const [altPhone, setAltPhone] = useState('')
+  const [maritalStatus, setMaritalStatus] = useState('Single')
+  const [email, setEmail] = useState('')
+  const [country, setCountry] = useState('India')
+  const [state, setState] = useState('Tamil Nadu')
+  const [city, setCity] = useState('Tuticorin')
+  const [area, setArea] = useState('')
+  const [leadType, setLeadType] = useState<'Hot' | 'Warm' | 'Cold'>('Hot')
+  const [leadSource, setLeadSource] = useState('Walk-in')
+  const [comments, setComments] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>(['Web Dev'])
 
   const handleCourseChange = (selectedCourseName: string) => {
     setCourse(selectedCourseName)
@@ -44,10 +97,16 @@ export function AddStudent({
     }
   }
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    )
+  }
+
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!name.trim()) {
-      setError('Please enter the student\'s full name.')
+      setError('Please enter the lead / student name.')
       return
     }
     if (!phone.trim() || phone.trim().length < 10) {
@@ -57,11 +116,11 @@ export function AddStudent({
     const totalNum = Number(total)
     const paidNum = Number(paid || 0)
     if (isNaN(totalNum) || totalNum <= 0) {
-      setError('Please specify valid base course fees.')
+      setError('Please specify valid base course tuition fees.')
       return
     }
     if (isNaN(paidNum) || paidNum < 0 || paidNum > totalNum) {
-      setError('Initial payment cannot exceed base course fees.')
+      setError('Initial payment cannot exceed base course tuition fees.')
       return
     }
 
@@ -72,6 +131,19 @@ export function AddStudent({
       batch,
       total: totalNum,
       paid: paidNum,
+      gender,
+      dob: dob || undefined,
+      altPhone: altPhone.trim() || undefined,
+      maritalStatus,
+      email: email.trim() || undefined,
+      country,
+      state,
+      city,
+      area: area.trim() || undefined,
+      leadType,
+      leadSource,
+      comments: comments.trim() || undefined,
+      knowledgeTags: selectedTags,
     })
   }
 
@@ -80,25 +152,25 @@ export function AddStudent({
   const grandTotal = baseFeeNum + gstAmount
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-3xl my-6 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-slate-50/50">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Register New Student
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+              Create Lead / Register Student
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              Enroll student, assign course tuition fee, and issue initial payment receipt.
+              Fill in student profile, communication channels, location details, and tuition fees.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg transition-colors"
+            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg transition-colors"
             aria-label="Close"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
@@ -109,19 +181,19 @@ export function AddStudent({
           </div>
         )}
 
-        {/* Form Body with smooth scroll if screen is small */}
-        <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto">
-          {/* Row 1: Name & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto max-h-[78vh]">
+          {/* Row 1: Lead Name, Gender, DOB */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="student-name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-red-500">*</span>
+              <label htmlFor="lead-name" className="block text-xs font-semibold text-gray-700 mb-1">
+                Lead Name <span className="text-red-500">*</span>
               </label>
               <input
-                id="student-name"
+                id="lead-name"
                 type="text"
                 required
-                placeholder="e.g. Kavya Srinivasan"
+                placeholder="Enter Lead Name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -129,27 +201,237 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="student-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Mobile Number <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center gap-4 pt-1">
+                {(['Male', 'Female', 'Others'] as const).map(g => (
+                  <label key={g} className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={g}
+                      checked={gender === g}
+                      onChange={() => setGender(g)}
+                      className="text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                    />
+                    <span>{g}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="lead-dob" className="block text-xs font-semibold text-gray-700 mb-1">
+                Date of Birth
               </label>
               <input
-                id="student-phone"
-                type="tel"
-                required
-                maxLength={10}
-                placeholder="e.g. 9876543210"
-                value={phone}
-                onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                id="lead-dob"
+                type="date"
+                value={dob}
+                onChange={e => setDob(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
 
-          {/* Row 2: Course & Batch */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Row 2: Mobile Number, Alternate Mobile, Marital Status */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="student-course" className="block text-sm font-medium text-gray-700 mb-1">
-                Professional Course <span className="text-red-500">*</span>
+              <label htmlFor="lead-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                Mobile Number <span className="text-red-500">*</span>
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-2.5 py-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-xs font-medium">
+                  IN - +91
+                </span>
+                <input
+                  id="lead-mobile"
+                  type="tel"
+                  required
+                  maxLength={10}
+                  placeholder="Enter Mobile Number"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-r-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="lead-alt-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                Alternate Mobile Number
+              </label>
+              <input
+                id="lead-alt-mobile"
+                type="tel"
+                maxLength={10}
+                placeholder="Enter Alternate Mobile Number"
+                value={altPhone}
+                onChange={e => setAltPhone(e.target.value.replace(/\D/g, ''))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lead-marital" className="block text-xs font-semibold text-gray-700 mb-1">
+                Marital Status
+              </label>
+              <select
+                id="lead-marital"
+                value={maritalStatus}
+                onChange={e => setMaritalStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Unspecified">Unspecified</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 3: Email, Country, State */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="lead-email" className="block text-xs font-semibold text-gray-700 mb-1">
+                Email ID
+              </label>
+              <input
+                id="lead-email"
+                type="email"
+                placeholder="Enter E-Mail ID"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lead-country" className="block text-xs font-semibold text-gray-700 mb-1">
+                Country
+              </label>
+              <select
+                id="lead-country"
+                value={country}
+                onChange={e => setCountry(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="India">India</option>
+                <option value="Singapore">Singapore</option>
+                <option value="Malaysia">Malaysia</option>
+                <option value="UAE">UAE</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="lead-state" className="block text-xs font-semibold text-gray-700 mb-1">
+                State
+              </label>
+              <select
+                id="lead-state"
+                value={state}
+                onChange={e => setState(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 4: City, Area / Street, Lead Type */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="lead-city" className="block text-xs font-semibold text-gray-700 mb-1">
+                City
+              </label>
+              <select
+                id="lead-city"
+                value={city}
+                onChange={e => setCity(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                {CITIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="lead-area" className="block text-xs font-semibold text-gray-700 mb-1">
+                Area / Street
+              </label>
+              <input
+                id="lead-area"
+                type="text"
+                placeholder="Enter Area / Street"
+                value={area}
+                onChange={e => setArea(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lead-type" className="block text-xs font-semibold text-gray-700 mb-1">
+                Lead Type
+              </label>
+              <select
+                id="lead-type"
+                value={leadType}
+                onChange={e => setLeadType(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="Hot">Hot (Ready to enroll)</option>
+                <option value="Warm">Warm (Follow up)</option>
+                <option value="Cold">Cold (Inquiry only)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 5: Lead Source & Comments */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="lead-source" className="block text-xs font-semibold text-gray-700 mb-1">
+                Lead Source <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="lead-source"
+                value={leadSource}
+                onChange={e => setLeadSource(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                {LEAD_SOURCES.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="lead-comments" className="block text-xs font-semibold text-gray-700 mb-1">
+                Comments
+              </label>
+              <textarea
+                id="lead-comments"
+                rows={2}
+                placeholder="Enter counselor notes, special requirements, or background..."
+                value={comments}
+                onChange={e => setComments(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Row 6: Course & Batch */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+            <div>
+              <label htmlFor="student-course" className="block text-xs font-semibold text-gray-700 mb-1">
+                Course <span className="text-red-500">*</span>
               </label>
               <select
                 id="student-course"
@@ -164,7 +446,7 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="student-batch" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="student-batch" className="block text-xs font-semibold text-gray-700 mb-1">
                 Batch Start Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -178,10 +460,36 @@ export function AddStudent({
             </div>
           </div>
 
-          {/* Row 3: Total Fees & Paid Amount */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Row 7: Lead Knowledge Tags */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Lead Knowledge Tags
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {AVAILABLE_TAGS.map(tag => {
+                const active = selectedTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={`text-xs px-2.5 py-1 rounded-md transition-colors border ${
+                      active 
+                        ? 'bg-blue-600 text-white border-blue-600 font-medium' 
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    {tag} {active && '✓'}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Row 8: Tuition Fee & Initial Payment */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
             <div>
-              <label htmlFor="student-total" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="student-total" className="block text-xs font-semibold text-gray-700 mb-1">
                 Tuition Fee (₹) <span className="text-red-500">*</span>
               </label>
               <input
@@ -194,11 +502,11 @@ export function AddStudent({
                 onChange={e => setTotal(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
-              <span className="text-[11px] text-gray-400 mt-0.5 block">Exclusive of GST</span>
+              <span className="text-[11px] text-gray-400 mt-0.5 block">Base fee (exclusive of GST)</span>
             </div>
 
             <div>
-              <label htmlFor="student-paid" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="student-paid" className="block text-xs font-semibold text-gray-700 mb-1">
                 Initial Payment (₹)
               </label>
               <input
@@ -214,17 +522,17 @@ export function AddStudent({
             </div>
           </div>
 
-          {/* Fee + GST Breakdown Card */}
+          {/* Fee Breakdown Preview */}
           {baseFeeNum > 0 && (
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
               <div className="font-semibold text-gray-900 flex items-center justify-between">
-                <span>Fee Breakdown</span>
+                <span>Fee Summary</span>
                 <span className="text-slate-500 font-normal">
                   {gstRate > 0 ? `GST @ ${gstRate}% (9% CGST + 9% SGST)` : 'GST Disabled'}
                 </span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Base Tuition Fee:</span>
+                <span>Base Course Fee:</span>
                 <span className="font-medium text-gray-900">{money(baseFeeNum)}</span>
               </div>
               {gstRate > 0 && (
@@ -245,15 +553,15 @@ export function AddStudent({
             <button
               type="button"
               onClick={onClose}
-              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md font-medium text-sm transition-colors"
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-5 py-2 rounded-md font-medium text-sm transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
+              className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
             >
-              Save Student
+              Create Lead
             </button>
           </div>
         </form>

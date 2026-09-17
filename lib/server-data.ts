@@ -14,6 +14,19 @@ export function studentFromRow(row: Record<string, unknown>): Student {
     paid,
     phone: String(row.phone ?? ''),
     status: paid >= total ? 'Fully Paid' : 'Pending',
+    gender: row.gender as any,
+    dob: row.dob ? String(row.dob) : undefined,
+    altPhone: row.alt_phone ? String(row.alt_phone) : undefined,
+    maritalStatus: row.marital_status ? String(row.marital_status) : undefined,
+    email: row.email ? String(row.email) : undefined,
+    country: row.country ? String(row.country) : undefined,
+    state: row.state ? String(row.state) : undefined,
+    city: row.city ? String(row.city) : undefined,
+    area: row.area ? String(row.area) : undefined,
+    leadType: row.lead_type as any,
+    leadSource: row.lead_source ? String(row.lead_source) : undefined,
+    comments: row.comments ? String(row.comments) : undefined,
+    knowledgeTags: Array.isArray(row.knowledge_tags) ? row.knowledge_tags : undefined,
   }
 }
 

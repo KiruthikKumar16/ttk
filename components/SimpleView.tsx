@@ -175,7 +175,7 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
 
     const download = () => {
       const rows = [
-        ['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status'],
+        ['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status', 'Lead Source', 'Lead Type'],
         ...students.map(student => [
           student.name,
            "TAI-" + student.registerId,
@@ -184,6 +184,8 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
           String(student.paid),
           String(student.total - student.paid),
           student.status,
+          student.leadSource || '-',
+          student.leadType || '-',
         ]),
       ]
       const csv = rows

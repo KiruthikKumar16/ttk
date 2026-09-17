@@ -25,7 +25,29 @@ export async function POST(req: Request) {
     }
 
     const registerId = Number(body.registerId ?? Date.now())
-    const student = { registerId, name, phone, course, batch, total, paid, status: paid >= total ? 'Fully Paid' : 'Pending' as const }
+    const student = {
+      registerId,
+      name,
+      phone,
+      course,
+      batch,
+      total,
+      paid,
+      status: (paid >= total ? 'Fully Paid' : 'Pending') as 'Fully Paid' | 'Pending',
+      gender: body.gender,
+      dob: body.dob,
+      altPhone: body.altPhone,
+      maritalStatus: body.maritalStatus,
+      email: body.email,
+      country: body.country,
+      state: body.state,
+      city: body.city,
+      area: body.area,
+      leadType: body.leadType,
+      leadSource: body.leadSource,
+      comments: body.comments,
+      knowledgeTags: body.knowledgeTags,
+    }
     
     let createdPayment = null
     const next = Date.now()
@@ -34,7 +56,18 @@ export async function POST(req: Request) {
     const paymentDate = new Date().toISOString().slice(0, 10)
 
     if (supabase) {
-      const { data, error } = await supabase.from('students').insert({ register_id: registerId, name, phone, course, batch, total, paid, status: student.status }).select().single()
+      const { data, error } = await supabase.from('students').insert({
+        register_id: registerId,
+        name,
+        phone,
+        course,
+        batch,
+        total,
+        paid,
+        status: student.status,
+        email: body.email,
+        city: body.city,
+      }).select().single()
       if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
       if (paid > 0) {
@@ -82,5 +115,27 @@ export async function POST(req: Request) {
 function studentFromApiRow(row: Record<string, unknown>) {
   const total = Number(row.total ?? 0)
   const paid = Number(row.paid ?? 0)
-  return { registerId: Number(row.register_id), name: String(row.name), phone: String(row.phone ?? ''), course: String(row.course), batch: String(row.batch), total, paid, status: paid >= total ? 'Fully Paid' : 'Pending' }
+  return {
+    registerId: Number(row.register_id),
+    name: String(row.name),
+    phone: String(row.phone ?? ''),
+    course: String(row.course),
+    batch: String(row.batch),
+    total,
+    paid,
+    status: (paid >= total ? 'Fully Paid' : 'Pending') as 'Fully Paid' | 'Pending',
+    gender: row.gender as any,
+    dob: row.dob ? String(row.dob) : undefined,
+    altPhone: row.alt_phone ? String(row.alt_phone) : undefined,
+    maritalStatus: row.marital_status ? String(row.marital_status) : undefined,
+    email: row.email ? String(row.email) : undefined,
+    country: row.country ? String(row.country) : undefined,
+    state: row.state ? String(row.state) : undefined,
+    city: row.city ? String(row.city) : undefined,
+    area: row.area ? String(row.area) : undefined,
+    leadType: row.lead_type as any,
+    leadSource: row.lead_source ? String(row.lead_source) : undefined,
+    comments: row.comments ? String(row.comments) : undefined,
+    knowledgeTags: Array.isArray(row.knowledge_tags) ? row.knowledge_tags : undefined,
+  }
 }

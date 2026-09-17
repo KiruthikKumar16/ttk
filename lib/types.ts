@@ -25,6 +25,19 @@ export type Student = {
   paid: number
   phone: string
   status: StudentStatus
+  gender?: 'Male' | 'Female' | 'Others'
+  dob?: string
+  altPhone?: string
+  maritalStatus?: string
+  email?: string
+  country?: string
+  state?: string
+  city?: string
+  area?: string
+  leadType?: 'Hot' | 'Warm' | 'Cold'
+  leadSource?: string
+  comments?: string
+  knowledgeTags?: string[]
 }
 
 export type Payment = {

@@ -60,7 +60,91 @@ export function StudentDetail({
           </p>
         </div>
       </div>
-      <Status status={student.status} />
+      <div className="flex items-center gap-3 mb-6">
+        <Status status={student.status} />
+        {student.leadType && (
+          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
+            student.leadType === 'Hot' ? 'bg-red-50 text-red-600 border-red-200' :
+            student.leadType === 'Warm' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+            'bg-blue-50 text-blue-600 border-blue-200'
+          }`}>
+            Lead: {student.leadType}
+          </span>
+        )}
+        {student.leadSource && (
+          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            Source: {student.leadSource}
+          </span>
+        )}
+      </div>
+
+      {/* Lead & Demographic Profile Card */}
+      <section className="panel mb-6 p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">Personal & Lead Profile</h2>
+            <p className="text-xs text-gray-400">Communication channels, address, and student background</p>
+          </div>
+          {student.gender && (
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-gray-100 text-gray-700">
+              {student.gender} {student.maritalStatus ? `· ${student.maritalStatus}` : ''}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Primary Phone</span>
+            <strong className="text-gray-800 font-mono text-sm">+91 {student.phone}</strong>
+          </div>
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Alternate Phone</span>
+            <strong className="text-gray-800 font-mono">{student.altPhone ? `+91 ${student.altPhone}` : '—'}</strong>
+          </div>
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Email Address</span>
+            <strong className="text-gray-800 truncate block">{student.email || '—'}</strong>
+          </div>
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Date of Birth</span>
+            <strong className="text-gray-800">{student.dob || '—'}</strong>
+          </div>
+
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Location</span>
+            <strong className="text-gray-800">
+              {[student.area, student.city, student.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+            </strong>
+          </div>
+          <div>
+            <span className="text-gray-400 block mb-0.5 font-medium">Country</span>
+            <strong className="text-gray-800">{student.country || 'India'}</strong>
+          </div>
+          <div className="col-span-2">
+            <span className="text-gray-400 block mb-0.5 font-medium">Knowledge / Interest Tags</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {student.knowledgeTags && student.knowledgeTags.length > 0 ? (
+                student.knowledgeTags.map(tag => (
+                  <span key={tag} className="px-2 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100">
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-400">No tags assigned</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {student.comments && (
+          <div className="mt-4 pt-3 border-t border-gray-100 text-xs">
+            <span className="text-gray-400 font-medium block mb-1">Counselor Notes / Remarks:</span>
+            <p className="text-gray-700 italic bg-slate-50 p-2.5 rounded-md border border-slate-100">
+              &ldquo;{student.comments}&rdquo;
+            </p>
+          </div>
+        )}
+      </section>
       <div className="detail-grid">
         <section className="panel fee-summary">
           <div className="panel-header">

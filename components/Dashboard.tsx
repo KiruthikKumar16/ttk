@@ -5,17 +5,28 @@ import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { PaymentsTable } from '@/components/PaymentsTable'
-
-export function Dashboard({ students, payments, setView, onInvoice }: { students: Student[]; payments: Payment[]; setView: (v: View) => void; onInvoice?: (p: Payment) => void }) {
+export function Dashboard({ students, payments, onInvoice, setView }: { students: Student[]; payments: Payment[]; onInvoice: (id: string) => void; setView: (view: View) => void; }) {
   const revenue = students.reduce((s, x) => s + x.paid, 0);
   const outstanding = students.reduce((s, x) => s + x.total - x.paid, 0);
+  // Lead analytics
+  const leadSourceCounts = students.reduce((acc, s) => {
+    const src = s.leadSource || 'Unknown';
+    acc[src] = (acc[src] ?? 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const leadTypeCounts = students.reduce((acc, s) => {
+    const type = s.leadType || 'Unknown';
+    acc[type] = (acc[type] ?? 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <>
       <div className="page-heading">
         <div>
           <p className="eyebrow">MONDAY, 15 SEPTEMBER 2026</p>
           <h1>Good morning, Admin</h1>
-          <p className="subcopy">Here&apos;s what&apos;s happening across ThoorigAI Infotech.</p>
+          <p className="subcopy">Here&rsquo;s what&rsquo;s happening across ThoorigAI Infotech.</p>
         </div>
         <Button variant="default" size="default" onClick={() => setView('Students')}>
           <Plus size={16} />
@@ -38,6 +49,28 @@ export function Dashboard({ students, payments, setView, onInvoice }: { students
         <div className="stat-card">
           <div className="stat-head"><span>Certificate eligible</span><ShieldCheck size={17} /></div>
           <div className="stat-value">{students.filter(s => s.status === 'Fully Paid').length}</div>
+        </div>
+        {/* Lead Source Card */}
+        <div className="stat-card">
+          <div className="stat-head"><span>Leads by Source</span><BarChart3 size={17} /></div>
+          <div className="stat-value">
+            {Object.entries(leadSourceCounts).map(([src, cnt]) => (
+              <div key={src} className="lead-item">
+                <span>{src}</span>: <strong>{cnt}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Lead Type Card */}
+        <div className="stat-card">
+          <div className="stat-head"><span>Leads by Type</span><BarChart3 size={17} /></div>
+          <div className="stat-value">
+            {Object.entries(leadTypeCounts).map(([type, cnt]) => (
+              <div key={type} className="lead-item">
+                <span>{type}</span>: <strong>{cnt}</strong>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <section className="panel table-panel">
