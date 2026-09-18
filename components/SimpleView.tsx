@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, Calendar, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, Calendar, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download, TrendingUp, BookOpen, UserCheck, PieChart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
@@ -173,9 +173,48 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
       return summary
     }, {} as Record<string, number>)
 
+    // Students by Source analytics
+    const studentSourceCounts = students.reduce((acc, s) => {
+      const src = s.leadSource || 'Unknown'
+      acc[src] = (acc[src] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    // Students by Type analytics
+    const studentTypeCounts = students.reduce((acc, s) => {
+      const type = s.leadType || 'Unknown'
+      acc[type] = (acc[type] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    // Course enrollment breakdown
+    const courseCounts = students.reduce((acc, s) => {
+      acc[s.course] = (acc[s.course] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    // Status breakdown
+    const fullyPaid = students.filter(s => s.status === 'Fully Paid').length
+    const pending = students.filter(s => s.status === 'Pending').length
+
+    // Gender breakdown
+    const genderCounts = students.reduce((acc, s) => {
+      const g = s.gender || 'Not specified'
+      acc[g] = (acc[g] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    // Average fee per student
+    const avgFee = students.length > 0 ? students.reduce((s, x) => s + x.total, 0) / students.length : 0
+
+    // Collection rate
+    const totalFees = students.reduce((s, x) => s + x.total, 0)
+    const totalPaid = students.reduce((s, x) => s + x.paid, 0)
+    const collectionRate = totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0
+
     const download = () => {
       const rows = [
-        ['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status', 'Lead Source', 'Lead Type'],
+        ['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status', 'Source', 'Type'],
         ...students.map(student => [
           student.name,
            "TAI-" + student.registerId,
@@ -205,7 +244,7 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
           <div>
             <p className="eyebrow">OPERATIONS REPORTING</p>
             <h1>Reports</h1>
-            <p className="subcopy">Live collection, balance, eligibility, and payment-method reporting.</p>
+            <p className="subcopy">Comprehensive analytics — revenue, enrollment, demographics, and collection insights.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap shrink-0">
             <div className="date-filter-group">
@@ -236,25 +275,42 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
             </Button>
           </div>
         </div>
+
+        {/* Row 1: Financial KPIs */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-head"><span>Revenue collected</span><CircleDollarSign size={17} /></div>
             <div className="stat-value">{money(revenue)}</div>
+            <p className="stat-sub">Selected period</p>
           </div>
           <div className="stat-card">
             <div className="stat-head"><span>Outstanding balance</span><ArrowDownRight size={17} /></div>
             <div className="stat-value">{money(outstanding)}</div>
+            <p className="stat-sub">As of end date</p>
           </div>
           <div className="stat-card">
-            <div className="stat-head"><span>Students</span><Users size={17} /></div>
+            <div className="stat-head"><span>Total students</span><Users size={17} /></div>
             <div className="stat-value">{students.length}</div>
           </div>
           <div className="stat-card">
+            <div className="stat-head"><span>Collection rate</span><TrendingUp size={17} /></div>
+            <div className="stat-value">{collectionRate}%</div>
+            <p className="stat-sub">{money(totalPaid)} of {money(totalFees)}</p>
+          </div>
+          <div className="stat-card">
             <div className="stat-head"><span>Certificate eligible</span><ShieldCheck size={17} /></div>
-            <div className="stat-value">{students.filter(student => student.status === 'Fully Paid').length}</div>
+            <div className="stat-value">{fullyPaid}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-head"><span>Average fee</span><CircleDollarSign size={17} /></div>
+            <div className="stat-value">{money(avgFee)}</div>
+            <p className="stat-sub">Per student</p>
           </div>
         </div>
+
+        {/* Row 2: Breakdowns — 2-column grid */}
         <div className="report-grid">
+          {/* Payment Method Totals */}
           <section className="panel report-main">
             <div className="panel-header">
               <div>
@@ -263,29 +319,157 @@ export function SimpleView({ view, students, payments, selectedCertificate, onCe
               </div>
             </div>
             <div className="distribution">
-              {Object.entries(methods).map(([method, total]) => (
-                <div className="dist-row" key={method}>
+              {Object.entries(methods).length === 0 ? (
+                <p className="empty-note">No payments in selected period.</p>
+              ) : (
+                Object.entries(methods).map(([method, total]) => (
+                  <div className="dist-row" key={method}>
+                    <div>
+                      <span>{method}</span>
+                      <strong>{money(total)}</strong>
+                    </div>
+                    <div className="bar">
+                       <i style={{ width: revenue ? Math.min(100, (total / revenue) * 100) : 0 + "%" }} />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Course Enrollment */}
+          <section className="panel report-side">
+            <div className="panel-header">
+              <div>
+                <h2>Enrollment by course</h2>
+                <p>Student count per course</p>
+              </div>
+            </div>
+            <div className="distribution">
+              {Object.entries(courseCounts).map(([course, count]) => (
+                <div className="dist-row" key={course}>
                   <div>
-                    <span>{method}</span>
-                    <strong>{money(total)}</strong>
+                    <span>{course}</span>
+                    <strong>{count}</strong>
                   </div>
                   <div className="bar">
-                     <i style={{ width: revenue ? Math.min(100, (total / revenue) * 100) : 0 + "%" }} />
+                    <i style={{ width: students.length ? Math.min(100, (count / students.length) * 100) + "%" : "0%" }} />
                   </div>
                 </div>
               ))}
             </div>
           </section>
+
+          {/* Students by Source */}
+          <section className="panel report-main">
+            <div className="panel-header">
+              <div>
+                <h2>Students by source</h2>
+                <p>How students discovered ThoorigAI</p>
+              </div>
+            </div>
+            <div className="distribution">
+              {Object.entries(studentSourceCounts).map(([src, count]) => (
+                <div className="dist-row" key={src}>
+                  <div>
+                    <span>{src}</span>
+                    <strong>{count}</strong>
+                  </div>
+                  <div className="bar">
+                    <i style={{ width: students.length ? Math.min(100, (count / students.length) * 100) + "%" : "0%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Students by Type */}
           <section className="panel report-side">
             <div className="panel-header">
               <div>
-                <h2>Recent transactions</h2>
-                <p>{filteredPayments.length} payment records in selected period</p>
+                <h2>Students by type</h2>
+                <p>Hot, Warm, and Cold classification</p>
               </div>
             </div>
-            <PaymentsTable payments={filteredPayments.slice(0, 5)} onInvoice={onInvoice} compact />
+            <div className="distribution">
+              {Object.entries(studentTypeCounts).map(([type, count]) => (
+                <div className="dist-row" key={type}>
+                  <div>
+                    <span>{type}</span>
+                    <strong>{count}</strong>
+                  </div>
+                  <div className="bar">
+                    <i style={{ width: students.length ? Math.min(100, (count / students.length) * 100) + "%" : "0%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Payment Status */}
+          <section className="panel report-main">
+            <div className="panel-header">
+              <div>
+                <h2>Payment status</h2>
+                <p>Fully paid vs pending students</p>
+              </div>
+            </div>
+            <div className="distribution">
+              <div className="dist-row">
+                <div>
+                  <span>Fully Paid</span>
+                  <strong>{fullyPaid}</strong>
+                </div>
+                <div className="bar">
+                  <i style={{ width: students.length ? Math.min(100, (fullyPaid / students.length) * 100) + "%" : "0%" }} />
+                </div>
+              </div>
+              <div className="dist-row">
+                <div>
+                  <span>Pending</span>
+                  <strong>{pending}</strong>
+                </div>
+                <div className="bar">
+                  <i style={{ width: students.length ? Math.min(100, (pending / students.length) * 100) + "%" : "0%" }} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Gender Demographics */}
+          <section className="panel report-side">
+            <div className="panel-header">
+              <div>
+                <h2>Gender demographics</h2>
+                <p>Student distribution by gender</p>
+              </div>
+            </div>
+            <div className="distribution">
+              {Object.entries(genderCounts).map(([gender, count]) => (
+                <div className="dist-row" key={gender}>
+                  <div>
+                    <span>{gender}</span>
+                    <strong>{count}</strong>
+                  </div>
+                  <div className="bar">
+                    <i style={{ width: students.length ? Math.min(100, (count / students.length) * 100) + "%" : "0%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
+
+        {/* Recent Transactions */}
+        <section className="panel table-panel" style={{ marginTop: 16 }}>
+          <div className="panel-header">
+            <div>
+              <h2>Recent transactions</h2>
+              <p>{filteredPayments.length} payment records in selected period</p>
+            </div>
+          </div>
+          <PaymentsTable payments={filteredPayments.slice(0, 10)} onInvoice={onInvoice} />
+        </section>
       </>
     )
   }
