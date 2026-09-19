@@ -24,6 +24,7 @@ export function CoursesManager({
   const [fee, setFee] = useState('')
   const [duration, setDuration] = useState('')
   const [description, setDescription] = useState('')
+  const [gstInclusive, setGstInclusive] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -33,6 +34,7 @@ export function CoursesManager({
     setFee('')
     setDuration('3 Months')
     setDescription('')
+    setGstInclusive(false)
     setFormError('')
     setModalOpen(true)
   }
@@ -43,6 +45,7 @@ export function CoursesManager({
     setFee(String(c.fee))
     setDuration(c.duration)
     setDescription(c.description || '')
+    setGstInclusive(Boolean(c.gstInclusive))
     setFormError('')
     setModalOpen(true)
   }
@@ -74,6 +77,7 @@ export function CoursesManager({
         fee: feeNum,
         duration: duration.trim() || '3 Months',
         description: description.trim(),
+        gstInclusive,
       })
       closeModal()
     } catch (err: any) {
@@ -99,8 +103,13 @@ export function CoursesManager({
 
   // Computed values for modal fee preview
   const enteredFee = Number(fee) || 0
-  const modalGst = gstRate > 0 ? Math.round(enteredFee * (gstRate / 100)) : 0
-  const modalTotal = enteredFee + modalGst
+  const modalBase = enteredFee > 0
+    ? (gstInclusive && gstRate > 0 ? Math.round(enteredFee / (1 + gstRate / 100)) : enteredFee)
+    : 0
+  const modalGst = enteredFee > 0
+    ? (gstRate > 0 ? (gstInclusive ? enteredFee - modalBase : Math.round(enteredFee * (gstRate / 100))) : 0)
+    : 0
+  const modalTotal = gstInclusive ? enteredFee : enteredFee + modalGst
 
   return (
     <>
@@ -119,7 +128,7 @@ export function CoursesManager({
         <div className="panel-header">
           <div>
             <h2>Course Catalog ({filteredCourses.length})</h2>
-            <p>Tuition fees shown below are exclusive of GST ({gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})</p>
+            <p>Academy curriculum with GST Inclusive and Exclusive pricing ({gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})</p>
           </div>
           <div className="search-box" style={{ maxWidth: 280 }}>
             <Search size={16} />
@@ -136,26 +145,29 @@ export function CoursesManager({
           <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
             <thead>
               <tr>
-                <th style={{ width: '28%' }}>Course</th>
-                <th style={{ width: '14%' }}>Duration</th>
-                <th style={{ width: '26%' }}>Description</th>
-                <th className="align-right" style={{ width: '18%', whiteSpace: 'nowrap' }}>
-                  Fee {gstRate > 0 ? `(+${gstRate}% GST)` : ''}
+                <th style={{ width: '26%' }}>Course</th>
+                <th style={{ width: '13%' }}>Duration</th>
+                <th style={{ width: '15%' }}>Tax Mode</th>
+                <th style={{ width: '22%' }}>Description</th>
+                <th className="align-right" style={{ width: '14%', whiteSpace: 'nowrap' }}>
+                  Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                 </th>
-                <th className="align-right" style={{ width: '14%', whiteSpace: 'nowrap' }}>Actions</th>
+                <th className="align-right" style={{ width: '10%', whiteSpace: 'nowrap' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredCourses.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                  <td colSpan={6} className="text-center py-8 text-gray-500">
                     No courses found matching your criteria.
                   </td>
                 </tr>
               ) : (
                 filteredCourses.map(c => {
-                  const courseGst = gstRate > 0 ? Math.round(c.fee * (gstRate / 100)) : 0
-                  const courseTotal = c.fee + courseGst
+                  const isInclusive = Boolean(c.gstInclusive)
+                  const courseBase = isInclusive && gstRate > 0 ? Math.round(c.fee / (1 + gstRate / 100)) : c.fee
+                  const courseGst = gstRate > 0 ? (isInclusive ? c.fee - courseBase : Math.round(c.fee * (gstRate / 100))) : 0
+                  const courseTotal = isInclusive ? c.fee : c.fee + courseGst
                   return (
                     <tr key={c.id}>
                       <td>
@@ -176,6 +188,17 @@ export function CoursesManager({
                         </div>
                       </td>
                       <td>
+                        {isInclusive ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            GST Inclusive
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            GST Exclusive
+                          </span>
+                        )}
+                      </td>
+                      <td>
                         <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed" title={c.description}>
                           {c.description || '—'}
                         </p>
@@ -186,7 +209,11 @@ export function CoursesManager({
                         </div>
                         {gstRate > 0 && (
                           <div className="text-[11px] text-gray-500 mt-0.5">
-                            Base: {money(c.fee)} <span className="text-gray-400">+{money(courseGst)}</span>
+                            {isInclusive ? (
+                              <>Base: {money(courseBase)} <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span></>
+                            ) : (
+                              <>Base: {money(c.fee)} <span className="text-gray-400">+{money(courseGst)}</span></>
+                            )}
                           </div>
                         )}
                       </td>
@@ -233,7 +260,7 @@ export function CoursesManager({
                   {editingCourse ? 'Edit Course' : 'Add New Course'}
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Set standard tuition fee (exclusive of GST) and duration for this program.
+                  Configure curriculum tuition fee, GST pricing mode, and duration.
                 </p>
               </div>
               <button
@@ -267,6 +294,58 @@ export function CoursesManager({
                 />
               </div>
 
+              {/* GST Pricing Mode Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  GST Calculation Mode <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setGstInclusive(false)}
+                    className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                      !gstInclusive
+                        ? 'border-blue-600 bg-blue-50/60 ring-1 ring-blue-600'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-900">Exclusive of GST</span>
+                      <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        !gstInclusive ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                      }`}>
+                        {!gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-gray-500 mt-1 leading-tight">
+                      +GST added on top of fee
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setGstInclusive(true)}
+                    className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                      gstInclusive
+                        ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-900">Inclusive of GST</span>
+                      <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        gstInclusive ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
+                      }`}>
+                        {gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-gray-500 mt-1 leading-tight">
+                      Fee already contains GST
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -281,7 +360,9 @@ export function CoursesManager({
                     onChange={e => setFee(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-[11px] text-gray-400 mt-0.5 block">Base fee before GST</span>
+                  <span className="text-[11px] text-gray-400 mt-0.5 block">
+                    {gstInclusive ? 'All-inclusive tuition fee' : 'Base tuition fee before GST'}
+                  </span>
                 </div>
 
                 <div>
@@ -301,26 +382,35 @@ export function CoursesManager({
 
               {/* Live Fee + GST Preview Box */}
               {enteredFee > 0 && (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
                   <div className="font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Fee Breakdown</span>
+                    <span className="flex items-center gap-1.5">
+                      Fee Breakdown
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        gstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {gstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
+                      </span>
+                    </span>
                     <span className="text-slate-500 font-normal">
                       {gstRate > 0 ? `GST @ ${gstRate}%` : 'GST Not Applicable'}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>Base Tuition:</span>
-                    <span className="font-medium text-gray-900">{money(enteredFee)}</span>
+                    <span>Base Tuition (Taxable):</span>
+                    <span className="font-medium text-gray-900">{money(modalBase)}</span>
                   </div>
                   {gstRate > 0 && (
                     <div className="flex justify-between text-gray-600">
-                      <span>GST ({gstRate}%):</span>
-                      <span className="font-medium text-gray-900">+{money(modalGst)}</span>
+                      <span>{gstInclusive ? `Included GST (${gstRate}%):` : `Applicable GST (${gstRate}%):`}</span>
+                      <span className="font-medium text-gray-900">
+                        {gstInclusive ? money(modalGst) : `+${money(modalGst)}`}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between pt-1.5 border-t border-slate-200 text-sm font-bold text-gray-900">
                     <span>Total Student Pays:</span>
-                    <span className="text-blue-600">{money(modalTotal)}</span>
+                    <span className={gstInclusive ? 'text-emerald-700' : 'text-blue-600'}>{money(modalTotal)}</span>
                   </div>
                 </div>
               )}
@@ -343,14 +433,14 @@ export function CoursesManager({
                   type="button"
                   onClick={closeModal}
                   disabled={submitting}
-                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md font-medium text-sm transition-colors"
+                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
                 </button>

@@ -1,0 +1,139 @@
+<script>
+  const $ = id => document.getElementById(id);
+
+  function fmtDate(v){
+    if(!v) return '—';
+    const d = new Date(v + 'T00:00:00');
+    if(isNaN(d)) return '—';
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function genId(){
+    const y = new Date().getFullYear();
+    const n = Math.floor(1 + Math.random()*9998).toString().padStart(4,'0');
+    return `TAI-${y}-${n}`;
+  }
+
+  function render(){
+    $('p-name').textContent = $('f-name').value.trim() || 'Student Name';
+    $('p-course').textContent = $('f-course').value.trim() || 'Course Name';
+    $('p-start').textContent = fmtDate($('f-start').value);
+    $('p-end').textContent = fmtDate($('f-end').value);
+    $('p-issue').textContent = fmtDate($('f-issue').value);
+    $('p-id').textContent = $('f-id').value.trim() || genId();
+    $('p-director').textContent = $('f-director').value.trim() || 'Director';
+    $('p-trainer').textContent = $('f-trainer').value.trim() || 'Trainer';
+
+    const skills = $('f-skills').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const ul = $('p-skills');
+    ul.innerHTML = '';
+    skills.forEach(s => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      ul.appendChild(li);
+    });
+  }
+
+  ['f-name','f-course','f-start','f-end','f-issue','f-id','f-skills','f-director','f-trainer']
+    .forEach(id => $(id).addEventListener('input', render));
+
+  $('f-id').value = genId();
+  $('f-issue').value = new Date().toISOString().slice(0,10);
+  $('f-id-regen').addEventListener('click', () => { $('f-id').value = genId(); render(); });
+
+  $('btn-reset').addEventListener('click', () => {
+    $('f-name').value = '';
+    $('f-course').value = '';
+    $('f-start').value = '';
+    $('f-end').value = '';
+    $('f-issue').value = new Date().toISOString().slice(0,10);
+    $('f-id').value = genId();
+    $('f-director').value = '';
+    $('f-trainer').value = '';
+    $('f-skills').value = '';
+    render();
+  });
+
+  function showToast(msg, isError){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  $('btn-print').addEventListener('click', () => window.print());
+
+  async function captureCanvas(){
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    await Promise.all(Array.from($('certificate').querySelectorAll('img')).map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve => {
+        img.addEventListener('load', resolve, { once:true });
+        img.addEventListener('error', resolve, { once:true });
+      });
+    }));
+
+    return await html2canvas($('certificate'), {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#fffdf8',
+      scrollX: 0,
+      scrollY: 0,
+      onclone: clonedDocument => {
+        const previewStage = clonedDocument.querySelector('.preview-stage');
+        if(previewStage) previewStage.style.transform = 'none';
+        clonedDocument.querySelectorAll('.corner-tri').forEach(element => {
+          element.style.width = '0';
+          element.style.height = '0';
+          element.style.clipPath = 'none';
+          element.style.background = 'none';
+          element.style.border = '0 solid transparent';
+        });
+        const cornerStyles = {
+          tl: { borderTop: '150px solid #081227', borderRight: '150px solid transparent' },
+          tr: { borderTop: '150px solid #081227', borderLeft: '150px solid transparent' },
+          bl: { borderBottom: '150px solid #081227', borderRight: '150px solid transparent' },
+          br: { borderBottom: '150px solid #081227', borderLeft: '150px solid transparent' }
+        };
+        Object.entries(cornerStyles).forEach(([corner, styles]) => {
+          const element = clonedDocument.querySelector(`.corner-tri.${corner}`);
+          if(element) Object.assign(element.style, styles);
+        });
+        clonedDocument.querySelectorAll('.corner-gold').forEach(element => {
+          element.style.backgroundImage = 'none';
+        });
+      }
+    });
+  }
+
+  $('btn-png').addEventListener('click', async () => {
+    showToast('Generating PNG…');
+    try{
+      const canvas = await captureCanvas();
+      const link = document.createElement('a');
+      link.download = `Certificate_${$('f-name').value.trim().replace(/\s+/g,'_') || 'ThoorigAI'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('PNG downloaded ✓');
+    }catch(e){ showToast('Could not generate PNG', true); }
+  });
+
+  $('btn-pdf').addEventListener('click', async () => {
+    showToast('Generating PDF…');
+    try {
+      const canvas = await captureCanvas();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
+      pdf.save(`Certificate_${$('f-name').value.trim().replace(/\s+/g,'_') || 'ThoorigAI'}.pdf`);
+      showToast('PDF downloaded ✓');
+    } catch (e) {
+      showToast('Could not generate PDF', true);
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>

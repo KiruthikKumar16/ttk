@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowUpRight, BarChart3, Bell, CheckCircle2, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Printer, Search, Settings, ShieldCheck, Users, X, MoreHorizontal, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Payment, Receipt, Student, View } from '@/lib/types'
+import type { Course, Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { PaymentsTable } from '@/components/PaymentsTable'
@@ -17,6 +17,7 @@ export function StudentDetail({
   onCertificate,
   onInvoice,
   gstRate = 18,
+  courses,
 }: {
   student: Student
   payments: Payment[]
@@ -25,6 +26,7 @@ export function StudentDetail({
   onCertificate: () => void
   onInvoice?: (p: Payment) => void
   gstRate?: number
+  courses?: Course[]
 }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('UPI');
@@ -62,27 +64,18 @@ export function StudentDetail({
       </div>
       <div className="flex items-center gap-3 mb-6">
         <Status status={student.status} />
-        {student.leadType && (
-          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
-            student.leadType === 'Hot' ? 'bg-red-50 text-red-600 border-red-200' :
-            student.leadType === 'Warm' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-            'bg-blue-50 text-blue-600 border-blue-200'
-          }`}>
-            Lead: {student.leadType}
-          </span>
-        )}
-        {student.leadSource && (
+        {(student.studentSource || (student as any).leadSource) && (
           <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200">
-            Source: {student.leadSource}
+            Source: {student.studentSource || (student as any).leadSource}
           </span>
         )}
       </div>
 
-      {/* Lead & Demographic Profile Card */}
+      {/* Student Demographic & Personal Profile Card */}
       <section className="panel mb-6 p-5">
         <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
           <div>
-            <h2 className="text-sm font-bold text-gray-900">Personal & Lead Profile</h2>
+            <h2 className="text-sm font-bold text-gray-900">Personal & Student Profile</h2>
             <p className="text-xs text-gray-400">Communication channels, address, and student background</p>
           </div>
           {student.gender && (
@@ -189,51 +182,62 @@ export function StudentDetail({
               </div>
               <p>Balance cleared. Certificate generation is ready below.</p>
             </div>
-          ) : receipt ? (
-            <div className="receipt-confirmation">
-              <div className="receipt-check">
-                <CheckCircle2 size={18} />
-                <strong>Payment recorded</strong>
+          ) : receipt ? (() => {
+            const isInclusive = Boolean(courses?.find(c => c.name === student.course)?.gstInclusive);
+            const receiptTaxable = isInclusive && gstRate > 0
+              ? Math.round(receipt.amount / (1 + gstRate / 100))
+              : receipt.amount;
+            const receiptGst = gstRate > 0
+              ? (isInclusive ? receipt.amount - receiptTaxable : Math.round(receipt.amount * (gstRate / 100)))
+              : 0;
+            const receiptHalfGst = Math.round(receiptGst / 2);
+            const receiptGrandTotal = isInclusive ? receipt.amount : receiptTaxable + receiptGst;
+
+            return (
+              <div className="receipt-confirmation">
+                <div className="receipt-check">
+                  <CheckCircle2 size={18} />
+                  <strong>Payment recorded</strong>
+                </div>
+                <div className="receipt-meta">
+                  <span>Invoice <b>{receipt.invoice}</b></span>
+                  <span>Taxable Amount <b>{money(receiptTaxable)}</b></span>
+                </div>
+                {gstRate > 0 ? (
+                  <div className="gst-breakdown">
+                    <span>Taxable Base <b>{money(receiptTaxable)}</b></span>
+                    <span>CGST ({(gstRate / 2)}%) <b>{money(receiptHalfGst)}</b></span>
+                    <span>SGST ({(gstRate / 2)}%) <b>{money(receiptGst - receiptHalfGst)}</b></span>
+                    <span>Grand Total <b>{money(receiptGrandTotal)}</b> {isInclusive && <small className="text-emerald-600 font-medium">(Incl. GST)</small>}</span>
+                  </div>
+                ) : (
+                  <div className="gst-breakdown">
+                    <span>Total Paid <b>{money(receipt.amount)}</b></span>
+                    <span>GST <b>Exempt</b></span>
+                  </div>
+                )}
+                {onInvoice && (
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onInvoice({
+                        id: receipt.id,
+                        student: receipt.student,
+                        method: receipt.method,
+                        date: receipt.date,
+                        amount: receipt.amount,
+                        invoice: receipt.invoice,
+                        studentId: receipt.studentId,
+                      })}
+                    >
+                      <Printer size={14} className="mr-1.5" /> View Invoice
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="receipt-meta">
-                <span>Invoice <b>{receipt.invoice}</b></span>
-                <span>Taxable Amount <b>{money(receipt.amount)}</b></span>
-              </div>
-              {gstRate > 0 ? (
-                <div className="gst-breakdown">
-                  <span>Taxable Base <b>{money(receipt.amount)}</b></span>
-                  <span>CGST ({(gstRate / 2)}%) <b>{money(Math.round(receipt.amount * (gstRate / 200)))}</b></span>
-                  <span>SGST ({(gstRate / 2)}%) <b>{money(Math.round(receipt.amount * (gstRate / 200)))}</b></span>
-                  <span>Grand Total <b>{money(receipt.amount + Math.round(receipt.amount * (gstRate / 100)))}</b></span>
-                </div>
-              ) : (
-                <div className="gst-breakdown">
-                  <span>Total Paid <b>{money(receipt.amount)}</b></span>
-                  <span>GST <b>Exempt</b></span>
-                </div>
-              )}
-              {onInvoice && (
-                <div className="mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onInvoice({
-                      id: receipt.id,
-                      student: receipt.student,
-                      method: receipt.method,
-                      date: receipt.date,
-                      amount: receipt.amount,
-                      invoice: receipt.invoice,
-                      studentId: receipt.studentId,
-                    })}
-                  >
-                    <Printer size={14} className="mr-1.5" />
-                    View & Print Invoice
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
+            );
+          })() : (
             <div className="payment-fields">
               <label>
                 Amount

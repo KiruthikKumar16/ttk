@@ -1,0 +1,83 @@
+<div class="certificate" id="certificate">
+
+        <div class="corner-tri tl"></div>
+        <div class="corner-tri tr"></div>
+        <div class="corner-tri bl"></div>
+        <div class="corner-tri br"></div>
+        <div class="corner-gold tl"></div>
+        <div class="corner-gold tr"></div>
+        <div class="corner-gold bl"></div>
+        <div class="corner-gold br"></div>
+
+        <div class="frame-border"></div>
+        <div class="frame-gold"></div>
+
+        <div class="cert-inner">
+          <div class="cert-logo">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAYAAADL1t+KAAAQAElEQVR4Ae...TRUNC..." alt="ThoorigAI">
+          </div>
+
+
+          <div class="cert-title">CERTIFICATE OF<br>COMPLETION</div>
+          <div class="divider"><span class="ln"></span><span class="star">★</span><span class="ln"></span></div>
+
+          <div class="cert-lead">This is to certify that</div>
+          <div class="cert-name" id="p-name">Priya Ramesh</div>
+          <div class="cert-name-rule"></div>
+
+          <div class="cert-body">
+            has successfully completed the <b id="p-course">Digital Marketing</b> Program at <b>ThoorigAI Infotech LLP</b>,
+            from <b id="p-start">—</b> to <b id="p-end">—</b>.
+          </div>
+
+          <div class="cert-note">During the Course, the candidate demonstrated dedication, professionalism, and technical proficiency in:</div>
+          <ul class="skills-list" id="p-skills"></ul>
+
+          <div class="cert-footer-strip">
+            <div class="idrow">
+              <div class="id-block">
+                <div class="lbl">Certificate ID</div>
+                <div class="val" id="p-id">TAI-2026-0001</div>
+              </div>
+              <div class="id-block" style="text-align:right;">
+                <div class="lbl">Date Issued</div>
+                <div class="val" id="p-issue">—</div>
+              </div>
+            </div>
+
+            <div class="sig-row">
+              <div class="sig-block">
+                <div class="sig-mark"></div>
+                <div class="sig-line"></div>
+                <div class="sig-name" id="p-director">Dr. K. Subramanian</div>
+                <div class="sig-role">Director</div>
+              </div>
+
+              <div class="seal">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="50" r="46" fill="#0e1c3d"/>
+                  <circle cx="50" cy="50" r="46" fill="none" stroke="#d4af37" stroke-width="3"/>
+                  <circle cx="50" cy="50" r="36" fill="none" stroke="#d4af37" stroke-width="1"/>
+                  <polygon points="50,28 54,40 66,40 56,48 60,60 50,52 40,60 44,48 34,40 46,40" fill="#d4af37"/>
+                  <text x="50" y="82" text-anchor="middle" fill="#f2d375" font-size="7" font-family="Poppins,sans-serif" letter-spacing="1">CERTIFIED</text>
+                </svg>
+              </div>
+
+              <div class="sig-block">
+                <div class="sig-mark"></div>
+                <div class="sig-line"></div>
+                <div class="sig-name" id="p-trainer">A. Ravichandran</div>
+                <div class="sig-role">Trainer</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

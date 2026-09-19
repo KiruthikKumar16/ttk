@@ -1,4 +1,4 @@
-import { Outfit, Inter, Playfair_Display, Great_Vibes } from 'next/font/google'
+import { Outfit, Inter, Playfair_Display, Great_Vibes, Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
@@ -15,7 +15,14 @@ const inter = Inter({
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
+  weight: ['700', '800'],
   variable: '--font-playfair',
+})
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
 })
 
 const greatVibes = Great_Vibes({
@@ -37,7 +44,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} ${inter.variable} ${playfair.variable} ${greatVibes.variable} antialiased`}>
+      <body className={`${outfit.variable} ${inter.variable} ${playfair.variable} ${greatVibes.variable} ${poppins.variable} antialiased`}>
         {children}
         <Analytics />
       </body>

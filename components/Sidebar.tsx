@@ -1,8 +1,8 @@
 import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users } from 'lucide-react'
-import type { View } from '@/lib/types'
+import type { Student, View } from '@/lib/types'
 import React from 'react'
 
-export function Sidebar({ view, setView, collapsed }: { view: View; setView: (v: View) => void; collapsed?: boolean }) {
+export function Sidebar({ view, setView, collapsed, students }: { view: View; setView: (v: View) => void; collapsed?: boolean; students?: Student[] }) {
   const nav: [View, typeof LayoutDashboard, string][] = [
     ['Dashboard', LayoutDashboard, 'Dashboard'],
     ['Students', Users, 'Students'],
@@ -14,7 +14,9 @@ export function Sidebar({ view, setView, collapsed }: { view: View; setView: (v:
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
       <div className="brand">
-        <div className="brand-mark">TAI</div>
+        <div className="brand-mark">
+          <img src="/thoorigai-logo.png" alt="ThoorigAI" className="brand-mark-img" />
+        </div>
         {!collapsed && (
           <div>
             <div className="brand-name">THOORIGAI</div>
@@ -27,7 +29,9 @@ export function Sidebar({ view, setView, collapsed }: { view: View; setView: (v:
           <button key={label} className={`nav-item ${view === label ? 'active' : ''}`} onClick={() => setView(label)} title={label}>
             <Icon size={18} className="mr-2" />
             {!collapsed && <span className="flex-1 text-left">{label}</span>}
-            {!collapsed && label === 'Students' && <span className="ml-auto flex-shrink-0">48</span>}
+            {!collapsed && label === 'Students' && students && (
+              <span className="ml-auto flex-shrink-0">{students.length}</span>
+            )}
           </button>
         ))}
       </nav>

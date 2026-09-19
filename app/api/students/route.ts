@@ -43,8 +43,7 @@ export async function POST(req: Request) {
       state: body.state,
       city: body.city,
       area: body.area,
-      leadType: body.leadType,
-      leadSource: body.leadSource,
+      studentSource: body.studentSource,
       comments: body.comments,
       knowledgeTags: body.knowledgeTags,
     }
@@ -65,12 +64,25 @@ export async function POST(req: Request) {
         total,
         paid,
         status: student.status,
-        email: body.email,
-        city: body.city,
+        gender: body.gender ?? null,
+        dob: body.dob ?? null,
+        alt_phone: body.altPhone ?? null,
+        marital_status: body.maritalStatus ?? null,
+        email: body.email ?? null,
+        country: body.country ?? null,
+        state: body.state ?? null,
+        city: body.city ?? null,
+        area: body.area ?? null,
+        lead_source: body.studentSource ?? null,
+        comments: body.comments ?? null,
+        knowledge_tags: body.knowledgeTags ?? [],
       }).select().single()
       if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
       if (paid > 0) {
+        const initialGstRate = 18
+        const initialCgst = Math.round((paid * (initialGstRate / 100)) / 2)
+        const initialSgst = Math.round((paid * (initialGstRate / 100)) / 2)
         const { data: pData } = await supabase.from('payments').insert({
           id: paymentId,
           student_id: data.id,
@@ -78,11 +90,14 @@ export async function POST(req: Request) {
           method: 'Initial Payment',
           amount: paid,
           invoice,
-          payment_date: paymentDate
+          payment_date: paymentDate,
+          gst_rate: initialGstRate,
+          cgst: initialCgst,
+          sgst: initialSgst,
         }).select().single()
 
         if (pData) {
-          createdPayment = { ...pData, student: name, studentId: registerId, date: paymentDate, amount: paid, invoice }
+          createdPayment = { ...pData, student: name, studentId: registerId, date: paymentDate, amount: paid, invoice, cgst: initialCgst, sgst: initialSgst, gstRate: initialGstRate }
         }
       }
 
@@ -133,8 +148,7 @@ function studentFromApiRow(row: Record<string, unknown>) {
     state: row.state ? String(row.state) : undefined,
     city: row.city ? String(row.city) : undefined,
     area: row.area ? String(row.area) : undefined,
-    leadType: row.lead_type as any,
-    leadSource: row.lead_source ? String(row.lead_source) : undefined,
+    studentSource: row.lead_source ? String(row.lead_source) : undefined,
     comments: row.comments ? String(row.comments) : undefined,
     knowledgeTags: Array.isArray(row.knowledge_tags) ? row.knowledge_tags : undefined,
   }

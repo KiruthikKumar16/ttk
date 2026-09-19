@@ -8,16 +8,14 @@ import { Status } from '@/components/Status'
 export function Students({ students, onAdd, onSelect }: { students: Student[]; onAdd: () => void; onSelect: (s: Student) => void }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All status');
-  const [leadSourceFilter, setLeadSourceFilter] = useState('All sources');
-  const [leadTypeFilter, setLeadTypeFilter] = useState('All types');
+  const [sourceFilter, setSourceFilter] = useState('All sources');
   const filtered = useMemo(() =>
     students.filter(s =>
       (s.name.toLowerCase().includes(query.toLowerCase()) || String(s.registerId).includes(query)) &&
       (filter === 'All status' || s.status === filter) &&
-      (leadSourceFilter === 'All sources' || s.leadSource === leadSourceFilter) &&
-      (leadTypeFilter === 'All types' || s.leadType === leadTypeFilter)
+      (sourceFilter === 'All sources' || s.studentSource === sourceFilter)
     ),
-    [students, query, filter, leadSourceFilter, leadTypeFilter]
+    [students, query, filter, sourceFilter]
   );
   return (
     <>
@@ -43,18 +41,11 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
             <option>Fully Paid</option>
             <option>Pending</option>
           </select>
-          {/* Lead Source Filter */}
-          <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} className="ml-2">
+          {/* Student Source Filter */}
+          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="ml-2">
             <option>All sources</option>
-            {Array.from(new Set(students.map(s => s.leadSource).filter(Boolean))).map(src => (
+            {Array.from(new Set(students.map(s => s.studentSource).filter(Boolean))).map(src => (
               <option key={src}>{src}</option>
-            ))}
-          </select>
-          {/* Lead Type Filter */}
-          <select value={leadTypeFilter} onChange={e => setLeadTypeFilter(e.target.value)} className="ml-2">
-            <option>All types</option>
-            {Array.from(new Set(students.map(s => s.leadType).filter(Boolean))).map(type => (
-              <option key={type}>{type}</option>
             ))}
           </select>
         </div>
@@ -68,8 +59,7 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
                 <th>Batch start</th>
                 <th className="align-right">Total fees</th>
                 <th className="align-right">Balance</th>
-                <th>Lead Source</th>
-                <th>Lead Type</th>
+                <th>Source</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -90,8 +80,7 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
                   <td>{s.batch}</td>
                   <td className="align-right">{money(s.total)}</td>
                   <td className="align-right amount">{money(s.total - s.paid)}</td>
-                  <td>{s.leadSource || '-'}</td>
-                  <td>{s.leadType || '-'}</td>
+                  <td>{s.studentSource || '-'}</td>
                   <td><Status status={s.status} /></td>
                 </tr>
               ))}

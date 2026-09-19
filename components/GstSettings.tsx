@@ -18,11 +18,20 @@ export function GstSettingsPage({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const [previewMode, setPreviewMode] = useState<'exclusive' | 'inclusive'>('exclusive')
+
   const rateNum = Number(rate) || 0
   const halfRate = rateNum / 2
   const sampleFee = 10000
-  const sampleGst = Math.round(sampleFee * (rateNum / 100))
-  const sampleTotal = sampleFee + sampleGst
+  
+  // Exclusive computation
+  const sampleGstExclusive = Math.round(sampleFee * (rateNum / 100))
+  const sampleTotalExclusive = sampleFee + sampleGstExclusive
+
+  // Inclusive computation
+  const sampleBaseInclusive = enabled && rateNum > 0 ? Math.round(sampleFee / (1 + rateNum / 100)) : sampleFee
+  const sampleGstInclusive = sampleFee - sampleBaseInclusive
+  const sampleHalfGstInclusive = Math.round(sampleGstInclusive / 2)
 
   const handleSave = async () => {
     const r = Number(rate)
@@ -170,57 +179,129 @@ export function GstSettingsPage({
           <div className="panel-header">
             <div>
               <h2>Tax Breakdown Preview</h2>
-              <p>How a ₹10,000 course fee is calculated with current settings</p>
+              <p>How a ₹10,000 course fee is calculated under current settings</p>
             </div>
             <IndianRupee size={20} className="text-gray-400" />
           </div>
-          <div className="p-6 pt-0">
+          <div className="p-6 pt-0 space-y-4">
+            {/* Mode Toggle Buttons */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setPreviewMode('exclusive')}
+                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  previewMode === 'exclusive'
+                    ? 'bg-white text-gray-900 shadow-xs font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                GST Exclusive Course
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewMode('inclusive')}
+                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  previewMode === 'inclusive'
+                    ? 'bg-white text-emerald-700 shadow-xs font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                GST Inclusive Course
+              </button>
+            </div>
+
             <div className="rounded-xl border border-gray-100 overflow-hidden">
               {/* Header */}
-              <div className="bg-gray-900 text-white px-5 py-3">
-                <p className="text-xs font-semibold tracking-wide uppercase">Sample Invoice Breakdown</p>
+              <div className="bg-gray-900 text-white px-5 py-3 flex items-center justify-between">
+                <p className="text-xs font-semibold tracking-wide uppercase">
+                  {previewMode === 'exclusive' ? 'GST Exclusive Breakdown' : 'GST Inclusive Breakdown'}
+                </p>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                  previewMode === 'exclusive' ? 'bg-amber-500/20 text-amber-200' : 'bg-emerald-500/20 text-emerald-200'
+                }`}>
+                  {previewMode === 'exclusive' ? '+GST Added On Top' : 'GST Included In Price'}
+                </span>
               </div>
 
               {/* Breakdown Rows */}
               <div className="divide-y divide-gray-100">
-                <div className="flex items-center justify-between px-5 py-3.5">
-                  <span className="text-sm text-gray-600">Course Fee (excl. GST)</span>
-                  <span className="text-sm font-semibold text-gray-900">{money(sampleFee)}</span>
-                </div>
-
-                {enabled && rateNum > 0 && (
+                {previewMode === 'exclusive' ? (
                   <>
-                    <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
-                      <span className="text-xs text-gray-500">CGST ({halfRate}%)</span>
-                      <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+                    <div className="flex items-center justify-between px-5 py-3.5">
+                      <span className="text-sm text-gray-600">Base Course Fee</span>
+                      <span className="text-sm font-semibold text-gray-900">{money(sampleFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
-                      <span className="text-xs text-gray-500">SGST ({halfRate}%)</span>
-                      <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+
+                    {enabled && rateNum > 0 && (
+                      <>
+                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
+                          <span className="text-xs text-gray-500">CGST ({halfRate}%)</span>
+                          <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
+                          <span className="text-xs text-gray-500">SGST ({halfRate}%)</span>
+                          <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-5 py-3 bg-blue-50/50">
+                          <span className="text-xs text-blue-600 font-medium">Total GST (+{rateNum}%)</span>
+                          <span className="text-xs font-semibold text-blue-700">+{money(sampleGstExclusive)}</span>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="flex items-center justify-between px-5 py-4 bg-gray-900 text-white">
+                      <span className="text-sm font-semibold">Total Payable</span>
+                      <span className="text-base font-bold">{enabled ? money(sampleTotalExclusive) : money(sampleFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3 bg-blue-50/50">
-                      <span className="text-xs text-blue-600 font-medium">Total GST ({rateNum}%)</span>
-                      <span className="text-xs font-semibold text-blue-700">{money(sampleGst)}</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between px-5 py-3.5">
+                      <span className="text-sm text-gray-600">Base Tuition (Taxable Value)</span>
+                      <span className="text-sm font-semibold text-gray-900">{money(sampleBaseInclusive)}</span>
+                    </div>
+
+                    {enabled && rateNum > 0 && (
+                      <>
+                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
+                          <span className="text-xs text-gray-500">CGST ({halfRate}%)</span>
+                          <span className="text-xs font-medium text-gray-600">{money(sampleHalfGstInclusive)}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
+                          <span className="text-xs text-gray-500">SGST ({halfRate}%)</span>
+                          <span className="text-xs font-medium text-gray-600">{money(sampleGstInclusive - sampleHalfGstInclusive)}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-5 py-3 bg-emerald-50/50">
+                          <span className="text-xs text-emerald-700 font-medium">Included GST ({rateNum}%)</span>
+                          <span className="text-xs font-semibold text-emerald-700">{money(sampleGstInclusive)}</span>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="flex items-center justify-between px-5 py-4 bg-gray-900 text-white">
+                      <span className="text-sm font-semibold">Total Payable (All-Inclusive)</span>
+                      <span className="text-base font-bold text-emerald-400">{money(sampleFee)}</span>
                     </div>
                   </>
                 )}
-
-                <div className="flex items-center justify-between px-5 py-4 bg-gray-900 text-white">
-                  <span className="text-sm font-semibold">Grand Total</span>
-                  <span className="text-base font-bold">{enabled ? money(sampleTotal) : money(sampleFee)}</span>
-                </div>
               </div>
             </div>
 
             {/* Info Note */}
-            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
-              <p className="text-xs text-amber-700">
-                <strong>Note:</strong> Course fees are <strong>exclusive</strong> of GST. The GST amount is added on top of the base course fee when generating invoices.
+            <div className={`p-3 rounded-lg border ${
+              previewMode === 'exclusive' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+            }`}>
+              <p className="text-xs">
+                {previewMode === 'exclusive' ? (
+                  <><strong>Exclusive Courses:</strong> GST is added on top of the course fee. Each student pays Base Fee + {rateNum}% GST.</>
+                ) : (
+                  <><strong>Inclusive Courses:</strong> The course price already contains {rateNum}% GST. Base taxable revenue and tax are extracted automatically.</>
+                )}
               </p>
             </div>
 
             {!enabled && (
-              <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <p className="text-xs text-gray-500">
                   GST is currently <strong>disabled</strong>. Invoices will show only the base course fee without tax computation.
                 </p>

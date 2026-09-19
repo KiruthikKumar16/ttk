@@ -13,7 +13,7 @@ const DEFAULT_COURSE_OPTIONS = [
   'UI/UX Design Masterclass',
 ]
 
-const LEAD_SOURCES = [
+const STUDENT_SOURCES = [
   'Walk-in',
   'Website',
   'Social Media',
@@ -74,7 +74,7 @@ export function AddStudent({
   const [paid, setPaid] = useState('')
   const [error, setError] = useState('')
 
-  // New Lead fields matching reference design
+  // Student demographic and enrollment fields matching reference design
   const [gender, setGender] = useState<'Male' | 'Female' | 'Others'>('Male')
   const [dob, setDob] = useState('')
   const [altPhone, setAltPhone] = useState('')
@@ -84,8 +84,7 @@ export function AddStudent({
   const [state, setState] = useState('Tamil Nadu')
   const [city, setCity] = useState('Tuticorin')
   const [area, setArea] = useState('')
-  const [leadType, setLeadType] = useState<'Hot' | 'Warm' | 'Cold'>('Hot')
-  const [leadSource, setLeadSource] = useState('Walk-in')
+  const [studentSource, setStudentSource] = useState('Walk-in')
   const [comments, setComments] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>(['Web Dev'])
 
@@ -106,7 +105,7 @@ export function AddStudent({
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!name.trim()) {
-      setError('Please enter the lead / student name.')
+      setError('Please enter the student name.')
       return
     }
     if (!phone.trim() || phone.trim().length < 10) {
@@ -140,16 +139,23 @@ export function AddStudent({
       state,
       city,
       area: area.trim() || undefined,
-      leadType,
-      leadSource,
+      studentSource,
       comments: comments.trim() || undefined,
       knowledgeTags: selectedTags,
     })
   }
 
-  const baseFeeNum = Number(total) || 0
-  const gstAmount = gstRate > 0 ? Math.round(baseFeeNum * (gstRate / 100)) : 0
-  const grandTotal = baseFeeNum + gstAmount
+  const selectedCourseObj = courses?.find(c => c.name === course)
+  const isGstInclusive = Boolean(selectedCourseObj?.gstInclusive)
+
+  const enteredTotal = Number(total) || 0
+  const baseFeeNum = isGstInclusive && gstRate > 0
+    ? Math.round(enteredTotal / (1 + gstRate / 100))
+    : enteredTotal
+  const gstAmount = gstRate > 0
+    ? (isGstInclusive ? enteredTotal - baseFeeNum : Math.round(enteredTotal * (gstRate / 100)))
+    : 0
+  const grandTotal = isGstInclusive ? enteredTotal : enteredTotal + gstAmount
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -158,7 +164,7 @@ export function AddStudent({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-slate-50/50">
           <div>
             <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-              Create Lead / Register Student
+              Register Student
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Fill in student profile, communication channels, location details, and tuition fees.
@@ -183,17 +189,17 @@ export function AddStudent({
 
         {/* Scrollable Form Body */}
         <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto max-h-[78vh]">
-          {/* Row 1: Lead Name, Gender, DOB */}
+          {/* Row 1: Student Name, Gender, DOB */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="lead-name" className="block text-xs font-semibold text-gray-700 mb-1">
-                Lead Name <span className="text-red-500">*</span>
+              <label htmlFor="student-name" className="block text-xs font-semibold text-gray-700 mb-1">
+                Student Name <span className="text-red-500">*</span>
               </label>
               <input
-                id="lead-name"
+                id="student-name"
                 type="text"
                 required
-                placeholder="Enter Lead Name"
+                placeholder="Enter Student Name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -222,11 +228,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-dob" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-dob" className="block text-xs font-semibold text-gray-700 mb-1">
                 Date of Birth
               </label>
               <input
-                id="lead-dob"
+                id="student-dob"
                 type="date"
                 value={dob}
                 onChange={e => setDob(e.target.value)}
@@ -238,7 +244,7 @@ export function AddStudent({
           {/* Row 2: Mobile Number, Alternate Mobile, Marital Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="lead-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
                 Mobile Number <span className="text-red-500">*</span>
               </label>
               <div className="flex">
@@ -246,7 +252,7 @@ export function AddStudent({
                   IN - +91
                 </span>
                 <input
-                  id="lead-mobile"
+                  id="student-mobile"
                   type="tel"
                   required
                   maxLength={10}
@@ -259,11 +265,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-alt-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-alt-mobile" className="block text-xs font-semibold text-gray-700 mb-1">
                 Alternate Mobile Number
               </label>
               <input
-                id="lead-alt-mobile"
+                id="student-alt-mobile"
                 type="tel"
                 maxLength={10}
                 placeholder="Enter Alternate Mobile Number"
@@ -274,11 +280,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-marital" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-marital" className="block text-xs font-semibold text-gray-700 mb-1">
                 Marital Status
               </label>
               <select
-                id="lead-marital"
+                id="student-marital"
                 value={maritalStatus}
                 onChange={e => setMaritalStatus(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -293,11 +299,11 @@ export function AddStudent({
           {/* Row 3: Email, Country, State */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="lead-email" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-email" className="block text-xs font-semibold text-gray-700 mb-1">
                 Email ID
               </label>
               <input
-                id="lead-email"
+                id="student-email"
                 type="email"
                 placeholder="Enter E-Mail ID"
                 value={email}
@@ -307,11 +313,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-country" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-country" className="block text-xs font-semibold text-gray-700 mb-1">
                 Country
               </label>
               <select
-                id="lead-country"
+                id="student-country"
                 value={country}
                 onChange={e => setCountry(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -325,11 +331,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-state" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-state" className="block text-xs font-semibold text-gray-700 mb-1">
                 State
               </label>
               <select
-                id="lead-state"
+                id="student-state"
                 value={state}
                 onChange={e => setState(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -345,14 +351,14 @@ export function AddStudent({
             </div>
           </div>
 
-          {/* Row 4: City, Area / Street, Lead Type */}
+          {/* Row 4: City, Area / Street, Student Source */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="lead-city" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-city" className="block text-xs font-semibold text-gray-700 mb-1">
                 City
               </label>
               <select
-                id="lead-city"
+                id="student-city"
                 value={city}
                 onChange={e => setCity(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -364,11 +370,11 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-area" className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="student-area" className="block text-xs font-semibold text-gray-700 mb-1">
                 Area / Street
               </label>
               <input
-                id="lead-area"
+                id="student-area"
                 type="text"
                 placeholder="Enter Area / Street"
                 value={area}
@@ -378,53 +384,35 @@ export function AddStudent({
             </div>
 
             <div>
-              <label htmlFor="lead-type" className="block text-xs font-semibold text-gray-700 mb-1">
-                Lead Type
+              <label htmlFor="student-source" className="block text-xs font-semibold text-gray-700 mb-1">
+                Student Source <span className="text-red-500">*</span>
               </label>
               <select
-                id="lead-type"
-                value={leadType}
-                onChange={e => setLeadType(e.target.value as any)}
+                id="student-source"
+                value={studentSource}
+                onChange={e => setStudentSource(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                <option value="Hot">Hot (Ready to enroll)</option>
-                <option value="Warm">Warm (Follow up)</option>
-                <option value="Cold">Cold (Inquiry only)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Row 5: Lead Source & Comments */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="lead-source" className="block text-xs font-semibold text-gray-700 mb-1">
-                Lead Source <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="lead-source"
-                value={leadSource}
-                onChange={e => setLeadSource(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                {LEAD_SOURCES.map(s => (
+                {STUDENT_SOURCES.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
+          </div>
 
-            <div className="md:col-span-2">
-              <label htmlFor="lead-comments" className="block text-xs font-semibold text-gray-700 mb-1">
-                Comments
-              </label>
-              <textarea
-                id="lead-comments"
-                rows={2}
-                placeholder="Enter counselor notes, special requirements, or background..."
-                value={comments}
-                onChange={e => setComments(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
-              />
-            </div>
+          {/* Row 5: Counselor Comments / Remarks */}
+          <div>
+            <label htmlFor="student-comments" className="block text-xs font-semibold text-gray-700 mb-1">
+              Comments / Remarks
+            </label>
+            <textarea
+              id="student-comments"
+              rows={2}
+              placeholder="Enter counselor notes, special requirements, or student background..."
+              value={comments}
+              onChange={e => setComments(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+            />
           </div>
 
           {/* Row 6: Course & Batch */}
@@ -460,10 +448,10 @@ export function AddStudent({
             </div>
           </div>
 
-          {/* Row 7: Lead Knowledge Tags */}
+          {/* Row 7: Student Knowledge Tags */}
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Lead Knowledge Tags
+              Knowledge / Skill Tags
             </label>
             <div className="flex flex-wrap gap-1.5">
               {AVAILABLE_TAGS.map(tag => {
@@ -489,9 +477,18 @@ export function AddStudent({
           {/* Row 8: Tuition Fee & Initial Payment */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
             <div>
-              <label htmlFor="student-total" className="block text-xs font-semibold text-gray-700 mb-1">
-                Tuition Fee (₹) <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="student-total" className="block text-xs font-semibold text-gray-700">
+                  Tuition Fee (₹) <span className="text-red-500">*</span>
+                </label>
+                {selectedCourseObj && (
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                    isGstInclusive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
+                  </span>
+                )}
+              </div>
               <input
                 id="student-total"
                 type="number"
@@ -502,7 +499,9 @@ export function AddStudent({
                 onChange={e => setTotal(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
-              <span className="text-[11px] text-gray-400 mt-0.5 block">Base fee (exclusive of GST)</span>
+              <span className="text-[11px] text-gray-400 mt-0.5 block">
+                {isGstInclusive ? 'All-inclusive course tuition fee' : 'Base fee (exclusive of GST)'}
+              </span>
             </div>
 
             <div>
@@ -523,27 +522,36 @@ export function AddStudent({
           </div>
 
           {/* Fee Breakdown Preview */}
-          {baseFeeNum > 0 && (
+          {enteredTotal > 0 && (
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
               <div className="font-semibold text-gray-900 flex items-center justify-between">
-                <span>Fee Summary</span>
+                <span className="flex items-center gap-1.5">
+                  Fee Summary
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                    isGstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
+                  </span>
+                </span>
                 <span className="text-slate-500 font-normal">
-                  {gstRate > 0 ? `GST @ ${gstRate}% (9% CGST + 9% SGST)` : 'GST Disabled'}
+                  {gstRate > 0 ? `GST @ ${gstRate}% (${gstRate / 2}% CGST + ${gstRate / 2}% SGST)` : 'GST Disabled'}
                 </span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Base Course Fee:</span>
+                <span>Base Course Fee (Taxable):</span>
                 <span className="font-medium text-gray-900">{money(baseFeeNum)}</span>
               </div>
               {gstRate > 0 && (
                 <div className="flex justify-between text-gray-600">
-                  <span>Applicable GST ({gstRate}%):</span>
-                  <span className="font-medium text-gray-900">+{money(gstAmount)}</span>
+                  <span>{isGstInclusive ? `Included GST (${gstRate}%):` : `Applicable GST (${gstRate}%):`}</span>
+                  <span className="font-medium text-gray-900">
+                    {isGstInclusive ? money(gstAmount) : `+${money(gstAmount)}`}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between pt-1.5 border-t border-slate-200 text-sm font-bold text-gray-900">
                 <span>Total Payable:</span>
-                <span className="text-blue-600">{money(grandTotal)}</span>
+                <span className={isGstInclusive ? 'text-emerald-700 font-bold' : 'text-blue-600 font-bold'}>{money(grandTotal)}</span>
               </div>
             </div>
           )}
@@ -561,7 +569,7 @@ export function AddStudent({
               type="submit"
               className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
             >
-              Create Lead
+              Register Student
             </button>
           </div>
         </form>

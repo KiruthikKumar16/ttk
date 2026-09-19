@@ -15,6 +15,7 @@ export async function GET() {
             fee: Number(c.fee),
             duration: c.duration,
             description: c.description,
+            gstInclusive: Boolean(c.gst_inclusive ?? c.gstInclusive ?? false),
           })),
           source: 'supabase',
         })
@@ -33,13 +34,14 @@ export async function POST(req: Request) {
     const fee = Number(body.fee)
     const duration = String(body.duration ?? '3 Months').trim()
     const description = String(body.description ?? '').trim()
+    const gstInclusive = Boolean(body.gstInclusive)
 
     if (!name || isNaN(fee) || fee < 0) {
       return NextResponse.json({ error: 'Valid course name and fee are required.' }, { status: 400 })
     }
 
     const id = body.id || `CRS-${String(Date.now()).slice(-4)}`
-    const newCourse: Course = { id, name, fee, duration, description }
+    const newCourse: Course = { id, name, fee, duration, description, gstInclusive }
 
     if (supabase) {
       const { data, error } = await supabase.from('courses').insert({
@@ -47,10 +49,11 @@ export async function POST(req: Request) {
         name,
         fee,
         duration,
-        description
+        description,
+        gst_inclusive: gstInclusive,
       }).select().single()
       if (!error && data) {
-        return NextResponse.json({ data: { ...data, fee: Number(data.fee) }, message: 'Course created' }, { status: 201 })
+        return NextResponse.json({ data: { ...data, fee: Number(data.fee), gstInclusive: Boolean(data.gst_inclusive) }, message: 'Course created' }, { status: 201 })
       }
     }
 

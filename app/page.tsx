@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import type { Payment, Receipt, Student, View, GstSettings, Course } from '@/lib/types'
+import type { Payment, Receipt, Student, View, GstSettings, Course, CertificateRecord } from '@/lib/types'
 import { initialPayments, initialStudents } from '@/lib/mock-data'
 
 import { Sidebar } from '@/components/Sidebar'
@@ -15,12 +15,14 @@ import { AddStudent } from '@/components/AddStudent'
 import { CoursesManager } from '@/components/CoursesManager'
 import { GstSettingsPage } from '@/components/GstSettings'
 import { SimpleView } from '@/components/SimpleView'
+import { Certificates } from '@/components/Certificates'
 
 export default function Page() {
   const [view, setView] = useState<View>('Dashboard')
   const [students, setStudents] = useState<Student[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
+  const [certificates, setCertificates] = useState<CertificateRecord[]>([])
   const [gst, setGst] = useState<GstSettings>({ rate: 18, gstin: '33AAZFT3654J1ZI', enabled: true })
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedCertificate, setSelectedCertificate] = useState<Student | null>(null)
@@ -33,22 +35,28 @@ export default function Page() {
 
   const selected = students.find(s => s.registerId === selectedId) ?? null
 
+  const fetchAll = async () => {
+    const [studentsRes, paymentsRes, coursesRes, gstRes, certsRes] = await Promise.all([
+      fetch('/api/students').then(res => res.json()),
+      fetch('/api/payments').then(res => res.json()),
+      fetch('/api/courses').then(res => res.json()),
+      fetch('/api/gst').then(res => res.json()),
+      fetch('/api/certificates').then(res => res.json()),
+    ])
+    if (studentsRes.data) setStudents(studentsRes.data)
+    if (paymentsRes.data) setPayments(paymentsRes.data)
+    if (coursesRes.data) setCourses(coursesRes.data)
+    if (gstRes.data) setGst(gstRes.data)
+    if (certsRes.data) setCertificates(certsRes.data)
+  }
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
         setError(null)
-        const [studentsRes, paymentsRes, coursesRes, gstRes] = await Promise.all([
-          fetch('/api/students').then(res => res.json()),
-          fetch('/api/payments').then(res => res.json()),
-          fetch('/api/courses').then(res => res.json()),
-          fetch('/api/gst').then(res => res.json())
-        ])
-        if (studentsRes.data) setStudents(studentsRes.data)
-        if (paymentsRes.data) setPayments(paymentsRes.data)
-        if (coursesRes.data) setCourses(coursesRes.data)
-        if (gstRes.data) setGst(gstRes.data)
+        await fetchAll()
       } catch (err) {
         setError('Failed to load data')
         console.error(err)
@@ -64,16 +72,7 @@ export default function Page() {
     try {
       setLoading(true)
       setError(null)
-      const [studentsRes, paymentsRes, coursesRes, gstRes] = await Promise.all([
-        fetch('/api/students').then(res => res.json()),
-        fetch('/api/payments').then(res => res.json()),
-        fetch('/api/courses').then(res => res.json()),
-        fetch('/api/gst').then(res => res.json())
-      ])
-      if (studentsRes.data) setStudents(studentsRes.data)
-      if (paymentsRes.data) setPayments(paymentsRes.data)
-      if (coursesRes.data) setCourses(coursesRes.data)
-      if (gstRes.data) setGst(gstRes.data)
+      await fetchAll()
     } catch (err) {
       setError('Failed to reload data')
       console.error(err)
@@ -163,12 +162,16 @@ export default function Page() {
         student={students.find(s => s.registerId === selectedInvoice.studentId)!}
         onBack={() => setSelectedInvoice(null)}
         gstRate={gst.enabled ? gst.rate : 0}
+        courses={courses}
       />
     )
     if (selectedCertificate) return (
       <CertificatePrint
         student={selectedCertificate}
-        onBack={() => setSelectedCertificate(null)}
+        onBack={() => {
+          setSelectedCertificate(null)
+          refetch()
+        }}
       />
     )
     if (selectedId !== null) {
@@ -182,6 +185,7 @@ export default function Page() {
           onCertificate={() => setSelectedCertificate(selectedStudent)}
           onInvoice={setSelectedInvoice}
           gstRate={gst.enabled ? gst.rate : 0}
+          courses={courses}
         />
       )
     }
@@ -190,6 +194,13 @@ export default function Page() {
     )
     if (view === 'Students') return (
       <Students students={students} onAdd={() => setAdding(true)} onSelect={(s: Student) => setSelectedId(s.registerId)} />
+    )
+    if (view === 'Certificates') return (
+      <Certificates
+        students={students}
+        certificates={certificates}
+        onCertificate={setSelectedCertificate}
+      />
     )
     if (view === 'Courses') return (
       <CoursesManager
@@ -222,8 +233,6 @@ export default function Page() {
         view={view}
         students={students}
         payments={payments}
-        selectedCertificate={selectedCertificate}
-        onCertificate={setSelectedCertificate}
         onInvoice={setSelectedInvoice}
       />
     )
@@ -237,11 +246,55 @@ export default function Page() {
     setView(newView)
   }
 
+  const handleRoot = () => {
+    setSelectedId(null)
+    setSelectedInvoice(null)
+    setSelectedCertificate(null)
+    setAdding(false)
+    setView('Dashboard')
+  }
+
+  const handleClearDetail = () => {
+    setSelectedId(null)
+    setSelectedInvoice(null)
+    setSelectedCertificate(null)
+    setAdding(false)
+  }
+
   return (
     <div className="app-shell">
-      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} />
+      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} students={students} />
       <div className="main-area">
-        <Topbar view={view} onMenu={() => setSidebarCollapsed(c => !c)} />
+        <Topbar
+          view={view}
+          onMenu={() => setSidebarCollapsed(c => !c)}
+          students={students}
+          payments={payments}
+          selectedStudent={selected}
+          selectedInvoice={selectedInvoice}
+          selectedCertificate={selectedCertificate}
+          setView={handleSetView}
+          onRoot={handleRoot}
+          onClearDetail={handleClearDetail}
+          onViewStudent={(s) => {
+            setSelectedInvoice(null)
+            setSelectedCertificate(null)
+            setAdding(false)
+            setSelectedId(s.registerId)
+          }}
+          onCertificate={(s) => {
+            setSelectedInvoice(null)
+            setAdding(false)
+            setSelectedId(null)
+            setSelectedCertificate(s)
+          }}
+          onInvoice={(p) => {
+            setSelectedCertificate(null)
+            setAdding(false)
+            setSelectedId(null)
+            setSelectedInvoice(p)
+          }}
+        />
         <main className="content">
           {renderContent()}
         </main>

@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     if (supabase) {
       const { data, error } = await supabase
         .from('gst_settings')
-        .upsert({ id: 1, rate, gstin, enabled, updated_at: new Date().toISOString() })
+        .upsert({ id: 'default', rate, gstin, enabled, updated_at: new Date().toISOString() })
         .select()
         .single()
       if (!error && data) {
