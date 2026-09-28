@@ -2,7 +2,7 @@ export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Sett
 
 export type GstSettings = {
   rate: number
-  gstin: string
+  gstin: string | null
   enabled: boolean
 }
 
@@ -63,7 +63,7 @@ export type Payment = {
   date: string
   /** Amount before GST if GST-inclusive course, else base amount */
   amount: number
-  /** Invoice reference e.g. TAI/2026/INVxxxxxx */
+  /** Invoice reference in the configured brand format */
   invoice: string
   /** Matches Student.registerId */
   studentId: number

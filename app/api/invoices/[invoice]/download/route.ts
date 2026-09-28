@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { listPayments, listStudents } from '@/lib/server-data'
 import QRCode from 'qrcode'
+import { brand } from '@/lib/brand'
 
 // This route is intended for authenticated staff use only to download payment invoices.
 // The eventual public verification flow (QR/verify prompts) will be a SEPARATE,
@@ -37,6 +38,14 @@ export async function GET(
   }
 
   const student = students.find(item => item.registerId === payment.studentId)
+  const { data: gstSettings } = await supabase
+    .from('gst_settings')
+    .select('gstin')
+    .eq('id', 'default')
+    .maybeSingle()
+  const gstin = typeof gstSettings?.gstin === 'string' && gstSettings.gstin.trim()
+    ? gstSettings.gstin.trim()
+    : null
 
   const storedGstRate = Number((payment.gstRate ?? 18))
   const storedCgst = Number((payment.cgst ?? 0))
@@ -73,7 +82,7 @@ export async function GET(
   let qrCodeImage
   try {
     if (payment.verification_code) {
-      const verificationUrl = `https://verify.thoorigai.in/verify/${payment.verification_code}`
+      const verificationUrl = `${brand.verifyBaseUrl}/verify/${payment.verification_code}`
       const qrCodeBuffer = await QRCode.toBuffer(verificationUrl, {
         width: 150,
         margin: 1,
@@ -84,7 +93,7 @@ export async function GET(
     console.error('Failed to generate QR code for invoice PDF:', err)
     // Continue without QR code if generation fails
   }
-  page.drawText('ThoorigAI Infotech LLP', { x: 48, y: 780, size: 22, font: bold, color: navy })
+  page.drawText(brand.legalName, { x: 48, y: 780, size: 22, font: bold, color: navy })
   page.drawText('COURSE PAYMENT TAX INVOICE', { x: 48, y: 754, size: 11, font: bold, color: gold })
   page.drawLine({ start: { x: 48, y: 740 }, end: { x: 547, y: 740 }, thickness: 1.5, color: navy })
   const rows = [
@@ -135,10 +144,8 @@ export async function GET(
     page.drawLine({ start: { x: 48, y: y - 8 }, end: { x: 547, y: y - 8 }, thickness: 0.5, color: rgb(0.75, 0.75, 0.75) })
     y -= 28
   }
-  const gstinFromPayment = supabase ? (payment.gstin ?? undefined) : undefined
-  const finalGstin = gstinFromPayment ?? (student?.gstin ?? '33AAZFT3654J1ZI')
   page.drawText('This is a computer-generated invoice and does not require a signature.', { x: 48, y: 90, size: 9, font: regular, color: rgb(0.35, 0.35, 0.35) })
-  page.drawText(`ThoorigAI Infotech LLP | GSTIN: ${finalGstin}`, { x: 48, y: 72, size: 9, font: regular, color: rgb(0.35, 0.35, 0.35) })
+  page.drawText(`${brand.legalName} | GSTIN: ${gstin ?? 'GSTIN not configured'}`, { x: 48, y: 72, size: 9, font: regular, color: rgb(0.35, 0.35, 0.35) })
   const bytes = await pdf.save()
   return new NextResponse(bytes, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${decodedInvoice.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf"` } })
 }

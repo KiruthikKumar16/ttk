@@ -4,7 +4,7 @@
 @import './print.css';
 
 /* ═══════════════════════════════════════════════════════
-   DESIGN SYSTEM — ThoorigAI Infotech LLP
+   DESIGN SYSTEM — brand values are defined in lib/brand.ts
    Typography: Poppins (UI) + Playfair Display (display)
    Spacing: multiples of 4 (8/12/16/24/32/48)
    ═══════════════════════════════════════════════════════ */
@@ -13,34 +13,34 @@
   color-scheme: light;
 
   /* ── Palette ── */
-  --navy:      #0f172a; /* Slate 900 for sidebar */
-  --navy-2:    #1e293b;
-  --navy-deep: #020617;
+  --navy:      var(--brand-navy); /* Slate 900 for sidebar */
+  --navy-2:    var(--brand-navy-secondary);
+  --navy-deep: var(--brand-navy-deep);
   
-  --gold:      #6366f1; /* Vibrant Indigo replacing gold for accents */
-  --gold-deep: #4f46e5;
-  --gold-light:#818cf8;
+  --gold:      var(--brand-accent); /* Vibrant Indigo replacing gold for accents */
+  --gold-deep: var(--brand-accent-deep);
+  --gold-light:var(--brand-accent-light);
 
-  --primary:   #3b82f6; /* Modern Blue */
-  --primary-hover: #2563eb;
+  --primary:   var(--brand-primary); /* Modern Blue */
+  --primary-hover: var(--brand-primary-hover);
 
-  --ink:       #0f172a; /* Slate 900 */
-  --muted:     #64748b;
-  --line:      #e2e8f0;
+  --ink:       var(--brand-ink); /* Slate 900 */
+  --muted:     var(--brand-muted);
+  --line:      var(--brand-line);
   
   /* Glassmorphism surface */
   --surface:   rgba(255, 255, 255, 0.7);
-  --surface-solid: #ffffff;
+  --surface-solid: var(--brand-surface);
   
   /* Mesh gradient for the main body */
-  --canvas:    linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  --canvas:    linear-gradient(135deg, var(--brand-canvas-start) 0%, var(--brand-canvas-end) 100%);
 
-  --green:     #10b981;
-  --green-bg:  #ecfdf5;
-  --red:       #ef4444;
-  --red-bg:    #fef2f2;
-  --amber:     #f59e0b;
-  --amber-bg:  #fffbeb;
+  --green:     var(--brand-green);
+  --green-bg:  var(--brand-green-background);
+  --red:       var(--brand-red);
+  --red-bg:    var(--brand-red-background);
+  --amber:     var(--brand-amber);
+  --amber-bg:  var(--brand-amber-background);
 
   /* ── Type ── */
   --font-ui:      var(--font-inter), 'Poppins', system-ui, -apple-system, sans-serif;
@@ -2004,3 +2004,30 @@ td strong { color: #0f172a; font-weight: 600; }
   font-size: var(--text-xs);
   color: var(--muted);
 }
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--canvas);
+}
+.login-card {
+  width: min(100%, 420px);
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-solid);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+}
+.login-logo { display: block; width: 76px; height: 76px; object-fit: contain; margin: 0 auto 12px; }
+.login-brand { color: var(--gold-deep); text-align: center; font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.08em; }
+.login-title { margin: 6px 0 26px; color: var(--ink); text-align: center; font-family: var(--font-display); font-size: var(--text-2xl); }
+.login-card label { color: var(--ink); }
+.login-card input { min-height: 42px; border: 1px solid var(--line); padding: 8px 10px; }
+.login-card input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.login-card button[type="submit"] { min-height: 44px; background: var(--primary); }
+.login-card button[type="submit"]:hover { background: var(--primary-hover); }
+.login-card button[type="submit"]:disabled { cursor: wait; opacity: 0.7; }
+.login-error { border-radius: var(--radius-sm); background: var(--red-bg); padding: 10px 12px; color: var(--red); font-size: var(--text-sm); }
+.login-help { margin-top: 22px; color: var(--muted); text-align: center; font-size: var(--text-sm); }

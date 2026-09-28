@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { listPayments } from '@/lib/server-data'
 import { paymentSchema } from '@/lib/validation'
+import { brand } from '@/lib/brand'
 import { generateUniqueVerificationCode } from '@/lib/utils'
 import z from 'zod'
 
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
 
       const next = Date.now()
       const paymentId = id || `RCPT-${next}`
-      const finalInvoice = invoice || `TAI/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
+      const finalInvoice = invoice || `${brand.invoicePrefix}/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
 
       const newPayment: any = {
         id: paymentId,

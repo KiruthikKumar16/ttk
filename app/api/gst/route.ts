@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         data: {
           rate: Number(data.rate),
-          gstin: String(data.gstin),
+          gstin: data.gstin ? String(data.gstin) : null,
           enabled: Boolean(data.enabled),
         },
         source: 'supabase',
@@ -75,12 +75,12 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('gst_settings')
-      .upsert({ id: 'default', rate, gstin, enabled, updated_at: new Date().toISOString() })
+      .upsert({ id: 'default', rate, gstin: gstin?.trim() || null, enabled, updated_at: new Date().toISOString() })
       .select()
       .single()
     if (!error && data) {
       return NextResponse.json({
-        data: { rate: Number(data.rate), gstin: String(data.gstin), enabled: Boolean(data.enabled) },
+        data: { rate: Number(data.rate), gstin: data.gstin ? String(data.gstin) : null, enabled: Boolean(data.enabled) },
         message: 'GST settings updated',
         source: 'supabase',
       })
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     // Update in-memory
     gstSettings.rate = rate
-    gstSettings.gstin = gstin
+    gstSettings.gstin = gstin?.trim() || null
     gstSettings.enabled = enabled
 
     return NextResponse.json({

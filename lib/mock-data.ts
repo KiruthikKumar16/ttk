@@ -1,8 +1,9 @@
 import type { Course, GstSettings, Payment, Student } from './types'
+import { brand } from './brand'
 
 export const gstSettings: GstSettings = {
   rate: 18,
-  gstin: '33AAZFT3654J1ZI',
+  gstin: null,
   enabled: true,
 }
 
@@ -116,10 +117,10 @@ export const initialStudents: Student[] = [
 ]
 
 export const initialPayments: Payment[] = [
-  { id: 'RCPT-1086', student: 'Kavya Srinivasan', method: 'UPI', date: '14 Sep 2026', amount: 12000, invoice: 'TAI/2026/INV086', studentId: 1048 },
-  { id: 'RCPT-1085', student: 'Arjun Prakash', method: 'Bank Transfer', date: '13 Sep 2026', amount: 18000, invoice: 'TAI/2026/INV085', studentId: 1047 },
-  { id: 'RCPT-1084', student: 'Meena Lakshmi', method: 'Cash', date: '11 Sep 2026', amount: 12000, invoice: 'TAI/2026/INV084', studentId: 1046 },
-  { id: 'RCPT-1083', student: 'Rohit Kumar', method: 'UPI', date: '09 Sep 2026', amount: 9000, invoice: 'TAI/2026/INV083', studentId: 1045 },
+  { id: 'RCPT-1086', student: 'Kavya Srinivasan', method: 'UPI', date: '14 Sep 2026', amount: 12000, invoice: `${brand.invoicePrefix}/2026/INV086`, studentId: 1048 },
+  { id: 'RCPT-1085', student: 'Arjun Prakash', method: 'Bank Transfer', date: '13 Sep 2026', amount: 18000, invoice: `${brand.invoicePrefix}/2026/INV085`, studentId: 1047 },
+  { id: 'RCPT-1084', student: 'Meena Lakshmi', method: 'Cash', date: '11 Sep 2026', amount: 12000, invoice: `${brand.invoicePrefix}/2026/INV084`, studentId: 1046 },
+  { id: 'RCPT-1083', student: 'Rohit Kumar', method: 'UPI', date: '09 Sep 2026', amount: 9000, invoice: `${brand.invoicePrefix}/2026/INV083`, studentId: 1045 },
 ]
 
 export const initialCourses: Course[] = [

@@ -4,6 +4,7 @@ import type { Course, Payment, Student } from '@/lib/types'
 import { money, amountInWords } from '@/lib/formatters'
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
+import { brand } from '@/lib/brand'
 
 const INVOICE_W = 794
 const INVOICE_H = 562
@@ -61,7 +62,6 @@ type InvoiceFormState = {
   invoiceNumber: string
   receiptId: string
   date: string
-  gstNumber: string
   studentName: string
   mobile: string
   studentId: string
@@ -78,12 +78,14 @@ export function InvoicePrint({
   student,
   onBack,
   gstRate = 18,
+  gstin,
   courses,
 }: {
   payment: Payment
   student?: Student
   onBack: () => void
   gstRate?: number
+  gstin: string | null
   courses?: Course[]
 }) {
   const invoiceStudent = student ?? {
@@ -101,10 +103,9 @@ export function InvoicePrint({
     const suff = genInvSuffix()
     const y = new Date().getFullYear()
     return {
-      invoiceNumber: payment.invoice || `TAI/${y}/INV${suff}`,
+      invoiceNumber: payment.invoice || `${brand.invoicePrefix}/${y}/INV${suff}`,
       receiptId: payment.id || `${y}${suff}`,
       date: todayISO(),
-      gstNumber: '33AAZFT3654J1ZI',
       studentName: invoiceStudent.name,
       mobile: invoiceStudent.phone && invoiceStudent.phone !== '—' ? invoiceStudent.phone : '',
       studentId: `TAI-${invoiceStudent.registerId}`,
@@ -157,7 +158,7 @@ export function InvoicePrint({
         // For invoices, we need to get the verification code from the payment data
         // Since the InvoicePrint component receives a payment prop, we should check if it has verification_code
         if (payment.verification_code) {
-          const verificationUrl = `https://verify.thoorigai.in/verify/${payment.verification_code}`
+          const verificationUrl = `${brand.verifyBaseUrl}/verify/${payment.verification_code}`
           const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
             width: 120,
             margin: 1,
@@ -197,10 +198,9 @@ export function InvoicePrint({
     const suff = genInvSuffix()
     const y = new Date().getFullYear()
     setForm({
-      invoiceNumber: `TAI/${y}/INV${suff}`,
+      invoiceNumber: `${brand.invoicePrefix}/${y}/INV${suff}`,
       receiptId: `${y}${suff}`,
       date: todayISO(),
-      gstNumber: '33AAZFT3654J1ZI',
       studentName: '',
       mobile: '',
       studentId: `${y}/TTK01/CUS${suff}`,
@@ -260,15 +260,12 @@ export function InvoicePrint({
                   />
                 </label>
               </div>
-              <label className="edit-label">
-                GST Number
-                <input
-                  type="text"
-                  value={form.gstNumber}
-                  onChange={(e) => set('gstNumber', e.target.value)}
-                  className="edit-input edit-input-light"
-                />
-              </label>
+              <div className="edit-label">
+                GSTIN
+                <div className="edit-input edit-input-light" aria-live="polite">
+                  {gstin || 'GSTIN not configured'}
+                </div>
+              </div>
             </div>
 
             <div className="edit-section">
@@ -438,6 +435,9 @@ export function InvoicePrint({
                   grandTotal={grandTotal}
                   gstRate={gstRate}
                   isInclusive={isInclusive}
+                  gstin={gstin}
+                  verificationCode={payment.verification_code}
+                  qrCode={qrCode}
                   copy="Customer Copy"
                 />
                 <InvoiceCopy
@@ -448,6 +448,9 @@ export function InvoicePrint({
                   grandTotal={grandTotal}
                   gstRate={gstRate}
                   isInclusive={isInclusive}
+                  gstin={gstin}
+                  verificationCode={payment.verification_code}
+                  qrCode={qrCode}
                   copy="Office Copy"
                 />
               </article>
@@ -471,6 +474,9 @@ function InvoiceCopy({
   grandTotal,
   gstRate,
   isInclusive,
+  gstin,
+  verificationCode,
+  qrCode,
   copy,
 }: {
   form: InvoiceFormState
@@ -480,6 +486,9 @@ function InvoiceCopy({
   grandTotal: number
   gstRate: number
   isInclusive: boolean
+  gstin: string | null
+  verificationCode?: string
+  qrCode: string | null
   copy: string
 }) {
   const course = effectiveCourse(form) || '—'
@@ -491,27 +500,27 @@ function InvoiceCopy({
           <span>Receipt ID - [ {form.receiptId || '—'} ]</span>
         </div>
         <b>{copy}</b>
-        {payment.verification_code && (
+        {verificationCode && (
           <div className="invoice-verification-section">
             <div className="lbl">Verify Invoice</div>
             <div className="qr-code-container">
               {qrCode ? <img src={qrCode} alt="Verify invoice" className="qr-code" /> : null}
             </div>
             <div className="verification-url">
-              https://verify.thoorigai.in/verify/{payment.verification_code}
+              {brand.verifyBaseUrl}/verify/{verificationCode}
             </div>
           </div>
         )}
       </div>
       <header className="ttk-invoice-brand">
         <div className="ttk-invoice-logo">
-          <img src="/thoorigai-logo.png" alt="ThoorigAI" />
+          <img src={brand.logoPath} alt={brand.shortName} />
         </div>
         <div>
-          <h1>ThoorigAI Infotech</h1>
+          <h1>{brand.legalName}</h1>
           <p>127, Ettayapuram Road, Melur Tuticorin, Tamil Nadu - 628002</p>
-          <p>Phone: 9244575008 | Professional Learning &amp; Training</p>
-          <strong>GST No: {form.gstNumber || '33AAZFT3654J1ZI'}</strong>
+          <p>Phone: 9244575008 | {brand.tagline}</p>
+          <strong>GST No: {gstin || 'GSTIN not configured'}</strong>
         </div>
       </header>
       <div className="ttk-invoice-meta">

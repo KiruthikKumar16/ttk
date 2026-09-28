@@ -1,13 +1,19 @@
 {
-  "name": "my-project",
+  "name": "thoorigai-admin-dashboard",
   "version": "0.1.0",
+  "description": "Internal administration dashboard for ThoorigAI Infotech",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "UNLICENSED",
   "packageManager": "pnpm@12.3.4",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:brand": "node scripts/check-brand.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

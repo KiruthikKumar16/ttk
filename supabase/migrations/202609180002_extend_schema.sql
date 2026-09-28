@@ -1,4 +1,4 @@
--- Extended schema for Elysium Academy admin dashboard
+-- Extended schema for ThoorigAI Infotech admin dashboard
 -- Adds: courses table, full student profile columns, certificates table,
 -- payment transaction metadata, and consistency with frontend types.
 

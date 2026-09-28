@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { brand } from '@/lib/brand'
 import { PaymentsTable } from '@/components/PaymentsTable'
 import { Status } from '@/components/Status'
 
@@ -270,7 +271,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
       const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
       const link = document.createElement('a')
       link.href = url
-      link.download = "thoorigai-report-" + new Date().toISOString().slice(0, 10) + ".csv"
+      link.download = `${brand.shortName.toLowerCase()}-report-${new Date().toISOString().slice(0, 10)}.csv`
       link.click()
       URL.revokeObjectURL(url)
     }
@@ -558,7 +559,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
             <div className="panel-header chart-panel-header">
               <div>
                 <h2>Acquisition channels</h2>
-                <p>How registered students discovered ThoorigAI Infotech</p>
+                <p>How registered students discovered {brand.displayName}</p>
               </div>
               <span className="chart-badge chart-badge-green">
                 <Globe size={12} />

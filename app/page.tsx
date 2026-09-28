@@ -24,7 +24,7 @@ export default function Page() {
   const [allPayments, setAllPayments] = useState<Payment[]>([])
   const [allCourses, setAllCourses] = useState<Course[]>([])
   const [allCertificates, setAllCertificates] = useState<CertificateRecord[]>([])
-  const [allGst, setAllGst] = useState<GstSettings>({ rate: 18, gstin: '33AAZFT3654J1ZI', enabled: true })
+  const [allGst, setAllGst] = useState<GstSettings>({ rate: 18, gstin: null, enabled: true })
 
   // Pagination state for Students and Payments views
   const [studentsPage, setStudentsPage] = useState(1)
@@ -222,6 +222,7 @@ export default function Page() {
         student={allStudents.find(s => s.registerId === selectedInvoice.studentId)!}
         onBack={() => setSelectedInvoice(null)}
         gstRate={allGst.enabled ? allGst.rate : 0}
+        gstin={allGst.gstin}
         courses={allCourses}
       />
     )
@@ -245,6 +246,7 @@ export default function Page() {
           onCertificate={() => setSelectedCertificate(selectedStudent)}
           onInvoice={setSelectedInvoice}
           gstRate={allGst.enabled ? allGst.rate : 0}
+          gstin={allGst.gstin}
           courses={allCourses}
         />
       )

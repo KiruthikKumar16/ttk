@@ -1,6 +1,6 @@
-# Elysium Academy Admin Dashboard
+# ThoorigAI Infotech Admin Dashboard
 
-Admin dashboard for student records, payments and invoices, courses, certificates, attendance, assessments, course materials, audit history, and public document verification.
+ThoorigAI Infotech Admin Dashboard for student records, payments and invoices, courses, certificates, attendance, assessments, course materials, audit history, and public document verification.
 
 ## Stack
 

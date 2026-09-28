@@ -12,7 +12,7 @@ export function GstSettingsPage({
   onSave: (s: GstSettings) => Promise<void>
 }) {
   const [rate, setRate] = useState(String(settings.rate))
-  const [gstin, setGstin] = useState(settings.gstin)
+  const [gstin, setGstin] = useState(settings.gstin ?? '')
   const [enabled, setEnabled] = useState(settings.enabled)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -39,15 +39,11 @@ export function GstSettingsPage({
       setError('GST rate must be between 0% and 100%.')
       return
     }
-    if (!gstin.trim()) {
-      setError('Please enter a valid GSTIN.')
-      return
-    }
     setError('')
     setSuccess('')
     setSaving(true)
     try {
-      await onSave({ rate: r, gstin: gstin.trim(), enabled })
+      await onSave({ rate: r, gstin: gstin.trim() || null, enabled })
       setSuccess('GST settings saved successfully.')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
@@ -140,7 +136,7 @@ export function GstSettingsPage({
             {/* GSTIN */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                GSTIN <span className="text-red-500">*</span>
+                GSTIN
               </label>
               <div className="relative">
                 <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -150,9 +146,14 @@ export function GstSettingsPage({
                   onChange={e => setGstin(e.target.value.toUpperCase())}
                   maxLength={15}
                   className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-900 font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="e.g. 33AAZFT3654J1ZI"
+                  placeholder="Enter GSTIN"
                 />
               </div>
+              {!gstin.trim() && (
+                <p className="mt-1.5 text-sm font-medium text-amber-700" role="status">
+                  GSTIN not configured
+                </p>
+              )}
               <p className="text-xs text-gray-500 mt-1.5">
                 15-character GST Identification Number
               </p>

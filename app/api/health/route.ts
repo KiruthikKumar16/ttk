@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
+import { brand } from '@/lib/brand'
 
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    service: 'thoorigai-admin-dashboard',
+    service: `${brand.shortName.toLowerCase()}-admin-dashboard`,
     mode: 'serverless-ready',
     timestamp: new Date().toISOString(),
   })

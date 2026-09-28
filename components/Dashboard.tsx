@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, CircleDollarSign, FileCh
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { brand } from '@/lib/brand'
 import { Status } from '@/components/Status'
 import { PaymentsTable } from '@/components/PaymentsTable'
 export function Dashboard({ students, payments, onInvoice, setView }: { students: Student[]; payments: Payment[]; onInvoice: (p: Payment) => void; setView: (view: View) => void; }) {
@@ -15,7 +16,7 @@ export function Dashboard({ students, payments, onInvoice, setView }: { students
         <div>
           <p className="eyebrow">MONDAY, 15 SEPTEMBER 2026</p>
           <h1>Good morning, Admin</h1>
-          <p className="subcopy">Here&rsquo;s what&rsquo;s happening across ThoorigAI Infotech.</p>
+          <p className="subcopy">Here&rsquo;s what&rsquo;s happening across {brand.displayName}.</p>
         </div>
         <Button variant="default" size="default" onClick={() => setView('Students')}>
           <Plus size={16} />

@@ -63,7 +63,7 @@ export const certificateSchema = z.object({
 
 export const gstSchema = z.object({
   rate: z.number().min(0).max(100, { message: 'GST rate must be between 0 and 100' }),
-  gstin: z.string().min(1, { message: 'GSTIN is required' }).optional(),
+  gstin: z.string().trim().nullable().optional(),
   enabled: z.boolean().optional(),
 });
 

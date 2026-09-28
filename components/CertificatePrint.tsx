@@ -6,6 +6,7 @@ import type { Student } from '@/lib/types'
 import { useEffect, useRef, useState, cloneElement } from 'react'
 import { createPortal } from 'react-dom'
 import QRCode from 'qrcode'
+import { brand } from '@/lib/brand'
 
 const CERT_W = 620
 const CERT_H = 877
@@ -175,7 +176,7 @@ export function CertificatePrint({
         // Otherwise use form.verification_code (for preview mode, which will be undefined)
         const verificationCode = certificateRecord?.verification_code ?? form.verification_code
         if (verificationCode) {
-          const verificationUrl = `https://verify.thoorigai.in/verify/${verificationCode}`
+          const verificationUrl = `${brand.verifyBaseUrl}/verify/${verificationCode}`
           const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
             width: 120,
             margin: 1,
@@ -262,7 +263,7 @@ export function CertificatePrint({
 
               <div className="cert-inner">
                 <div className="cert-logo">
-                  <img src="/thoorigai-logo.png" alt="ThoorigAI" />
+                  <img src={brand.logoPath} alt={brand.shortName} />
                 </div>
 
                 <div className="cert-title">
@@ -281,7 +282,7 @@ export function CertificatePrint({
                 <div className="cert-body">
                   has successfully completed the{' '}
                   <b>{form.courseName || 'Course Name'}</b> Program at{' '}
-                  <b>ThoorigAI Infotech LLP</b>, from{' '}
+                  <b>{brand.legalName}</b>, from{' '}
                   <b>{fmtDate(form.startDate)}</b> to{' '}
                   <b>{fmtDate(form.endDate)}</b>.
                 </div>
@@ -318,7 +319,7 @@ export function CertificatePrint({
                         {qrCode ? <img src={qrCode} alt="Verify certificate" className="qr-code" /> : null}
                       </div>
                       <div className="verification-url">
-                        https://verify.thoorigai.in/verify/{certificateRecord?.verification_code || form.verification_code || 'CODE'}
+                        {brand.verifyBaseUrl}/verify/{certificateRecord?.verification_code || form.verification_code || 'CODE'}
                       </div>
                     </div>
                   ) : null}

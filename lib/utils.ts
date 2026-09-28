@@ -1,4 +1,4 @@
-// Utility functions for the Elysium Academy Admin Dashboard
+// Utility functions for the ThoorigAI Infotech Admin Dashboard
 
 /**
  * Generate a URL-safe, short random string for verification codes

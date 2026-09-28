@@ -1,6 +1,7 @@
 import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users, List } from 'lucide-react'
 import type { Student, View } from '@/lib/types'
 import React from 'react'
+import { brand } from '@/lib/brand'
 
 export function Sidebar({ view, setView, collapsed, students }: { view: View; setView: (v: View) => void; collapsed?: boolean; students?: Student[] }) {
   const nav: [View, typeof LayoutDashboard, string][] = [
@@ -17,12 +18,12 @@ export function Sidebar({ view, setView, collapsed, students }: { view: View; se
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
       <div className="brand">
         <div className="brand-mark">
-          <img src="/thoorigai-logo.png" alt="ThoorigAI" className="brand-mark-img" />
+          <img src={brand.logoPath} alt={brand.shortName} className="brand-mark-img" />
         </div>
         {!collapsed && (
           <div>
-            <div className="brand-name">THOORIGAI</div>
-            <div className="brand-sub">INFOTECH</div>
+            <div className="brand-name">{brand.shortName.toUpperCase()}</div>
+            <div className="brand-sub">{brand.displayName.replace(`${brand.shortName} `, '').toUpperCase()}</div>
           </div>
         )}
       </div>
@@ -52,7 +53,7 @@ export function Sidebar({ view, setView, collapsed, students }: { view: View; se
             <>
               <div>
                 <strong>Admin account</strong>
-                <small>ThoorigAI Infotech</small>
+                <small>{brand.displayName}</small>
               </div>
               <ChevronDown size={15} />
             </>

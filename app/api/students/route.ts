@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { listStudents, studentFromRow } from '@/lib/server-data'
 import { studentSchema } from '@/lib/validation'
+import { brand } from '@/lib/brand'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
     const next = Date.now()
     const registerId = next  // Using timestamp for mock simplicity
     const paymentId = `RCPT-${next}`
-    const invoice = `TAI/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
+    const invoice = `${brand.invoicePrefix}/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
 
     const mockStudent = {
       registerId,
@@ -212,7 +213,7 @@ export async function POST(req: NextRequest) {
         method: 'Initial Payment',
         date: paymentDate,
         amount: paid,
-        invoice: `TAI/${new Date().getFullYear()}/INV${String(Date.now()).slice(-6)}`,
+        invoice: `${brand.invoicePrefix}/${new Date().getFullYear()}/INV${String(Date.now()).slice(-6)}`,
         studentId: next,
       } : null,
       source: 'mock'
