@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { Payment, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { differenceRupees } from '@/lib/money'
 
 type BreadcrumbSegment = {
   label: string
@@ -257,7 +258,7 @@ export function Topbar({
                 matches.map(student => {
                   const invoices = invoicesFor(student)
                   const eligible = student.status === 'Fully Paid'
-                  const outstanding = student.total - student.paid
+                  const outstanding = differenceRupees(student.total, student.paid)
                   return (
                     <article key={student.registerId} className="student-search-card">
                       <header className="student-search-head">

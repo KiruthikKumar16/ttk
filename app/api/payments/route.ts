@@ -6,6 +6,8 @@ import { paymentSchema } from '@/lib/validation'
 import { generateUniqueVerificationCode } from '@/lib/utils'
 import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
+import { pagePaginationFromSearchParams } from '@/lib/pagination'
+import { paiseToRupees, rupeesToPaise } from '@/lib/money'
 
 export async function GET(req: NextRequest) {
   // Cookie-bound client: RLS applies to every query in this handler.
@@ -18,12 +20,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const pageParam = searchParams.get('page')
-    const pageSizeParam = searchParams.get('pageSize')
-    const page = pageParam ? parseInt(pageParam, 10) : 1
-    const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : 50
+    const pagination = pagePaginationFromSearchParams(searchParams)
 
-    const result = await listPayments(supabase, { page, pageSize })
+    const result = await listPayments(supabase, { page: pagination.page, pageSize: pagination.pageSize })
     return NextResponse.json(result)
   } catch (error) {
     return unexpectedApiError(error, 'Unable to load payments')
@@ -68,9 +67,10 @@ export async function POST(req: NextRequest) {
     }
     if (studentError) return unexpectedApiError(studentError, 'Unable to load payment student')
 
-    const balance = Number(student.total) - Number(student.paid)
-    if (amount > balance) {
-      return NextResponse.json({ error: `Payment exceeds the remaining balance of ${balance}.` }, { status: 400 })
+    const amountPaise = rupeesToPaise(amount)
+    const balancePaise = Number(student.total) - Number(student.paid)
+    if (amountPaise > balancePaise) {
+      return NextResponse.json({ error: `Payment exceeds the remaining balance of ${paiseToRupees(balancePaise)}.` }, { status: 400 })
     }
 
     const paymentDate = date ?? new Date().toISOString().slice(0, 10)
@@ -79,13 +79,13 @@ export async function POST(req: NextRequest) {
       student_id: student.id,
       student_register_id: studentId,
       method,
-      amount,
+      amount: amountPaise,
       payment_date: paymentDate,
       transaction_id: transactionId ?? null,
       custom_note: customNote ?? null,
       gst_rate: gstRate,
-      cgst,
-      sgst,
+      cgst: cgst === undefined ? 0 : rupeesToPaise(cgst),
+      sgst: sgst === undefined ? 0 : rupeesToPaise(sgst),
     }
 
     const { data: payment, error: paymentError } = await supabase
@@ -94,13 +94,6 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
     if (paymentError) return unexpectedApiError(paymentError, 'Unable to record payment')
-
-    const paid = Number(student.paid) + amount
-    const { error: updateError } = await supabase
-      .from('students')
-      .update({ paid, status: paid >= Number(student.total) ? 'Fully Paid' : 'Pending', updated_at: new Date().toISOString() })
-      .eq('id', student.id)
-    if (updateError) return unexpectedApiError(updateError, 'Unable to update student balance')
 
     const dateStr = new Date(paymentDate + 'T00:00:00').toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -132,12 +125,12 @@ export async function POST(req: NextRequest) {
           student: student.name,
           method,
           date: dateStr,
-          amount: Number(payment.amount),
+          amount: paiseToRupees(Number(payment.amount)),
           invoice: payment.invoice,
           studentId: studentId,
           studentRowId: student.id,
-          cgst: Number(payment.cgst) ?? 0,
-          sgst: Number(payment.sgst) ?? 0,
+          cgst: paiseToRupees(Number(payment.cgst ?? 0)),
+          sgst: paiseToRupees(Number(payment.sgst ?? 0)),
           transactionId: payment.transaction_id,
           customNote: payment.custom_note,
           gstRate: Number(payment.gst_rate) ?? 0,

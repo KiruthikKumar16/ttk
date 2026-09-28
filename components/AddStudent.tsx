@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, AlertCircle } from 'lucide-react'
 import type { Course, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { calculateGstForRupees, rupeesToPaise } from '@/lib/money'
 
 const DEFAULT_COURSE_OPTIONS = [
   'Professional Course',
@@ -118,7 +119,13 @@ export function AddStudent({
       setError('Please specify valid base course tuition fees.')
       return
     }
-    if (isNaN(paidNum) || paidNum < 0 || paidNum > totalNum) {
+    if (!Number.isFinite(paidNum) || paidNum < 0) {
+      setError('Initial payment cannot exceed base course tuition fees.')
+      return
+    }
+    const totalPaise = rupeesToPaise(totalNum)
+    const paidPaise = rupeesToPaise(paidNum)
+    if (paidPaise > totalPaise) {
       setError('Initial payment cannot exceed base course tuition fees.')
       return
     }
@@ -149,13 +156,10 @@ export function AddStudent({
   const isGstInclusive = Boolean(selectedCourseObj?.gstInclusive)
 
   const enteredTotal = Number(total) || 0
-  const baseFeeNum = isGstInclusive && gstRate > 0
-    ? Math.round(enteredTotal / (1 + gstRate / 100))
-    : enteredTotal
-  const gstAmount = gstRate > 0
-    ? (isGstInclusive ? enteredTotal - baseFeeNum : Math.round(enteredTotal * (gstRate / 100)))
-    : 0
-  const grandTotal = isGstInclusive ? enteredTotal : enteredTotal + gstAmount
+  const feeBreakdown = calculateGstForRupees(enteredTotal, gstRate, isGstInclusive)
+  const baseFeeNum = feeBreakdown.taxableAmount
+  const gstAmount = feeBreakdown.gstAmount
+  const grandTotal = feeBreakdown.totalAmount
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">

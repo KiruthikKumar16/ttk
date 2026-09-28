@@ -1,5 +1,7 @@
 export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Invoices' | 'Reports' | 'Settings' | 'Audit Log' | 'Attendance' | 'Assessments' | 'SimpleView'
 
+export type Role = 'admin' | 'staff' | 'trainer'
+
 export type GstSettings = {
   rate: number
   gstin: string | null
@@ -9,6 +11,7 @@ export type GstSettings = {
 export type Course = {
   id: string
   name: string
+  /** Rupees at the API/UI boundary; the database stores integer paise. */
   fee: number
   duration: string
   description?: string
@@ -28,7 +31,9 @@ export type Student = {
   course: string
   /** ISO date string YYYY-MM-DD or display string depending on source */
   batch: string
+  /** Rupees at the API/UI boundary; the database stores integer paise. */
   total: number
+  /** Rupees at the API/UI boundary; the database stores integer paise. */
   paid: number
   phone: string
   status: StudentStatus
@@ -61,7 +66,7 @@ export type Payment = {
   method: PaymentMethod
   /** UI date string — 'DD Mmm YYYY' (format preserved for display) */
   date: string
-  /** Amount before GST if GST-inclusive course, else base amount */
+  /** Rupees at the API/UI boundary; the database stores integer paise. */
   amount: number
   /** Invoice reference in the configured brand format */
   invoice: string
@@ -75,9 +80,9 @@ export type Payment = {
   customNote?: string
   /** GST percent applied (from gst_settings at time of payment) */
   gstRate?: number
-  /** CGST portion (computed from gstRate on base taxable amount) */
+  /** CGST in rupees at the API/UI boundary; the database stores integer paise. */
   cgst?: number
-  /** SGST portion */
+  /** SGST in rupees at the API/UI boundary; the database stores integer paise. */
   sgst?: number
   /** ISO date (YYYY-MM-DD) — used when read from storage; same info as .date */
   paymentDate?: string

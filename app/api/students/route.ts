@@ -5,6 +5,8 @@ import { listStudents, studentFromRow } from '@/lib/server-data'
 import { studentSchema } from '@/lib/validation'
 import z from 'zod'
 import { unexpectedApiError } from '@/lib/api-response'
+import { pagePaginationFromSearchParams } from '@/lib/pagination'
+import { calculateGstForRupees, rupeesToPaise, paiseToRupees } from '@/lib/money'
 
 export async function GET(req: NextRequest) {
   // Cookie-bound client: RLS applies to every query in this handler.
@@ -17,12 +19,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const pageParam = searchParams.get('page')
-    const pageSizeParam = searchParams.get('pageSize')
-    const page = pageParam ? parseInt(pageParam, 10) : 1
-    const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : 50
+    const pagination = pagePaginationFromSearchParams(searchParams)
 
-    const result = await listStudents(supabase, { page, pageSize })
+    const result = await listStudents(supabase, { page: pagination.page, pageSize: pagination.pageSize })
     return NextResponse.json(result)
   } catch (error) {
     return unexpectedApiError(error, 'Unable to load students')
@@ -65,7 +64,7 @@ export async function POST(req: NextRequest) {
     } = parsedBody
 
     // Business-logic validation: paid cannot exceed total
-    if (paid > total) {
+    if (rupeesToPaise(paid) > rupeesToPaise(total)) {
       return NextResponse.json({ error: 'Paid amount cannot exceed total fees' }, { status: 400 })
     }
 
@@ -74,8 +73,9 @@ export async function POST(req: NextRequest) {
       phone,
       course,
       batch,
-      total,
-      paid,
+      total: rupeesToPaise(total),
+      // The payment trigger applies any initial payment exactly once.
+      paid: rupeesToPaise(0),
       status: (paid >= total ? 'Fully Paid' : 'Pending') as 'Fully Paid' | 'Pending',
       gender: gender ?? null,
       dob: dob ?? null,
@@ -105,8 +105,7 @@ export async function POST(req: NextRequest) {
       // If there's an initial payment, create it
       if (paid > 0) {
         const initialGstRate = 18
-        const initialCgst = Math.round((paid * (initialGstRate / 100)) / 2)
-        const initialSgst = Math.round((paid * (initialGstRate / 100)) / 2)
+        const initialGst = calculateGstForRupees(paid, initialGstRate, false)
 
         const { data: paymentData, error: paymentError } = await supabase
           .from('payments')
@@ -114,11 +113,11 @@ export async function POST(req: NextRequest) {
             student_id: student.id,
             student_register_id: student.register_id,
             method: 'Initial Payment',
-            amount: paid,
+            amount: rupeesToPaise(paid),
             payment_date: paymentDate,
             gst_rate: initialGstRate,
-            cgst: initialCgst,
-            sgst: initialSgst,
+            cgst: rupeesToPaise(initialGst.cgstAmount),
+            sgst: rupeesToPaise(initialGst.sgstAmount),
           })
           .select()
           .single()
@@ -140,8 +139,8 @@ export async function POST(req: NextRequest) {
           invoice: paymentData.invoice,
           studentId: student.register_id,
           studentRowId: student.id,
-          cgst: paymentData.cgst,
-          sgst: paymentData.sgst,
+          cgst: paiseToRupees(Number(paymentData.cgst)),
+          sgst: paiseToRupees(Number(paymentData.sgst)),
           gstRate: paymentData.gst_rate,
           transactionId: paymentData.transaction_id,
           customNote: paymentData.custom_note,
@@ -150,7 +149,11 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         message: 'Student created successfully',
-        data: studentFromRow(student),
+        data: studentFromRow({
+          ...student,
+          paid: rupeesToPaise(paid),
+          status: paid >= total ? 'Fully Paid' : 'Pending',
+        }),
         payment: createdPayment,
       }, { status: 201 })
   } catch (error) {

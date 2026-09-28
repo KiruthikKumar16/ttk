@@ -73,7 +73,12 @@ export async function GET(
       if (paymentError) throw paymentError
       if (paymentData) {
         const selector = getVerificationSelector('invoice')
-        if (selector) publicResult = selector(paymentData)
+        if (selector) publicResult = selector({
+          invoice: paymentData.invoice,
+          amountPaise: Number(paymentData.amount),
+          gst_rate: paymentData.gst_rate,
+          payment_date: paymentData.payment_date,
+        })
       }
     }
 

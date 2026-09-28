@@ -38,8 +38,8 @@ export function Attendance() {
     courseId: '',
     startDate: '',
     endDate: '',
-    limit: 50,
-    offset: 0
+    pageSize: 50,
+    page: 1
   })
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -54,8 +54,8 @@ export function Attendance() {
       if (filters.courseId) queryParams.append('courseId', filters.courseId)
       if (filters.startDate) queryParams.append('startDate', filters.startDate)
       if (filters.endDate) queryParams.append('endDate', filters.endDate)
-      queryParams.append('limit', String(filters.limit))
-      queryParams.append('offset', String(filters.offset))
+      queryParams.append('pageSize', String(filters.pageSize))
+      queryParams.append('page', String(filters.page))
 
       const response = await fetch(`/api/attendance?${queryParams.toString()}`)
       if (!response.ok) {
@@ -77,20 +77,20 @@ export function Attendance() {
   // Initial fetch
   useEffect(() => {
     fetchAttendance()
-  }, [filters.studentId, filters.courseId, filters.startDate, filters.endDate, filters.limit, filters.offset])
+  }, [filters.studentId, filters.courseId, filters.startDate, filters.endDate, filters.pageSize, filters.page])
 
   const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({
       ...prev,
       ...newFilters,
-      offset: 0 // Reset to first page when filters change
+      page: 1 // Reset to first page when filters change
     }))
   }
 
   const handleLoadMore = () => {
     setFilters(prev => ({
       ...prev,
-      offset: prev.offset + prev.limit
+      page: prev.page + 1
     }))
   }
 
@@ -126,7 +126,7 @@ export function Attendance() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, offset: 0 }))}>
+          <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}>
             <RefreshCw size={16} className="mr-2" /> Refresh
           </Button>
           {/* Button to mark new attendance would go here, likely linking to student/detail or course views */}

@@ -7,6 +7,7 @@ import { generateUniqueVerificationCode } from '@/lib/utils'
 import type { CertificateRecord } from '@/lib/types'
 import z from 'zod'
 import { unexpectedApiError } from '@/lib/api-response'
+import { pagePaginationFromSearchParams } from '@/lib/pagination'
 
 export async function GET(req: NextRequest) {
   // Cookie-bound client: RLS applies to every query in this handler.
@@ -18,8 +19,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const rows = await listCertificates(supabase)
-    const mapped: CertificateRecord[] = rows.map((row) => ({
+    const pagination = pagePaginationFromSearchParams(new URL(req.url).searchParams)
+    const result = await listCertificates(supabase, { page: pagination.page, pageSize: pagination.pageSize })
+    const mapped: CertificateRecord[] = result.data.map((row) => ({
       id: String(row.id),
       certificateId: String(row.certificate_id),
       studentRowId: row.student_id ? String(row.student_id) : undefined,
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
       issuedAt: row.issued_at ? String(row.issued_at) : undefined,
       verificationCode: row.verification_code ? String(row.verification_code) : undefined,
     }))
-    return NextResponse.json({ data: mapped, count: mapped.length })
+    return NextResponse.json({ ...result, data: mapped })
   } catch (error) {
     return unexpectedApiError(error, 'Unable to load certificates')
   }

@@ -12,6 +12,7 @@ import { money } from '@/lib/formatters'
 import { brand } from '@/lib/brand'
 import { PaymentsTable } from '@/components/PaymentsTable'
 import { Status } from '@/components/Status'
+import { paiseToRupees, percentageOfRupees, roundRatio, rupeesToPaise, sumPaise, sumRupees } from '@/lib/money'
 
 export function SimpleView({ view, students, payments, onInvoice }: { view: View; students: Student[]; payments: Payment[]; onInvoice?: (p: Payment) => void }) {
   const [startDate, setStartDate] = useState(new Date())
@@ -189,21 +190,26 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
     // Calculate paid per student up to endDate
     const paidPerStudent = {} as Record<number, number>
     paymentsUpToEndDate.forEach(p => {
-      paidPerStudent[p.studentId] = (paidPerStudent[p.studentId] || 0) + p.amount
+      paidPerStudent[p.studentId] = (paidPerStudent[p.studentId] || 0) + rupeesToPaise(p.amount)
     })
 
-    const revenue = filteredPayments.reduce((sum, p) => sum + p.amount, 0)
-    const totalFees = students.reduce((s, x) => s + x.total, 0)
-    const totalPaid = students.reduce((s, x) => s + (paidPerStudent[x.registerId] ?? x.paid ?? 0), 0)
-    const outstanding = students.reduce((sum, student) => {
-      const paid = paidPerStudent[student.registerId] ?? student.paid ?? 0
-      return sum + Math.max(0, student.total - paid)
-    }, 0)
+    const revenue = sumRupees(filteredPayments.map((payment) => payment.amount))
+    const totalFees = sumRupees(students.map((student) => student.total))
+    const totalPaidPaise = sumPaise(students.map((student) =>
+      paidPerStudent[student.registerId] ?? rupeesToPaise(student.paid ?? 0),
+    ))
+    const totalPaid = paiseToRupees(totalPaidPaise)
+    const outstandingPaise = sumPaise(students.map((student) => {
+      const paidPaise = paidPerStudent[student.registerId] ?? rupeesToPaise(student.paid ?? 0)
+      return Math.max(0, rupeesToPaise(student.total) - paidPaise)
+    }))
+    const outstanding = paiseToRupees(outstandingPaise)
 
-    const methods = filteredPayments.reduce((summary, payment) => {
-      summary[payment.method] = (summary[payment.method] ?? 0) + payment.amount
+    const methodsPaise = filteredPayments.reduce((summary, payment) => {
+      summary[payment.method] = (summary[payment.method] ?? 0) + rupeesToPaise(payment.amount)
       return summary
     }, {} as Record<string, number>)
+    const methods = Object.fromEntries(Object.entries(methodsPaise).map(([method, amount]) => [method, paiseToRupees(amount)]))
 
     // Method counts for transaction numbers
     const methodCounts = filteredPayments.reduce((summary, payment) => {
@@ -236,18 +242,20 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
     }, {} as Record<string, number>)
 
     // Average fee per student
-    const avgFee = students.length > 0 ? Math.round(totalFees / students.length) : 0
+    const avgFee = students.length > 0
+      ? paiseToRupees(Number(roundRatio(BigInt(rupeesToPaise(totalFees)), BigInt(students.length))))
+      : 0
 
     // Collection rate
-    const collectionRate = totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0
+    const collectionRate = percentageOfRupees(totalPaid, totalFees)
 
     // Payments timeline aggregation
     const timelineMap = filteredPayments.reduce((acc, p) => {
-      acc[p.date] = (acc[p.date] ?? 0) + p.amount
+      acc[p.date] = (acc[p.date] ?? 0) + rupeesToPaise(p.amount)
       return acc
     }, {} as Record<string, number>)
 
-    const timelineEntries = Object.entries(timelineMap).sort((a, b) => {
+    const timelineEntries = Object.entries(timelineMap).map(([date, amount]) => [date, paiseToRupees(amount)] as [string, number]).sort((a, b) => {
       return parseDate(a[0]).getTime() - parseDate(b[0]).getTime()
     })
 
@@ -260,7 +268,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
           student.course,
           String(student.total),
           String(student.paid),
-          String(student.total - student.paid),
+          String(paiseToRupees(rupeesToPaise(student.total) - rupeesToPaise(student.paid))),
           student.status,
           student.studentSource || (student as any).leadSource || '-',
         ]),
@@ -454,7 +462,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
                     />
                     {/* Data segments */}
                     {Object.entries(methods).map(([method, amount]) => {
-                      const pct = revenue > 0 ? (amount / revenue) * 100 : 0
+                      const pct = percentageOfRupees(amount, revenue)
                       const strokeDasharray = `${(pct / 100) * donutCircumference} ${donutCircumference}`
                       const strokeDashoffset = -((accumulatedDonutPercent / 100) * donutCircumference)
                       accumulatedDonutPercent += pct
@@ -485,7 +493,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
 
                 <div className="donut-details-list">
                   {Object.entries(methods).map(([method, amount]) => {
-                    const pct = revenue > 0 ? Math.round((amount / revenue) * 100) : 0
+                    const pct = percentageOfRupees(amount, revenue)
                     const count = methodCounts[method] || 1
                     const color = methodColors[method] || '#8b5cf6'
 
@@ -640,7 +648,7 @@ export function SimpleView({ view, students, payments, onInvoice }: { view: View
                   // Generate coordinates with safe headroom
                   const points = timelineEntries.map((entry, idx) => {
                     const x = count === 1 ? width / 2 : paddingX + (idx / (count - 1)) * (width - 2 * paddingX)
-                    const y = height - paddingBottom - (entry[1] / maxTimelineAmount) * graphHeight
+                    const y = height - paddingBottom - (percentageOfRupees(entry[1], maxTimelineAmount) / 100) * graphHeight
                     return { x, y, date: entry[0], amount: entry[1] }
                   })
 

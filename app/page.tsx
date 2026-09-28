@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import type { Payment, Receipt, Student, View, GstSettings, Course, CertificateRecord } from '@/lib/types'
+import type { Payment, Receipt, Student, View, GstSettings, Course, CertificateRecord, Role } from '@/lib/types'
 
 import { Sidebar } from '@/components/Sidebar'
 import { Topbar } from '@/components/Topbar'
@@ -26,6 +26,7 @@ export default function Page() {
   const [allCourses, setAllCourses] = useState<Course[]>([])
   const [allCertificates, setAllCertificates] = useState<CertificateRecord[]>([])
   const [allGst, setAllGst] = useState<GstSettings | null>(null)
+  const [role, setRole] = useState<Role | null>(null)
 
   // Pagination state for Students and Payments views
   const [studentsPage, setStudentsPage] = useState(1)
@@ -52,12 +53,13 @@ export default function Page() {
   const fetchAll = async () => {
     try {
       // Fetch all data (for Dashboard, etc.) with a large page size
-      const [allStudentsRes, allPaymentsRes, allCoursesRes, allGstRes, allCertsRes] = await Promise.all([
-        fetch('/api/students?page=1&pageSize=1000'),
-        fetch('/api/payments?page=1&pageSize=1000'),
-        fetch('/api/courses?page=1&pageSize=1000'),
+      const [roleRes, allStudentsRes, allPaymentsRes, allCoursesRes, allGstRes, allCertsRes] = await Promise.all([
+        fetch('/api/session'),
+        fetch('/api/students?page=1&pageSize=100'),
+        fetch('/api/payments?page=1&pageSize=100'),
+        fetch('/api/courses?page=1&pageSize=100'),
         fetch('/api/gst'),
-        fetch('/api/certificates?page=1&pageSize=1000'),
+        fetch('/api/certificates?page=1&pageSize=100'),
       ])
 
       // Helper to check response and throw error with message from body if available
@@ -76,12 +78,14 @@ export default function Page() {
       }
 
       const [
+        roleData,
         allStudentsData,
         allPaymentsData,
         allCoursesData,
         allGstData,
         allCertsData,
       ] = await Promise.all([
+        checkResponse(roleRes, 'Failed to load current user'),
         checkResponse(allStudentsRes, 'Failed to load students'),
         checkResponse(allPaymentsRes, 'Failed to load payments'),
         checkResponse(allCoursesRes, 'Failed to load courses'),
@@ -89,6 +93,7 @@ export default function Page() {
         checkResponse(allCertsRes, 'Failed to load certificates'),
       ])
 
+      setRole(roleData.data.role)
       if (allStudentsData.data) setAllStudents(allStudentsData.data)
       if (allPaymentsData.data) setAllPayments(allPaymentsData.data)
       if (allCoursesData.data) setAllCourses(allCoursesData.data)
@@ -215,6 +220,7 @@ export default function Page() {
 
   if (loading) return <div className="loading">Loading...</div>
   if (error) return <div className="error">Error: {error}</div>
+  if (!role) return <div className="loading">Loading permissions...</div>
 
   const renderContent = () => {
     if (selectedInvoice) return (
@@ -347,7 +353,7 @@ export default function Page() {
 
   return (
     <div className="app-shell">
-      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} students={allStudents} />
+      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} students={allStudents} role={role} />
       <div className="main-area">
         <Topbar
           view={view}

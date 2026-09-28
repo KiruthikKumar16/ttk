@@ -5,6 +5,7 @@ import { assessmentResultSchema } from '@/lib/validation'
 import { unexpectedApiError } from '@/lib/api-response'
 import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
+import { pagePaginationFromSearchParams } from '@/lib/pagination'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Cookie-bound client: RLS applies to every query in this handler.
@@ -51,12 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const { searchParams } = new URL(req.url)
-    const pageParam = searchParams.get('page')
-    const pageSizeParam = searchParams.get('pageSize')
-    const page = pageParam ? parseInt(pageParam, 10) : 1
-    const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : 50
-    const from = (page - 1) * pageSize
-    const to = page * pageSize - 1
+    const pagination = pagePaginationFromSearchParams(searchParams)
 
     let query = supabase
       .from('assessment_results')
@@ -75,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { data, error, count } = await query
       .order('graded_at', { ascending: false })
-      .range(from, to)
+      .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
     if (error) throw error
 
@@ -101,9 +97,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({
       data: formattedData,
       count: data?.length || 0,
-      page,
-      pageSize,
-      totalCount: count || 0
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      totalCount: count || 0,
+      hasMore: pagination.offset + pagination.limit < (count || 0),
     })
   } catch (error) {
     return unexpectedApiError(error, 'Unable to load assessment results')

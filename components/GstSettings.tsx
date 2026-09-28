@@ -3,6 +3,7 @@ import { Save, ToggleLeft, ToggleRight, Percent, Hash, AlertCircle, CheckCircle2
 import { Button } from '@/components/ui/button'
 import type { GstSettings } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { calculateGstForRupees } from '@/lib/money'
 
 export function GstSettingsPage({
   settings,
@@ -25,13 +26,15 @@ export function GstSettingsPage({
   const sampleFee = 10000
   
   // Exclusive computation
-  const sampleGstExclusive = Math.round(sampleFee * (rateNum / 100))
-  const sampleTotalExclusive = sampleFee + sampleGstExclusive
+  const sampleExclusive = calculateGstForRupees(sampleFee, rateNum, false)
+  const sampleGstExclusive = sampleExclusive.gstAmount
+  const sampleTotalExclusive = sampleExclusive.totalAmount
 
   // Inclusive computation
-  const sampleBaseInclusive = enabled && rateNum > 0 ? Math.round(sampleFee / (1 + rateNum / 100)) : sampleFee
-  const sampleGstInclusive = sampleFee - sampleBaseInclusive
-  const sampleHalfGstInclusive = Math.round(sampleGstInclusive / 2)
+  const sampleInclusive = calculateGstForRupees(sampleFee, rateNum, true)
+  const sampleBaseInclusive = enabled ? sampleInclusive.taxableAmount : sampleFee
+  const sampleGstInclusive = enabled ? sampleInclusive.gstAmount : 0
+  const sampleHalfGstInclusive = enabled ? sampleInclusive.cgstAmount : 0
 
   const handleSave = async () => {
     const r = Number(rate)

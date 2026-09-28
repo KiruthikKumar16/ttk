@@ -1,18 +1,19 @@
 import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users, List } from 'lucide-react'
-import type { Student, View } from '@/lib/types'
+import type { Role, Student, View } from '@/lib/types'
 import React from 'react'
 import { brand } from '@/lib/brand'
+import { can, type Resource } from '@/lib/auth/permissions'
 
-export function Sidebar({ view, setView, collapsed, students }: { view: View; setView: (v: View) => void; collapsed?: boolean; students?: Student[] }) {
-  const nav: [View, typeof LayoutDashboard, string][] = [
-    ['Dashboard', LayoutDashboard, 'Dashboard'],
-    ['Students', Users, 'Students'],
-    ['Courses', BookOpen, 'Courses'],
-    ['Certificates', FileCheck2, 'Certificates'],
-    ['Invoices', FileText, 'Invoices'],
-    ['Reports', BarChart3, 'Reports'],
-    ['Audit Log', List, 'Audit Log'], // Added Audit Log
-    ['Assessments', List, 'Assessments'],
+export function Sidebar({ view, setView, collapsed, students, role }: { view: View; setView: (v: View) => void; collapsed?: boolean; students?: Student[]; role: Role }) {
+  const nav: [View, typeof LayoutDashboard, string, Resource][] = [
+    ['Dashboard', LayoutDashboard, 'Dashboard', 'reports'],
+    ['Students', Users, 'Students', 'students'],
+    ['Courses', BookOpen, 'Courses', 'courses'],
+    ['Certificates', FileCheck2, 'Certificates', 'certificates'],
+    ['Invoices', FileText, 'Invoices', 'payments'],
+    ['Reports', BarChart3, 'Reports', 'reports'],
+    ['Audit Log', List, 'Audit Log', 'audit'],
+    ['Assessments', List, 'Assessments', 'assessments'],
   ];
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
@@ -28,7 +29,7 @@ export function Sidebar({ view, setView, collapsed, students }: { view: View; se
         )}
       </div>
       <nav>
-        {nav.map(([label, Icon]) => (
+        {nav.filter(([, , , resource]) => can(role, resource, 'read')).map(([label, Icon]) => (
           <button key={label} className={`nav-item ${view === label ? 'active' : ''}`} onClick={() => setView(label)} title={label}>
             <Icon size={18} className="mr-2" />
             {!collapsed && <span className="flex-1 text-left">{label}</span>}
@@ -39,20 +40,22 @@ export function Sidebar({ view, setView, collapsed, students }: { view: View; se
         ))}
       </nav>
       <div className="sidebar-bottom">
-        <button
-          className={`nav-item${view === 'Settings' ? ' active' : ''}`}
-          onClick={() => setView('Settings')}
-          title="Settings"
-        >
-          <Settings size={18} className="mr-2" />
-          {!collapsed && <span className="flex-1 text-left">Settings</span>}
-        </button>
+        {can(role, 'gst', 'read') && (
+          <button
+            className={`nav-item${view === 'Settings' ? ' active' : ''}`}
+            onClick={() => setView('Settings')}
+            title="Settings"
+          >
+            <Settings size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Settings</span>}
+          </button>
+        )}
         <div className="account">
           <div className="avatar">AK</div>
           {!collapsed && (
             <>
               <div>
-                <strong>Admin account</strong>
+                <strong>{role[0].toUpperCase() + role.slice(1)} account</strong>
                 <small>{brand.displayName}</small>
               </div>
               <ChevronDown size={15} />

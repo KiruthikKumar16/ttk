@@ -6,9 +6,10 @@ import { money } from '@/lib/formatters'
 import { brand } from '@/lib/brand'
 import { Status } from '@/components/Status'
 import { PaymentsTable } from '@/components/PaymentsTable'
+import { differenceRupees, sumRupees } from '@/lib/money'
 export function Dashboard({ students, payments, onInvoice, setView }: { students: Student[]; payments: Payment[]; onInvoice: (p: Payment) => void; setView: (view: View) => void; }) {
-  const revenue = students.reduce((s, x) => s + x.paid, 0);
-  const outstanding = students.reduce((s, x) => s + x.total - x.paid, 0);
+  const revenue = sumRupees(students.map((student) => student.paid))
+  const outstanding = sumRupees(students.map((student) => differenceRupees(student.total, student.paid)))
 
   return (
     <>

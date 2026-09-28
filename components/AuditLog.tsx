@@ -37,8 +37,8 @@ export function AuditLog() {
     paymentId: '',
     tableName: '',
     action: '',
-    limit: 50,
-    offset: 0
+    pageSize: 50,
+    page: 1
   })
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -53,8 +53,8 @@ export function AuditLog() {
       if (filters.paymentId) queryParams.append('paymentId', filters.paymentId)
       if (filters.tableName) queryParams.append('tableName', filters.tableName)
       if (filters.action) queryParams.append('action', filters.action)
-      queryParams.append('limit', String(filters.limit))
-      queryParams.append('offset', String(filters.offset))
+      queryParams.append('pageSize', String(filters.pageSize))
+      queryParams.append('page', String(filters.page))
 
       const response = await fetch(`/api/audit?${queryParams.toString()}`)
       if (!response.ok) {
@@ -76,20 +76,20 @@ export function AuditLog() {
   // Initial fetch
   useEffect(() => {
     fetchAuditLogs()
-  }, [filters.studentId, filters.paymentId, filters.tableName, filters.action, filters.limit, filters.offset])
+  }, [filters.studentId, filters.paymentId, filters.tableName, filters.action, filters.pageSize, filters.page])
 
   const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({
       ...prev,
       ...newFilters,
-      offset: 0 // Reset to first page when filters change
+      page: 1 // Reset to first page when filters change
     }))
   }
 
   const handleLoadMore = () => {
     setFilters(prev => ({
       ...prev,
-      offset: prev.offset + prev.limit
+      page: prev.page + 1
     }))
   }
 
@@ -123,7 +123,7 @@ export function AuditLog() {
             Track changes to payments and student records
           </p>
         </div>
-        <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, offset: 0 }))}>
+        <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}>
           <RefreshCw size={16} className="mr-2" /> Refresh
         </Button>
       </div>

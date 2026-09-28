@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { unexpectedApiError } from '@/lib/api-response'
+import { pagePaginationFromSearchParams } from '@/lib/pagination'
 
 export async function GET(req: NextRequest) {
   // Create a Supabase client with the anon key for this request
@@ -31,8 +32,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const studentId = searchParams.get('studentId')
     const paymentId = searchParams.get('paymentId')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const pagination = pagePaginationFromSearchParams(searchParams)
     const tableName = searchParams.get('tableName') // 'payments' or 'students'
     const action = searchParams.get('action') // 'insert', 'update', 'delete'
 
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     query = query.order('changed_at', { ascending: false })
 
     // Apply pagination
-    query = query.range(offset, offset + limit - 1)
+    query = query.range(pagination.offset, pagination.offset + pagination.limit - 1)
 
     const { data, error, count } = await query
 
@@ -80,9 +80,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       data,
       count,
-      limit,
-      offset,
-      hasMore: (offset + limit) < (count || 0)
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      hasMore: (pagination.offset + pagination.limit) < (count || 0)
     })
   } catch (error) {
     return unexpectedApiError(error, 'Failed to fetch audit logs')

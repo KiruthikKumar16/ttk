@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { unexpectedApiError } from '@/lib/api-response'
 import { listPayments, listStudents } from '@/lib/server-data'
+import { collectPages } from '@/lib/pagination'
+import { paiseToRupees, rupeesToPaise } from '@/lib/money'
 
 export async function GET() {
   try {
@@ -10,19 +12,28 @@ export async function GET() {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const [studentPage, paymentPage] = await Promise.all([
-      listStudents(supabase, { pageSize: 1000 }),
-      listPayments(supabase, { pageSize: 1000 }),
+    const [students, payments] = await Promise.all([
+      collectPages(({ page, pageSize }) => listStudents(supabase, { page, pageSize })),
+      collectPages(({ page, pageSize }) => listPayments(supabase, { page, pageSize })),
     ])
-    const students = studentPage.data
-    const payments = paymentPage.data
-    const revenue = students.reduce((sum, student) => sum + student.paid, 0)
-    const outstanding = students.reduce((sum, student) => sum + student.total - student.paid, 0)
-    const byMethod = payments.reduce<Record<string, number>>((summary, payment) => {
-      summary[payment.method] = (summary[payment.method] ?? 0) + payment.amount
+    const revenuePaise = students.reduce((sum, student) => sum + rupeesToPaise(student.paid), 0)
+    const outstandingPaise = students.reduce(
+      (sum, student) => sum + rupeesToPaise(student.total) - rupeesToPaise(student.paid),
+      0,
+    )
+    const byMethodPaise = payments.reduce<Record<string, number>>((summary, payment) => {
+      summary[payment.method] = (summary[payment.method] ?? 0) + rupeesToPaise(payment.amount)
       return summary
     }, {})
-    return NextResponse.json({ data: { students, payments, revenue, outstanding, eligible: students.filter(student => student.status === 'Fully Paid').length, byMethod } })
+    const byMethod = Object.fromEntries(Object.entries(byMethodPaise).map(([method, amount]) => [method, paiseToRupees(amount)]))
+    return NextResponse.json({ data: {
+      students,
+      payments,
+      revenue: paiseToRupees(revenuePaise),
+      outstanding: paiseToRupees(outstandingPaise),
+      eligible: students.filter(student => student.status === 'Fully Paid').length,
+      byMethod,
+    } })
   } catch (error) {
     return unexpectedApiError(error, 'Unable to build report')
   }

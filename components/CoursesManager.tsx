@@ -5,6 +5,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Course } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { CourseMaterials } from '@/components/CourseMaterials'
+import { calculateGstForRupees } from '@/lib/money'
 
 export function CoursesManager({
   courses,
@@ -134,20 +135,18 @@ export function CoursesManager({
 
   // Computed values for modal fee preview
   const enteredFee = Number(fee) || 0
-  const modalBase = enteredFee > 0
-    ? (gstInclusive && gstRate > 0 ? Math.round(enteredFee / (1 + gstRate / 100)) : enteredFee)
-    : 0
-  const modalGst = enteredFee > 0
-    ? (gstRate > 0 ? (gstInclusive ? enteredFee - modalBase : Math.round(enteredFee * (gstRate / 100))) : 0)
-    : 0
-  const modalTotal = gstInclusive ? enteredFee : enteredFee + modalGst
+  const modalBreakdown = calculateGstForRupees(enteredFee, gstRate, gstInclusive)
+  const modalBase = modalBreakdown.taxableAmount
+  const modalGst = modalBreakdown.gstAmount
+  const modalTotal = modalBreakdown.totalAmount
 
   // If a course is selected, show the course details and materials
   if (selectedCourse) {
     const isInclusive = Boolean(selectedCourse.gstInclusive)
-    const courseBase = isInclusive && gstRate > 0 ? Math.round(selectedCourse.fee / (1 + gstRate / 100)) : selectedCourse.fee
-    const courseGst = gstRate > 0 ? (isInclusive ? selectedCourse.fee - courseBase : Math.round(selectedCourse.fee * (gstRate / 100))) : 0
-    const courseTotal = isInclusive ? selectedCourse.fee : selectedCourse.fee + courseGst
+    const courseBreakdown = calculateGstForRupees(selectedCourse.fee, gstRate, isInclusive)
+    const courseBase = courseBreakdown.taxableAmount
+    const courseGst = courseBreakdown.gstAmount
+    const courseTotal = courseBreakdown.totalAmount
 
     return (
       <div className="flex flex-col h-full">
@@ -234,9 +233,10 @@ export function CoursesManager({
               ) : (
                 filteredCourses.map(c => {
                   const isInclusive = Boolean(c.gstInclusive)
-                  const courseBase = isInclusive && gstRate > 0 ? Math.round(c.fee / (1 + gstRate / 100)) : c.fee
-                  const courseGst = gstRate > 0 ? (isInclusive ? c.fee - courseBase : Math.round(c.fee * (gstRate / 100))) : 0
-                  const courseTotal = isInclusive ? c.fee : c.fee + courseGst
+                  const courseBreakdown = calculateGstForRupees(c.fee, gstRate, isInclusive)
+                  const courseBase = courseBreakdown.taxableAmount
+                  const courseGst = courseBreakdown.gstAmount
+                  const courseTotal = courseBreakdown.totalAmount
                   return (
                     <tr
                       key={c.id}

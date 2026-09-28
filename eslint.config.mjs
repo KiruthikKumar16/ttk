@@ -22,7 +22,7 @@ const adminDataRestriction = {
 
 export default [
   {
-    ignores: ['.next/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
+    ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'playwright-report/**', 'test-results/**'],
   },
   {
     files: ['**/*.{ts,tsx}'],

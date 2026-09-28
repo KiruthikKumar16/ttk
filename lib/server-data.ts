@@ -2,10 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Payment, Student } from '@/lib/types'
 import { captureError } from '@/lib/errorReporting'
 import { normalizeJoined } from '@/lib/supabase/relations'
+import { pagePagination } from '@/lib/pagination'
+import { paiseToRupees } from '@/lib/money'
 
 export function studentFromRow(row: Record<string, unknown>): Student {
-  const total = Number(row.total ?? 0)
-  const paid = Number(row.paid ?? 0)
+  const total = paiseToRupees(Number(row.total ?? 0))
+  const paid = paiseToRupees(Number(row.paid ?? 0))
   return {
     registerId: Number(row.register_id),
     name: String(row.name),
@@ -35,9 +37,9 @@ export function studentFromRow(row: Record<string, unknown>): Student {
 }
 
 export function paymentFromRow(row: Record<string, unknown>): Payment {
-  const amount = Number(row.amount ?? 0)
-  const cgst = Number(row.cgst ?? 0)
-  const sgst = Number(row.sgst ?? 0)
+  const amount = paiseToRupees(Number(row.amount ?? 0))
+  const cgst = paiseToRupees(Number(row.cgst ?? 0))
+  const sgst = paiseToRupees(Number(row.sgst ?? 0))
   const gstRate = Number(row.gst_rate ?? row.gstRate ?? 0)
   const base: Payment = {
     id: String(row.id),
@@ -72,14 +74,13 @@ export async function listStudents(
 ) {
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
-  const from = (page - 1) * pageSize
-  const to = page * pageSize - 1
+  const pagination = pagePagination(page, pageSize)
 
   const { data, error, count } = await supabaseClient
     .from('students')
     .select('*', { count: 'exact' })
     .order('register_id', { ascending: false })
-    .range(from, to)
+    .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
   if (error) throw error
   return {
@@ -97,8 +98,7 @@ export async function listPayments(
 ) {
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
-  const from = (page - 1) * pageSize
-  const to = page * pageSize - 1
+  const pagination = pagePagination(page, pageSize)
 
   const { data, error, count } = await supabaseClient
     .from('payments')
@@ -111,7 +111,7 @@ export async function listPayments(
       )
     `)
     .order('payment_date', { ascending: false })
-    .range(from, to)
+    .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
   if (error) throw error
   return {
@@ -149,17 +149,24 @@ export type CertificateRow = {
   verification_code?: string
 }
 
-export async function listCertificates(supabaseClient: SupabaseClient) {
+export async function listCertificates(
+  supabaseClient: SupabaseClient,
+  options: { page?: number; pageSize?: number } = {},
+) {
+  const page = options.page ?? 1
+  const pageSize = options.pageSize ?? 50
+  const pagination = pagePagination(page, pageSize)
   // Fetch certificates with verification codes
-  const { data, error } = await supabaseClient
+  const { data, error, count } = await supabaseClient
     .from('certificates')
     .select(`
       *,
       verifiable_documents (
         verification_code
       )
-    `)
+    `, { count: 'exact' })
     .order('issue_date', { ascending: false })
+    .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
   if (error) {
     await captureError(error, { function: 'listCertificates' })
@@ -167,12 +174,18 @@ export async function listCertificates(supabaseClient: SupabaseClient) {
   }
 
   // Map the data to include verification_code
-  const mappedData = (data ?? []).map(row => ({
+  const mappedData = (data ?? []).map((row) => ({
     ...row,
-    verification_code: row.verifiable_documents?.[0]?.verification_code
+    verification_code: normalizeJoined(row.verifiable_documents)?.verification_code,
   }))
 
-  return mappedData as CertificateRow[]
+  return {
+    data: mappedData as CertificateRow[],
+    count: mappedData.length,
+    page,
+    pageSize,
+    totalCount: count ?? 0,
+  }
 }
 
 export async function insertCertificate(

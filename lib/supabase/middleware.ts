@@ -9,11 +9,25 @@ function unavailableStatus(error: unknown): 500 | 503 {
 
 function unauthenticated(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const requestId = crypto.randomUUID()
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: 'Authentication is required.', requestId } },
+      { status: 401, headers: { 'x-request-id': requestId } },
+    )
   }
   const loginUrl = request.nextUrl.clone()
   loginUrl.pathname = '/login'
   return NextResponse.redirect(loginUrl)
+}
+
+function authenticationFailure(status: 500 | 503, message: string, error: unknown) {
+  const requestId = crypto.randomUUID()
+  const errorType = error instanceof Error ? error.name : typeof error
+  console.error(`[${requestId}] Supabase authentication failed (${errorType})`)
+  return NextResponse.json(
+    { error: { code: status === 503 ? 'SERVICE_UNAVAILABLE' : 'INTERNAL_ERROR', message, requestId } },
+    { status, headers: { 'x-request-id': requestId } },
+  )
 }
 
 export async function updateSession(request: NextRequest) {
@@ -49,35 +63,20 @@ export async function updateSession(request: NextRequest) {
         return unauthenticated(request)
       }
       if (status !== 500) {
-        const requestId = crypto.randomUUID()
-        console.error(`[${requestId}] Supabase auth request failed`, error)
-        return NextResponse.json(
-          { error: 'Authentication service is unavailable.', requestId },
-          { status },
-        )
+        return authenticationFailure(status, 'Authentication service is unavailable.', error)
       }
       if (typeof error.status === 'number' && error.status < 500) {
         return unauthenticated(request)
       }
-      const requestId = crypto.randomUUID()
-      console.error(`[${requestId}] Supabase auth request failed`, error)
-      return NextResponse.json(
-        { error: 'An unexpected authentication error occurred.', requestId },
-        { status },
-      )
+      return authenticationFailure(status, 'An unexpected authentication error occurred.', error)
     }
     if (data?.claims) return response
   } catch (error) {
-    const requestId = crypto.randomUUID()
-    console.error(`[${requestId}] Supabase auth request failed`, error)
-    return NextResponse.json(
-      {
-        error: unavailableStatus(error) === 503
-          ? 'Authentication service is unavailable.'
-          : 'An unexpected authentication error occurred.',
-        requestId,
-      },
-      { status: unavailableStatus(error) },
+    const status = unavailableStatus(error)
+    return authenticationFailure(
+      status,
+      status === 503 ? 'Authentication service is unavailable.' : 'An unexpected authentication error occurred.',
+      error,
     )
   }
   return unauthenticated(request)

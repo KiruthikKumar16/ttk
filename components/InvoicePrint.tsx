@@ -1,7 +1,8 @@
 import { ArrowLeft, Printer, Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Course, Payment, Student } from '@/lib/types'
-import { money, amountInWords } from '@/lib/formatters'
+import { money } from '@/lib/formatters'
+import { amountInWords, calculateGstExclusive, calculateGstInclusive, paiseToRupees, rupeesToPaise } from '@/lib/money'
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 import { brand } from '@/lib/brand'
@@ -122,15 +123,14 @@ export function InvoicePrint({
   const isInclusive = Boolean(matchedCourse?.gstInclusive)
 
   const gross = parseFloat(form.grossAmount) || 0
-  const taxableValue = isInclusive && gstRate > 0 ? Math.round(gross / (1 + gstRate / 100)) : gross
-  const gstAmount =
-    gstRate > 0
-      ? isInclusive
-        ? gross - taxableValue
-        : Math.round(taxableValue * (gstRate / 100))
-      : 0
-  const halfGst = Math.round(gstAmount / 2)
-  const grandTotal = isInclusive ? gross : taxableValue + gstAmount
+  const grossPaise = rupeesToPaise(gross)
+  const breakdown = isInclusive
+    ? calculateGstInclusive(grossPaise, gstRate)
+    : calculateGstExclusive(grossPaise, gstRate)
+  const taxableValue = paiseToRupees(breakdown.taxablePaise)
+  const gstAmount = paiseToRupees(breakdown.gstPaise)
+  const halfGst = paiseToRupees(breakdown.cgstPaise)
+  const grandTotal = paiseToRupees(breakdown.totalPaise)
 
   const containerRef = useRef<HTMLElement>(null)
   const [scale, setScale] = useState(1)
@@ -583,7 +583,7 @@ function InvoiceCopy({
           <strong>{form.transactionId || form.receiptId || '—'}</strong>
         </div>
       </div>
-      <p className="ttk-amount-words">{grandTotal > 0 ? amountInWords(grandTotal) : '—'}</p>
+      <p className="ttk-amount-words">{grandTotal > 0 ? amountInWords(rupeesToPaise(grandTotal)) : '—'}</p>
       <div className="ttk-invoice-terms">
         <b>Terms &amp; Conditions</b>
         <ol>

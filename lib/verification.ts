@@ -1,5 +1,6 @@
 // lib/verification.ts
 // Registry of document types to their public field selectors for verification
+import { paiseToRupees } from '@/lib/money'
 
 // Define the shape of the fetched document rows (we only fetch the needed fields)
 export type CertificateDoc = {
@@ -10,7 +11,7 @@ export type CertificateDoc = {
 
 export type PaymentDoc = {
   invoice: string;
-  amount: number; // Assuming amount is stored as number in payment
+  amountPaise: number;
   gst_rate: number;
   payment_date: string; // ISO date string
 };
@@ -52,7 +53,7 @@ export const verificationRegistry = {
   }),
   invoice: (doc: PaymentDoc): PublicVerificationResult => ({
     invoiceNumber: doc.invoice,
-    amount: doc.amount,
+    amount: paiseToRupees(doc.amountPaise),
     gstStatus: doc.gst_rate > 0 ? 'GST Applied' : 'GST Exempt',
     issueDate: doc.payment_date,
     status: 'Valid',

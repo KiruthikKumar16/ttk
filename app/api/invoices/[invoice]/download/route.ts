@@ -7,6 +7,7 @@ import { normalizeJoined } from '@/lib/supabase/relations'
 import { unexpectedApiError } from '@/lib/api-response'
 import QRCode from 'qrcode'
 import { brand } from '@/lib/brand'
+import { calculateGstFromParts, calculateGstInclusive, formatINR, rupeesToPaise } from '@/lib/money'
 
 // This route is intended for authenticated staff use only to download payment invoices.
 // The eventual public verification flow (QR/verify prompts) will be a SEPARATE,
@@ -65,23 +66,14 @@ export async function GET(
   const storedSgst = Number((payment.sgst ?? 0))
   const grossAmount = Number(payment.amount ?? 0)
 
-  let taxable: number
-  let totalGst: number
-  if (storedCgst > 0 || storedSgst > 0) {
-    totalGst = storedCgst + storedSgst
-    taxable = grossAmount - totalGst
-    if (taxable < 0) {
-      taxable = grossAmount
-      totalGst = 0
-    }
-  } else if (storedGstRate > 0) {
-    const divisor = 1 + (storedGstRate / 100)
-    taxable = grossAmount / divisor
-    totalGst = grossAmount - taxable
-  } else {
-    taxable = grossAmount
-    totalGst = 0
-  }
+  const grossPaise = rupeesToPaise(grossAmount)
+  const cgstPaise = rupeesToPaise(storedCgst)
+  const sgstPaise = rupeesToPaise(storedSgst)
+  const invoiceBreakdown = cgstPaise > 0 || sgstPaise > 0
+    ? calculateGstFromParts(grossPaise, cgstPaise, sgstPaise)
+    : calculateGstInclusive(grossPaise, storedGstRate)
+  const taxablePaise = invoiceBreakdown.taxablePaise
+  const totalGstPaise = invoiceBreakdown.gstPaise
 
   const pdf = await PDFDocument.create()
   const page = pdf.addPage([595, 842])
@@ -89,7 +81,7 @@ export async function GET(
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const navy = rgb(0.055, 0.11, 0.24)
   const gold = rgb(0.66, 0.51, 0.16)
-  const money = (value: number) => `INR ${value.toFixed(2)}`
+  const money = formatINR
 
   // Generate QR code for invoice verification
   let qrCodeImage
@@ -148,8 +140,8 @@ export async function GET(
   page.drawText('Taxable value', { x: 300, y: y - 17, size: 10, font: bold, color: rgb(1, 1, 1) })
   page.drawText('Amount', { x: 460, y: y - 17, size: 10, font: bold, color: rgb(1, 1, 1) })
   y -= 58
-  const gstLabel = totalGst > 0 ? `GST (${storedGstRate}%)` : 'GST'
-  const invoiceRows = [['Course fee payment', money(taxable), money(taxable)], [gstLabel, money(totalGst), money(totalGst)], ['Grand Total', '', money(grossAmount)]]
+  const gstLabel = totalGstPaise > 0 ? `GST (${storedGstRate}%)` : 'GST'
+  const invoiceRows = [['Course fee payment', money(taxablePaise), money(taxablePaise)], [gstLabel, money(totalGstPaise), money(totalGstPaise)], ['Grand Total', '', money(grossPaise)]]
   for (const [label, taxableValue, total] of invoiceRows) {
     page.drawText(label, { x: 60, y, size: 10, font: label === 'Grand Total' ? bold : regular, color: label === 'Grand Total' ? navy : rgb(0.15, 0.15, 0.15) })
     page.drawText(taxableValue, { x: 300, y, size: 10, font: regular })

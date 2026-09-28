@@ -5,6 +5,7 @@ import type { Course, Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { PaymentsTable } from '@/components/PaymentsTable'
+import { calculateGstForRupees, differenceRupees, percentageOfRupees, rupeesToPaise } from '@/lib/money'
 // We'll import CertificatePrint and InvoicePrint later, for now we'll comment out and use placeholders
 // import { CertificatePrint } from '@/components/CertificatePrint'
 // import { InvoicePrint } from '@/components/InvoicePrint'
@@ -32,14 +33,14 @@ export function StudentDetail({
   const [method, setMethod] = useState('UPI');
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState('');
-  const balance = student.total - student.paid;
+  const balance = differenceRupees(student.total, student.paid)
   const history = payments.filter(p => p.studentId === student.registerId);
   const submit = async () => {
     const value = Number(amount);
     if (!value || value <= 0) return setError('Enter a payment amount greater than zero.');
     // We assume onPayment returns a Promise that resolves to a Receipt or a string error
     const result = await onPayment(value, method);
-    if (value > balance) return setError("Payment cannot exceed the remaining balance of " + money(balance) + ".");
+    if (rupeesToPaise(value) > rupeesToPaise(balance)) return setError("Payment cannot exceed the remaining balance of " + money(balance) + ".");
     if (typeof result === 'string') return setError(result);
     setReceipt(result);
     setAmount('');
@@ -152,7 +153,7 @@ export function StudentDetail({
               {money(balance)}
             </div>
             <div className="balance-progress">
-                 <div className="balance-progress-fill" style={{ width: ((student.paid / student.total) * 100) + "%" }} />
+                 <div className="balance-progress-fill" style={{ width: percentageOfRupees(student.paid, student.total) + "%" }} />
             </div>
             <div className="fee-meta">
               <div>
@@ -184,14 +185,12 @@ export function StudentDetail({
             </div>
           ) : receipt ? (() => {
             const isInclusive = Boolean(courses?.find(c => c.name === student.course)?.gstInclusive);
-            const receiptTaxable = isInclusive && gstRate > 0
-              ? Math.round(receipt.amount / (1 + gstRate / 100))
-              : receipt.amount;
-            const receiptGst = gstRate > 0
-              ? (isInclusive ? receipt.amount - receiptTaxable : Math.round(receipt.amount * (gstRate / 100)))
-              : 0;
-            const receiptHalfGst = Math.round(receiptGst / 2);
-            const receiptGrandTotal = isInclusive ? receipt.amount : receiptTaxable + receiptGst;
+            const receiptBreakdown = calculateGstForRupees(receipt.amount, gstRate, isInclusive);
+            const receiptTaxable = receiptBreakdown.taxableAmount;
+            const receiptGst = receiptBreakdown.gstAmount;
+            const receiptHalfGst = receiptBreakdown.cgstAmount;
+            const receiptSgst = receiptBreakdown.sgstAmount;
+            const receiptGrandTotal = receiptBreakdown.totalAmount;
 
             return (
               <div className="receipt-confirmation">
@@ -207,7 +206,7 @@ export function StudentDetail({
                   <div className="gst-breakdown">
                     <span>Taxable Base <b>{money(receiptTaxable)}</b></span>
                     <span>CGST ({(gstRate / 2)}%) <b>{money(receiptHalfGst)}</b></span>
-                    <span>SGST ({(gstRate / 2)}%) <b>{money(receiptGst - receiptHalfGst)}</b></span>
+                    <span>SGST ({(gstRate / 2)}%) <b>{money(receiptSgst)}</b></span>
                     <span>Grand Total <b>{money(receiptGrandTotal)}</b> {isInclusive && <small className="text-emerald-600 font-medium">(Incl. GST)</small>}</span>
                   </div>
                 ) : (
@@ -270,7 +269,7 @@ export function StudentDetail({
           )}
         </section>
       </div>
-      {receipt && student.total - student.paid === 0 ? (
+      {receipt && differenceRupees(student.total, student.paid) === 0 ? (
         <section className="certificate-banner">
           <div>
             <p className="eyebrow">PAYMENT COMPLETE</p>

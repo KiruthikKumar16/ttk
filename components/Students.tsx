@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, ChevronUp, 
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { differenceRupees } from '@/lib/money'
 import { Status } from '@/components/Status'
 
 export function Students({
@@ -73,7 +74,7 @@ export function Students({
                   <td>{s.course}</td>
                   <td>{s.batch}</td>
                   <td className="align-right">{money(s.total)}</td>
-                  <td className="align-right amount">{money(s.total - s.paid)}</td>
+                  <td className="align-right amount">{money(differenceRupees(s.total, s.paid))}</td>
                   <td>{s.studentSource || '-'}</td>
                   <td><Status status={s.status} /></td>
                 </tr>

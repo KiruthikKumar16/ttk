@@ -68,8 +68,8 @@ export function Assessments() {
   })
   const [assessmentFilters, setAssessmentFilters] = useState({
     courseId: '',
-    limit: 50,
-    offset: 0
+    pageSize: 50,
+    page: 1
   })
   const [assessmentTotalCount, setAssessmentTotalCount] = useState(0)
   const [assessmentHasMore, setAssessmentHasMore] = useState(false)
@@ -77,7 +77,7 @@ export function Assessments() {
   // Fetch courses for the dropdown
   const fetchCourses = async () => {
     try {
-      const response = await fetch('/api/courses?page=1&pageSize=1000')
+      const response = await fetch('/api/courses?page=1&pageSize=100')
       if (!response.ok) {
         throw new Error('Failed to fetch courses')
       }
@@ -96,8 +96,8 @@ export function Assessments() {
     try {
       const queryParams = new URLSearchParams()
       if (assessmentFilters.courseId) queryParams.append('courseId', assessmentFilters.courseId)
-      queryParams.append('limit', String(assessmentFilters.limit))
-      queryParams.append('offset', String(assessmentFilters.offset))
+      queryParams.append('pageSize', String(assessmentFilters.pageSize))
+      queryParams.append('page', String(assessmentFilters.page))
 
       const response = await fetch(`/api/assessments?${queryParams.toString()}`)
       if (!response.ok) {
@@ -119,7 +119,7 @@ export function Assessments() {
   // Fetch students for a given course (used when selecting an assessment to enter results)
   const fetchStudentsForCourse = async (courseId: string) => {
     try {
-      const response = await fetch(`/api/students?course=${courseId}&page=1&pageSize=1000`)
+      const response = await fetch(`/api/students?course=${courseId}&page=1&pageSize=100`)
       if (!response.ok) {
         throw new Error('Failed to fetch students')
       }
@@ -134,7 +134,7 @@ export function Assessments() {
   // Fetch results for a given assessment
   const fetchAssessmentResults = async (assessmentId: string) => {
     try {
-      const response = await fetch(`/api/assessments/${assessmentId}/results?page=1&pageSize=1000`)
+      const response = await fetch(`/api/assessments/${assessmentId}/results?page=1&pageSize=100`)
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to fetch assessment results')
@@ -156,7 +156,7 @@ export function Assessments() {
   // Refetch assessments when filters change
   useEffect(() => {
     fetchAssessments()
-  }, [assessmentFilters.courseId, assessmentFilters.limit, assessmentFilters.offset])
+  }, [assessmentFilters.courseId, assessmentFilters.pageSize, assessmentFilters.page])
 
   // When selected assessment changes, fetch its results and students for its course
   useEffect(() => {
@@ -177,14 +177,14 @@ export function Assessments() {
     setAssessmentFilters(prev => ({
       ...prev,
       ...newFilters,
-      offset: 0 // Reset to first page when filters change
+      page: 1 // Reset to first page when filters change
     }))
   }
 
   const handleLoadMoreAssessments = () => {
     setAssessmentFilters(prev => ({
       ...prev,
-      offset: prev.offset + prev.limit
+      page: prev.page + 1
     }))
   }
 
