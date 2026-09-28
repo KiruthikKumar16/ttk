@@ -54,7 +54,7 @@ export function Select({
   )
 }
 
-function SelectTrigger({ children, className = '' }: SelectTriggerProps) {
+export function SelectTrigger({ children, className = '' }: SelectTriggerProps) {
   return (
     <div
       className={`flex items-center justify-between px-2 py-2 cursor-pointer text-sm text-gray-700 ${className}`}
@@ -64,15 +64,15 @@ function SelectTrigger({ children, className = '' }: SelectTriggerProps) {
   )
 }
 
-function SelectValue({ children }: { children: React.ReactNode }) {
+export function SelectValue({ children }: { children: React.ReactNode }) {
   return <span className="text-gray-500">{children}</span>
 }
 
-function SelectContent({ className = '', children }: SelectContentProps) {
+export function SelectContent({ className = '', children }: SelectContentProps) {
   return <div className={className}>{children}</div>
 }
 
-function SelectItem({
+export function SelectItem({
   value,
   children,
   className = '',

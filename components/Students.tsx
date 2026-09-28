@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, ChevronUp, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'

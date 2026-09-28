@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Table } from '@/components/ui/table'
 import { TableHeader } from '@/components/ui/table-header'
@@ -11,7 +11,7 @@ import { TableBody } from '@/components/ui/table-body'
 import { TableRow } from '@/components/ui/table-row'
 import { TableCell } from '@/components/ui/table-cell'
 import { TableHead } from '@/components/ui/table-head'
-import { ChevronDown, Calendar, Filter, Search, User, Trash2, Edit, List } from 'lucide-react'
+import { ChevronDown, Calendar, Filter, Search, User, Trash2, Edit, List, RefreshCw } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 type AuditLogEntry = {
@@ -274,7 +274,7 @@ export function AuditLog() {
                           </div>
                         ))}
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <span className="text-muted-italic">No detailed changes available</span>
                   )}

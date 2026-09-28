@@ -1,4 +1,4 @@
-export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Settings' | 'Audit Log' | 'Attendance' | 'Assessments' | 'SimpleView'
+export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Invoices' | 'Reports' | 'Settings' | 'Audit Log' | 'Attendance' | 'Assessments' | 'SimpleView'
 
 export type GstSettings = {
   rate: number

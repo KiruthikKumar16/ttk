@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { gstSettings } from '@/lib/mock-data'
 import { gstSchema } from '@/lib/validation'
+import z from 'zod'
 
 export async function GET(req: NextRequest) {
   // Create a Supabase client with the anon key for this request

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FileCheck2, History, Search } from 'lucide-react'
+import { FileCheck2, History, Printer, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CertificateRecord, Student } from '@/lib/types'
 import { Status } from '@/components/Status'

@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { assessmentResultSchema } from '@/lib/validation'
 import z from 'zod'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Create a Supabase client with the anon key for this request
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
 
-  const assessmentId = params.id
+  const { id: assessmentId } = await params
 
   try {
     // First, check if the assessment exists and user has permission to view it
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Create a Supabase client with the anon key for this request
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
 
-  const assessmentId = params.id
+  const { id: assessmentId } = await params
 
   // Get the current user's profile to get their ID and role
   let profile = null

@@ -2,7 +2,7 @@
 
 import { ArrowLeft, CheckCircle2, Printer, RefreshCw, Save as SaveIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Student } from '@/lib/types'
+import type { CertificateRecord, Student } from '@/lib/types'
 import { useEffect, useRef, useState, cloneElement } from 'react'
 import { createPortal } from 'react-dom'
 import QRCode from 'qrcode'

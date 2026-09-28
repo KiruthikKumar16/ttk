@@ -6,9 +6,9 @@ import { getVerificationSelector, type PublicVerificationResult } from '@/lib/ve
 // GET /api/verify/[code] - Public verification endpoint for documents
 export async function GET(
   req: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
-  const { code } = params
+  const { code } = await params
 
   // Validate input
   if (!code || typeof code !== 'string' || code.trim() === '') {

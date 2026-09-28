@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ArrowLeft, ArrowUpRight, BarChart3, Bell, CheckCircle2, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Printer, Search, Settings, ShieldCheck, Users, X, MoreHorizontal, Download, BookOpen, Clock, Edit, AlertCircle } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, BarChart3, Bell, CheckCircle2, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Printer, Search, Settings, ShieldCheck, Users, X, MoreHorizontal, Download, BookOpen, Clock, Edit, AlertCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Course } from '@/lib/types'
@@ -315,8 +315,10 @@ export function CoursesManager({
                         </div>
                       </td>
                     </tr>
+                  )
                 })
               )
+              }
             </tbody>
           </table>
         </div>

@@ -1,11 +1,14 @@
+'use client'
+
 import { notFound } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 export default function VerificationPage({
   params,
 }: {
-  params: { code: string }
+  params: Promise<{ code: string }>
 }) {
+  const { code } = use(params)
   const [verificationResult, setVerificationResult] = useState<
     | {
         status: 'Valid'
@@ -23,7 +26,7 @@ export default function VerificationPage({
   useEffect(() => {
     const fetchVerification = async () => {
       try {
-        const res = await fetch(`/api/verify/${params.code}`)
+        const res = await fetch(`/api/verify/${code}`)
         if (!res.ok) {
           // If the API returns an error, treat as invalid
           setVerificationResult({ status: 'Invalid' })
@@ -52,7 +55,7 @@ export default function VerificationPage({
     }
 
     fetchVerification()
-  }, [params.code])
+  }, [code])
 
   if (loading) {
     return (
@@ -202,4 +205,6 @@ export default function VerificationPage({
           </div>
         )}
       </div>
+    </div>
+  )
 }
