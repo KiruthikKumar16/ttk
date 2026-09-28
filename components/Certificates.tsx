@@ -323,7 +323,7 @@ export function Certificates({
                     setShowCertificatePreview(false)
                     setPreviewCertificate(null)
                   }}
-                  certificateRecord={previewCertificate}
+                  certificateRecord={previewCertificate ?? undefined}
                 />
               </div>
             </div>

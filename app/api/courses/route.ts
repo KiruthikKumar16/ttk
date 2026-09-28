@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import type { Course } from '@/lib/types'
 import { courseSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -17,29 +18,23 @@ export async function GET(req: NextRequest) {
   try {
     const { data, error } = await supabase.from('courses').select('*').order('name')
     if (error) throw error
-    if (!data || data.length === 0) {
-      // Fallback to mock data if no data in supabase
-      const { initialCourses } = require('@/lib/mock-data')
-      return NextResponse.json({ data: initialCourses, source: 'mock' })
-    }
     return NextResponse.json({
-      data: data.map((c) => ({
-        id: c.id,
-        name: c.name,
-        fee: Number(c.fee),
-        duration: c.duration,
-        description: c.description,
-        gstInclusive: Boolean(c.gst_inclusive ?? c.gstInclusive ?? false),
+      data: (data ?? []).map((course) => ({
+        id: course.id,
+        name: course.name,
+        fee: Number(course.fee),
+        duration: course.duration,
+        description: course.description,
+        gstInclusive: course.gst_inclusive,
       })),
-      source: 'supabase',
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to fetch courses' }, { status: 500 })
+    return unexpectedApiError(error, 'Failed to fetch courses')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -54,7 +49,7 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch course creator profile')
   }
 
   // Only staff and admin can create courses
@@ -96,12 +91,12 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to save course' }, { status: 500 })
+    return unexpectedApiError(error, 'Failed to save course')
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -116,7 +111,7 @@ export async function DELETE(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch course deleter profile')
   }
 
   // Only admin can delete courses
@@ -132,15 +127,8 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabase.from('courses').delete().eq('id', id)
     if (error) throw error
 
-    // Also remove from mock data for consistency
-    const { initialCourses } = require('@/lib/mock-data')
-    const idx = initialCourses.findIndex(c => c.id === id)
-    if (idx >= 0) {
-      initialCourses.splice(idx, 1)
-    }
-
     return NextResponse.json({ success: true, message: 'Course deleted' })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to delete course' }, { status: 500 })
+    return unexpectedApiError(error, 'Failed to delete course')
   }
 }

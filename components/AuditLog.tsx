@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Table } from '@/components/ui/table'
 import { TableHeader } from '@/components/ui/table-header'
 import { TableBody } from '@/components/ui/table-body'
@@ -263,13 +262,13 @@ export function AuditLog() {
                       <div className="font-medium">Changed Fields:</div>
                       <div className="text-xs space-y-0.5">
                         {Object.keys(log.new_values).filter(key =>
-                          String(log.old_values?.[key]) !== String(log.new_values[key])
+                          String(log.old_values?.[key]) !== String(log.new_values?.[key])
                         ).map((key) => (
                           <div key={key} className="flex justify-between text-xs">
                             <span className="font-medium">{key}:</span>
                             <div className="flex space-x-2">
                               <span className="text-red-600 line-through">{String(log.old_values?.[key])}</span>
-                              <span className="text-green-600">{String(log.new_values[key])}</span>
+                              <span className="text-green-600">{String(log.new_values?.[key])}</span>
                             </div>
                           </div>
                         ))}

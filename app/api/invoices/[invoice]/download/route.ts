@@ -1,8 +1,10 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { listPayments, listStudents } from '@/lib/server-data'
+import { createClient } from '@/lib/supabase/server'
+import { paymentFromRow, studentFromRow } from '@/lib/server-data'
+import { normalizeJoined } from '@/lib/supabase/relations'
+import { unexpectedApiError } from '@/lib/api-response'
 import QRCode from 'qrcode'
 import { brand } from '@/lib/brand'
 
@@ -23,26 +25,37 @@ export async function GET(
   const { invoice } = await context.params
   const decodedInvoice = decodeURIComponent(invoice)
 
-  // Fetch data using per-request Supabase client (respects RLS)
-  const [payments, students] = await Promise.all([
-    listPayments(supabase),
-    listStudents(supabase)
-  ])
-
-  // Find the payment with the matching invoice
-  const payment = payments.find(item => item.invoice === decodedInvoice)
+  const { data: paymentRow, error: paymentError } = await supabase
+    .from('payments')
+    .select('*, verifiable_documents ( verification_code )')
+    .eq('invoice', decodedInvoice)
+    .maybeSingle()
+  if (paymentError) return unexpectedApiError(paymentError, 'Failed to load invoice payment')
 
   // If invoice not found, return 404 instead of generating placeholder PDF
-  if (!payment) {
+  if (!paymentRow) {
     return new NextResponse(JSON.stringify({ error: 'Invoice not found' }), { status: 404 })
   }
 
-  const student = students.find(item => item.registerId === payment.studentId)
-  const { data: gstSettings } = await supabase
+  const verification = normalizeJoined(paymentRow.verifiable_documents)
+  const payment = paymentFromRow({
+    ...paymentRow,
+    verification_code: verification?.verification_code,
+  })
+  const { data: studentRow, error: studentError } = await supabase
+    .from('students')
+    .select('*')
+    .eq('id', paymentRow.student_id)
+    .maybeSingle()
+  if (studentError) return unexpectedApiError(studentError, 'Failed to load invoice student')
+  const student = studentRow ? studentFromRow(studentRow) : undefined
+
+  const { data: gstSettings, error: gstError } = await supabase
     .from('gst_settings')
     .select('gstin')
     .eq('id', 'default')
     .maybeSingle()
+  if (gstError) return unexpectedApiError(gstError, 'Failed to load invoice GST settings')
   const gstin = typeof gstSettings?.gstin === 'string' && gstSettings.gstin.trim()
     ? gstSettings.gstin.trim()
     : null

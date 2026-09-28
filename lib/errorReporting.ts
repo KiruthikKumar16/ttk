@@ -1,25 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-/**
- * Get a Supabase client with service role key for bypassing RLS (used for error logging)
- * If service role key is not available, fallback to anon key (may be restricted by RLS)
- */
-export function getSupabaseAdminClient(): SupabaseClient | null {
-  if (!supabaseUrl) return null
-  if (!supabaseServiceRoleKey) {
-    if (!publicKey) return null
-    // Fallback to a public key - RLS may prevent inserts.
-    console.warn('SUPABASE_SERVICE_ROLE_KEY not set, error logging may fail due to RLS restrictions')
-    return createClient(supabaseUrl, publicKey)
-  }
-  return createClient(supabaseUrl, supabaseServiceRoleKey)
-}
+import 'server-only'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Captures an error and logs it to both console and Supabase error_logs table.

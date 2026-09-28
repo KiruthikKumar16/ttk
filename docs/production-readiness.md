@@ -11,8 +11,7 @@ Set the following in the hosting provider's encrypted environment settings and i
 | Variable | Exposure | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser and server | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server | Supabase publishable key; legacy anon key is supported by the client helpers |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server | Legacy public anon key, if used by the project |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server | Supabase publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only | Required for course material storage, public document verification, and privileged error logging; never expose to client code |
 
 Use distinct Supabase projects for local, staging, and production. Configure the production auth site URL and allowed redirect URLs to the deployed HTTPS origin. Ensure the first administrator is provisioned through a controlled process; the new-user trigger assigns the default `staff` role.

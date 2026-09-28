@@ -12,15 +12,11 @@ export function generateVerificationCode(size: number = 10): string {
   let result = '';
   const charsLength = chars.length;
 
-  // Use crypto.getRandomValues for cryptographically secure random values
-  // Fallback to Math.random if crypto is not available (shouldn't happen in modern browsers/Node)
-  const getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValue !== undefined
-    ? crypto.getRandomValue.bind(crypto)
-    : () => Math.random();
-
   for (let i = 0; i < size; i++) {
-    // Get a random index between 0 and charsLength-1
-    const randomIndex = Math.floor(getRandomValues() * charsLength);
+    const randomValue = typeof crypto !== 'undefined'
+      ? crypto.getRandomValues(new Uint32Array(1))[0] ?? 0
+      : Math.floor(Math.random() * 0x1_0000_0000)
+    const randomIndex = Math.floor((randomValue / 0x1_0000_0000) * charsLength)
     result += chars.charAt(randomIndex);
   }
 

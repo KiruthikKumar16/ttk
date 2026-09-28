@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { assessmentSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
+import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -49,20 +51,24 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     // Format the response for easier consumption
-    const formattedData = (data || []).map(record => ({
-      id: record.id,
-      courseId: record.course_id,
-      courseName: record.courses?.name,
-      title: record.title,
-      maxScore: record.max_score,
-      assessmentDate: record.assessment_date,
-      createdBy: record.profiles ? {
-        id: record.profiles.id,
-        fullName: record.profiles.full_name,
-        role: record.profiles.role
-      } : null,
-      createdAt: record.created_at
-    }))
+    const formattedData = (data || []).map(record => {
+      const course = normalizeJoined(record.courses)
+      const profile = normalizeJoined(record.profiles)
+      return {
+        id: record.id,
+        courseId: record.course_id,
+        courseName: course?.name,
+        title: record.title,
+        maxScore: record.max_score,
+        assessmentDate: record.assessment_date,
+        createdBy: profile ? {
+          id: profile.id,
+          fullName: profile.full_name,
+          role: profile.role
+        } : null,
+        createdAt: record.created_at
+      }
+    })
 
     return NextResponse.json({
       data: formattedData,
@@ -72,12 +78,12 @@ export async function GET(req: NextRequest) {
       totalCount: count || 0
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load assessments' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to load assessments')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -86,18 +92,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Get the current user's profile to get their ID and role
-  let profile = null
-  if (supabase) {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 400 })
-    }
-    profile = profileData
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single()
+  if (profileError || !profile) {
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch assessment creator profile')
   }
 
   try {
@@ -115,9 +116,10 @@ export async function POST(req: NextRequest) {
       .eq('id', courseId)
       .single()
 
-    if (courseError || !courseData) {
+    if (courseError?.code === 'PGRST116' || (!courseError && !courseData)) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
+    if (courseError) return unexpectedApiError(courseError, 'Unable to load assessment course')
 
     // 2. Check if user has permission to create assessments for this course
     // For now, allow staff, admin, and all trainers (as noted in migration)
@@ -173,6 +175,6 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create assessment' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to create assessment')
   }
 }

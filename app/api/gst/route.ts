@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { gstSettings } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import { gstSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
 
-export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+export async function GET() {
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -19,28 +19,24 @@ export async function GET(req: NextRequest) {
       .from('gst_settings')
       .select('*')
       .limit(1)
-      .single()
-    if (!error && data) {
-      return NextResponse.json({
-        data: {
-          rate: Number(data.rate),
-          gstin: data.gstin ? String(data.gstin) : null,
-          enabled: Boolean(data.enabled),
-        },
-        source: 'supabase',
-      })
-    }
-    return NextResponse.json({ data: { ...gstSettings }, source: 'mock' })
+      .maybeSingle()
+    if (error) throw error
+    return NextResponse.json({
+      data: data
+        ? {
+            rate: Number(data.rate),
+            gstin: data.gstin ? String(data.gstin) : null,
+            enabled: Boolean(data.enabled),
+          }
+        : null,
+    })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch GST settings' },
-      { status: 500 }
-    )
+    return unexpectedApiError(error, 'Failed to fetch GST settings')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -55,7 +51,7 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch GST editor profile')
   }
 
   // Only admin can update GST settings
@@ -79,31 +75,19 @@ export async function POST(req: NextRequest) {
       .upsert({ id: 'default', rate, gstin: gstin?.trim() || null, enabled, updated_at: new Date().toISOString() })
       .select()
       .single()
-    if (!error && data) {
-      return NextResponse.json({
-        data: { rate: Number(data.rate), gstin: data.gstin ? String(data.gstin) : null, enabled: Boolean(data.enabled) },
-        message: 'GST settings updated',
-        source: 'supabase',
-      })
-    }
-
-    // Update in-memory
-    gstSettings.rate = rate
-    gstSettings.gstin = gstin?.trim() || null
-    gstSettings.enabled = enabled
-
+    if (error || !data) throw error ?? new Error('No GST settings row was returned after save.')
     return NextResponse.json({
-      data: { ...gstSettings },
+      data: {
+        rate: Number(data.rate),
+        gstin: data.gstin ? String(data.gstin) : null,
+        enabled: Boolean(data.enabled),
+      },
       message: 'GST settings updated',
-      source: 'mock',
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to update GST settings' },
-      { status: 500 }
-    )
+    return unexpectedApiError(error, 'Failed to update GST settings')
   }
 }

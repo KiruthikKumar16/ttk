@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { listCertificates } from '@/lib/server-data'
 import { certificateSchema } from '@/lib/validation'
 import { generateUniqueVerificationCode } from '@/lib/utils'
 import type { CertificateRecord } from '@/lib/types'
 import z from 'zod'
+import { unexpectedApiError } from '@/lib/api-response'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -33,18 +34,16 @@ export async function GET(req: NextRequest) {
       trainerName: row.trainer_name ? String(row.trainer_name) : undefined,
       customNote: row.custom_note ? String(row.custom_note) : undefined,
       issuedAt: row.issued_at ? String(row.issued_at) : undefined,
+      verificationCode: row.verification_code ? String(row.verification_code) : undefined,
     }))
-    return NextResponse.json({ data: mapped, count: mapped.length, source: 'supabase' })
+    return NextResponse.json({ data: mapped, count: mapped.length })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unable to load certificates' },
-      { status: 500 }
-    )
+    return unexpectedApiError(error, 'Unable to load certificates')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch certificate creator profile')
   }
 
   // Only staff and admin can create certificates
@@ -108,27 +107,18 @@ export async function POST(req: NextRequest) {
       .insert(payload)
       .select()
       .single()
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
+    if (error) throw error
 
-    // Create verifiable document entry for this certificate (only in real Supabase mode)
-    if (supabase) {
-      try {
-        const verificationCode = await generateUniqueVerificationCode(supabase);
-        await supabase
-          .from('verifiable_documents')
-          .insert({
-            doc_type: 'certificate',
-            reference_id: data.id,
-            verification_code: verificationCode,
-            status: 'active'
-          });
-      } catch (verificationError) {
-        // Log the error but don't fail the certificate creation
-        console.error('Failed to create verifiable document entry:', verificationError);
-      }
-    }
+    const verificationCode = await generateUniqueVerificationCode(supabase)
+    const { error: verificationError } = await supabase
+      .from('verifiable_documents')
+      .insert({
+        doc_type: 'certificate',
+        reference_id: data.id,
+        verification_code: verificationCode,
+        status: 'active',
+      })
+    if (verificationError) throw verificationError
 
     return NextResponse.json(
       {
@@ -148,8 +138,8 @@ export async function POST(req: NextRequest) {
           trainerName: data.trainer_name ? String(data.trainer_name) : undefined,
           customNote: data.custom_note ? String(data.custom_note) : undefined,
           issuedAt: data.issued_at ? String(data.issued_at) : undefined,
+          verificationCode: undefined,
         } as CertificateRecord,
-        source: 'supabase',
       },
       { status: 201 }
     )
@@ -157,9 +147,6 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unable to record certificate' },
-      { status: 500 }
-    )
+    return unexpectedApiError(error, 'Unable to record certificate')
   }
 }

@@ -30,7 +30,6 @@ export function Input({
   if (rows && rows > 1) {
     return (
       <textarea
-        type={type}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
@@ -38,9 +37,6 @@ export function Input({
         disabled={disabled}
         required={required}
         rows={rows}
-        min={min}
-        max={max}
-        step={step}
       />
     )
   }

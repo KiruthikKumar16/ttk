@@ -86,8 +86,8 @@ export function CertificatePrint({
       return {
         studentName: certificateRecord.studentName,
         courseName: certificateRecord.courseName,
-        startDate: certificateRecord.start_date ?? parseBatchToISO(student.batch),
-        endDate: certificateRecord.end_date ?? todayISO(),
+        startDate: certificateRecord.startDate ?? parseBatchToISO(student.batch),
+        endDate: certificateRecord.endDate ?? todayISO(),
         issueDate: certificateRecord.issueDate ?? todayISO(),
         certId: certificateRecord.certificateId ?? `TAI-${new Date().getFullYear()}-${String(student.registerId).padStart(4, '0')}`,
         skills: certificateRecord.skills ? certificateRecord.skills.join('\n') : DEFAULT_SKILLS.join('\n'),
@@ -174,7 +174,7 @@ export function CertificatePrint({
       try {
         // Use certificateRecord verification_code if available (for viewing existing certificates)
         // Otherwise use form.verification_code (for preview mode, which will be undefined)
-        const verificationCode = certificateRecord?.verification_code ?? form.verification_code
+        const verificationCode = certificateRecord?.verificationCode
         if (verificationCode) {
           const verificationUrl = `${brand.verifyBaseUrl}/verify/${verificationCode}`
           const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
@@ -192,7 +192,7 @@ export function CertificatePrint({
     }
 
     generateQRCode()
-  }, [certificateRecord?.verification_code, form.verification_code])
+  }, [certificateRecord?.verificationCode])
 
   const set = <K extends keyof CertFormState>(key: K, value: CertFormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -312,14 +312,14 @@ export function CertificatePrint({
                   </div>
 
                   {/* Verification QR Code */}
-                  {certificateRecord?.verification_code || form.verification_code ? (
+                  {certificateRecord?.verificationCode ? (
                     <div className="verification-section">
                       <div className="lbl">Verify Certificate</div>
                       <div className="qr-code-container">
                         {qrCode ? <img src={qrCode} alt="Verify certificate" className="qr-code" /> : null}
                       </div>
                       <div className="verification-url">
-                        {brand.verifyBaseUrl}/verify/{certificateRecord?.verification_code || form.verification_code || 'CODE'}
+                        {brand.verifyBaseUrl}/verify/{certificateRecord?.verificationCode || 'CODE'}
                       </div>
                     </div>
                   ) : null}

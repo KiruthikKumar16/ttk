@@ -1,3 +1,5 @@
+import { clientEnv } from '@/lib/env'
+
 export const brand = {
   displayName: 'ThoorigAI Infotech',
   legalName: 'ThoorigAI Infotech LLP',
@@ -6,8 +8,8 @@ export const brand = {
   logoPath: '/thoorigai-logo.png',
   invoicePrefix: 'TAI',
   supportEmail: 'support@thoorigai.in',
-  websiteUrl: 'https://thoorigai.in',
-  verifyBaseUrl: (process.env.NEXT_PUBLIC_VERIFY_BASE_URL || 'https://verify.thoorigai.in').replace(/\/+$/, ''),
+  websiteUrl: clientEnv.NEXT_PUBLIC_APP_URL,
+  verifyBaseUrl: clientEnv.NEXT_PUBLIC_VERIFY_BASE_URL.replace(/\/+$/, ''),
   theme: {
     colors: {
       navy: '#0f172a',

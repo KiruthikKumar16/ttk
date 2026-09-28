@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { assessmentResultSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
+import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -23,9 +25,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('id', assessmentId)
       .single()
 
-    if (assessmentError || !assessmentData) {
+    if (assessmentError?.code === 'PGRST116' || (!assessmentError && !assessmentData)) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
+    if (assessmentError) throw assessmentError
 
     // Check if user has permission to view results for this assessment
     // For now, allow staff, admin, and all trainers (as noted in migration)
@@ -36,9 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('id', session.user.id)
       .single()
 
-    if (profileError || !profileData) {
-      return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 400 })
-    }
+    if (profileError || !profileData) throw profileError ?? new Error('User profile was not found.')
 
     const hasPermission =
       profileData.role === 'admin' ||
@@ -79,19 +80,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (error) throw error
 
     // Format the response for easier consumption
-    const formattedData = (data || []).map(record => ({
-      id: record.id,
-      studentId: record.students?.register_id,
-      studentName: record.students?.name,
-      score: record.score,
-      remarks: record.remarks,
-      gradedBy: record.profiles ? {
-        id: record.profiles.id,
-        fullName: record.profiles.full_name,
-        role: record.profiles.role
-      } : null,
-      gradedAt: record.graded_at
-    }))
+    const formattedData = (data || []).map(record => {
+      const student = normalizeJoined(record.students)
+      const profile = normalizeJoined(record.profiles)
+      return {
+        id: record.id,
+        studentId: student?.register_id,
+        studentName: student?.name,
+        score: record.score,
+        remarks: record.remarks,
+        gradedBy: profile ? {
+          id: profile.id,
+          fullName: profile.full_name,
+          role: profile.role
+        } : null,
+        gradedAt: record.graded_at
+      }
+    })
 
     return NextResponse.json({
       data: formattedData,
@@ -101,12 +106,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       totalCount: count || 0
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load assessment results' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to load assessment results')
   }
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -117,18 +122,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id: assessmentId } = await params
 
   // Get the current user's profile to get their ID and role
-  let profile = null
-  if (supabase) {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 400 })
-    }
-    profile = profileData
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single()
+  if (profileError || !profile) {
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch result grader profile')
   }
 
   try {
@@ -146,9 +146,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .eq('id', assessmentId)
       .single()
 
-    if (assessmentError || !assessmentData) {
+    if (assessmentError?.code === 'PGRST116' || (!assessmentError && !assessmentData)) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
+    if (assessmentError) throw assessmentError
 
     // 2. Check if student exists
     const { data: studentData, error: studentError } = await supabase
@@ -157,9 +158,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .eq('register_id', studentId)
       .single()
 
-    if (studentError || !studentData) {
+    if (studentError?.code === 'PGRST116' || (!studentError && !studentData)) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 })
     }
+    if (studentError) throw studentError
 
     // 3. Check if user has permission to create results for this assessment
     // For now, allow staff, admin, and all trainers (as noted in migration)
@@ -202,7 +204,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { data: resultRecord, error: resultError } = await supabase
       .from('assessment_results')
       .upsert(resultData, {
-        onConflict: ['assessment_id', 'student_id'],
+        onConflict: 'assessment_id,student_id',
         ignoreDuplicates: false
       })
       .select()
@@ -234,6 +236,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to save assessment result' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to save assessment result')
   }
 }

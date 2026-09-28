@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { listPayments } from '@/lib/server-data'
 import { paymentSchema } from '@/lib/validation'
-import { brand } from '@/lib/brand'
 import { generateUniqueVerificationCode } from '@/lib/utils'
+import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -24,15 +24,14 @@ export async function GET(req: NextRequest) {
     const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : 50
 
     const result = await listPayments(supabase, { page, pageSize })
-    // Add source for consistency with previous responses
-    return NextResponse.json({ ...result, source: 'supabase' })
+    return NextResponse.json(result)
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load payments' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to load payments')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -53,59 +52,21 @@ export async function POST(req: NextRequest) {
       transactionId,
       customNote,
       gstRate,
-      id,
-      invoice,
       cgst,
       sgst,
     } = parsedBody
 
     // Business-logic validation will be done after fetching the student (checking balance)
 
-    if (!supabase) {
-      const { initialStudents, initialPayments } = require('@/lib/mock-data')
-      const student = initialStudents.find((s: any) => s.registerId === studentId)
-      if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
-      const balance = Number(student.total) - Number(student.paid)
-      if (amount > balance) return NextResponse.json({ error: `Payment exceeds the remaining balance of ${balance}.` }, { status: 400 })
-
-      student.paid = Number(student.paid) + amount
-      student.status = student.paid >= Number(student.total) ? 'Fully Paid' : 'Pending'
-
-      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-
-      const next = Date.now()
-      const paymentId = id || `RCPT-${next}`
-      const finalInvoice = invoice || `${brand.invoicePrefix}/${new Date().getFullYear()}/INV${String(next).slice(-6)}`
-
-      const newPayment: any = {
-        id: paymentId,
-        student: student.name,
-        method,
-        date: dateStr,
-        amount,
-        invoice: finalInvoice,
-        studentId: studentId,
-      }
-      if (cgst !== undefined && cgst > 0) newPayment.cgst = cgst
-      if (sgst !== undefined && sgst > 0) newPayment.sgst = sgst
-      if (transactionId !== undefined) newPayment.transactionId = transactionId
-      if (customNote !== undefined) newPayment.customNote = customNote
-      if (gstRate !== undefined) newPayment.gstRate = gstRate
-      initialPayments.unshift(newPayment)
-
-      return NextResponse.json({ data: newPayment, source: 'mock' }, { status: 201 })
-    }
-
     const { data: student, error: studentError } = await supabase
       .from('students')
       .select('*')
       .eq('register_id', studentId)
       .single()
-    if (studentError || !student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
+    if (studentError?.code === 'PGRST116' || (!studentError && !student)) {
+      return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
+    }
+    if (studentError) return unexpectedApiError(studentError, 'Unable to load payment student')
 
     const balance = Number(student.total) - Number(student.paid)
     if (amount > balance) {
@@ -132,14 +93,14 @@ export async function POST(req: NextRequest) {
       .insert(paymentRow)
       .select()
       .single()
-    if (paymentError) return NextResponse.json({ error: paymentError.message }, { status: 400 })
+    if (paymentError) return unexpectedApiError(paymentError, 'Unable to record payment')
 
     const paid = Number(student.paid) + amount
     const { error: updateError } = await supabase
       .from('students')
       .update({ paid, status: paid >= Number(student.total) ? 'Fully Paid' : 'Pending', updated_at: new Date().toISOString() })
       .eq('id', student.id)
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 })
+    if (updateError) return unexpectedApiError(updateError, 'Unable to update student balance')
 
     const dateStr = new Date(paymentDate + 'T00:00:00').toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -147,22 +108,21 @@ export async function POST(req: NextRequest) {
       year: 'numeric',
     })
 
-    // Create verifiable document entry for this invoice (only in real Supabase mode)
-    if (supabase) {
-      try {
-        const verificationCode = await generateUniqueVerificationCode(supabase);
-        await supabase
-          .from('verifiable_documents')
-          .insert({
-            doc_type: 'invoice',
-            reference_id: payment.id, // Using payment ID as reference for invoice
-            verification_code: verificationCode,
-            status: 'active'
-          });
-      } catch (verisonError) {
-        // Log the error but don't fail the payment creation
-        console.error('Failed to create verifiable document entry for invoice:', verisonError);
-      }
+    // Create a verification record for the invoice.
+    try {
+      const verificationCode = await generateUniqueVerificationCode(supabase)
+      const { error: verificationError } = await supabase
+        .from('verifiable_documents')
+        .insert({
+          doc_type: 'invoice',
+          reference_id: payment.id,
+          verification_code: verificationCode,
+          status: 'active',
+        })
+      if (verificationError) throw verificationError
+    } catch (verificationError) {
+      console.error('Failed to create verifiable document entry for invoice:', verificationError)
+      throw verificationError
     }
 
     return NextResponse.json(
@@ -182,7 +142,6 @@ export async function POST(req: NextRequest) {
           customNote: payment.custom_note,
           gstRate: Number(payment.gst_rate) ?? 0,
         },
-        source: 'supabase',
       },
       { status: 201 }
     )
@@ -190,6 +149,6 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to record payment' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to record payment')
   }
 }

@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { getSupabaseAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { courseMaterialSchema, courseMaterialResponseSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
+import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // User client enforces RLS; service role is used only for signed storage URLs.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -53,22 +55,21 @@ export async function GET(req: NextRequest) {
     const adminSupabase = getSupabaseAdminClient()
     const materialsWithSignedUrl = await Promise.all(
       (data || []).map(async (material) => {
+        const course = normalizeJoined(material.courses)
+        const profile = normalizeJoined(material.profiles)
         const { data: signedUrlData, error: signedUrlError } = await adminSupabase
           .storage
           .from('course-materials')
           .createSignedUrl(material.storage_path, 3600) // 1 hour expiry
 
         if (signedUrlError) {
-          console.error('Error creating signed URL:', signedUrlError)
-          // If we can't create a signed URL, we'll return null for the URL
-          return {
-            ...material,
-            signedUrl: null,
-          }
+          throw signedUrlError
         }
 
         return {
           ...material,
+          course,
+          profile,
           signedUrl: signedUrlData.signedUrl,
         }
       })
@@ -78,14 +79,14 @@ export async function GET(req: NextRequest) {
     const formattedData = materialsWithSignedUrl.map((material) => ({
       id: material.id,
       courseId: material.course_id,
-      courseName: material.courses?.name,
+      courseName: material.course?.name,
       title: material.title,
       type: material.type,
       storagePath: material.storage_path,
-      uploadedBy: material.profiles ? {
-        id: material.profiles.id,
-        fullName: material.profiles.full_name,
-        role: material.profiles.role
+      uploadedBy: material.profile ? {
+        id: material.profile.id,
+        fullName: material.profile.full_name,
+        role: material.profile.role
       } : null,
       createdAt: material.created_at,
       signedUrl: material.signedUrl
@@ -99,12 +100,12 @@ export async function GET(req: NextRequest) {
       totalCount: count || 0
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load course materials' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to load course materials')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // User client enforces RLS; service role is used only for signed storage URLs.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -113,18 +114,14 @@ export async function POST(req: NextRequest) {
   }
 
   // Get the current user's profile to get their ID and role
-  let profile = null
-  if (supabase) {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single()
 
-    if (profileError || !profileData) {
-      return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 400 })
-    }
-    profile = profileData
+  if (profileError || !profile) {
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch course material uploader profile')
   }
 
   // Check permissions: only staff, admin, and trainer can upload course materials
@@ -162,16 +159,14 @@ export async function POST(req: NextRequest) {
     const fileExtension = file.name.split('.').pop() || ''
     const storagePath = `${courseId}/${title.replace(/\s+/g, '_')}_${Date.now()}.${fileExtension}`
 
-    // Upload the file to Supabase Storage using the admin client
-    const adminSupabase = getSupabaseAdminClient()
-    const { data: uploadData, error: uploadError } = await adminSupabase
+    // Uploads use the authenticated user client so Storage RLS remains in force.
+    const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('course-materials')
       .upload(storagePath, file)
 
     if (uploadError) {
-      console.error('Error uploading file to Supabase Storage:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
+      return unexpectedApiError(uploadError, 'Failed to upload course material')
     }
 
     // Insert the course material metadata into the database
@@ -192,36 +187,22 @@ export async function POST(req: NextRequest) {
     if (courseMaterialError) {
       // If the database insert fails, we should try to delete the uploaded file to avoid orphaned files
       // Note: This is a best-effort cleanup; if this fails, we might have an orphaned file.
-      await adminSupabase
+      await supabase
         .storage
         .from('course-materials')
         .remove([storagePath])
-      return NextResponse.json({ error: courseMaterialError.message }, { status: 500 })
+      return unexpectedApiError(courseMaterialError, 'Failed to save course material metadata')
     }
 
     // Generate a signed URL for the uploaded file (short-lived)
+    const adminSupabase = getSupabaseAdminClient()
     const { data: signedUrlData, error: signedUrlError } = await adminSupabase
       .storage
       .from('course-materials')
       .createSignedUrl(storagePath, 3600) // 1 hour expiry
 
     if (signedUrlError) {
-      console.error('Error creating signed URL:', signedUrlError)
-      // We'll still return the course material without a signed URL
-      return NextResponse.json({
-        data: {
-          ...courseMaterial,
-          courseId: courseMaterial.course_id,
-          courseName: null, // We don't have the course name in the inserted data, but we can fetch it if needed
-          uploadedBy: {
-            id: profile.id,
-            fullName: profile.full_name,
-            role: profile.role
-          },
-          signedUrl: null
-        },
-        message: 'Course material uploaded successfully, but failed to generate signed URL'
-      }, { status: 201 })
+      throw signedUrlError
     }
 
     // Format the response
@@ -250,6 +231,6 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to upload course material' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to upload course material')
   }
 }

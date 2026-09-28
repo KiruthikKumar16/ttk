@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import type { Payment, Receipt, Student, View, GstSettings, Course, CertificateRecord } from '@/lib/types'
-import { initialPayments, initialStudents } from '@/lib/mock-data'
 
 import { Sidebar } from '@/components/Sidebar'
 import { Topbar } from '@/components/Topbar'
@@ -26,7 +25,7 @@ export default function Page() {
   const [allPayments, setAllPayments] = useState<Payment[]>([])
   const [allCourses, setAllCourses] = useState<Course[]>([])
   const [allCertificates, setAllCertificates] = useState<CertificateRecord[]>([])
-  const [allGst, setAllGst] = useState<GstSettings>({ rate: 18, gstin: null, enabled: true })
+  const [allGst, setAllGst] = useState<GstSettings | null>(null)
 
   // Pagination state for Students and Payments views
   const [studentsPage, setStudentsPage] = useState(1)
@@ -93,7 +92,7 @@ export default function Page() {
       if (allStudentsData.data) setAllStudents(allStudentsData.data)
       if (allPaymentsData.data) setAllPayments(allPaymentsData.data)
       if (allCoursesData.data) setAllCourses(allCoursesData.data)
-      if (allGstData.data) setAllGst(allGstData.data)
+      setAllGst(allGstData.data ?? null)
       if (allCertsData.data) setAllCertificates(allCertsData.data)
 
       // Fetch paginated students for the Students view
@@ -223,8 +222,8 @@ export default function Page() {
         payment={selectedInvoice}
         student={allStudents.find(s => s.registerId === selectedInvoice.studentId)!}
         onBack={() => setSelectedInvoice(null)}
-        gstRate={allGst.enabled ? allGst.rate : 0}
-        gstin={allGst.gstin}
+        gstRate={allGst?.enabled ? allGst.rate : 0}
+        gstin={allGst?.gstin ?? null}
         courses={allCourses}
       />
     )
@@ -247,8 +246,7 @@ export default function Page() {
           onPayment={recordPayment}
           onCertificate={() => setSelectedCertificate(selectedStudent)}
           onInvoice={setSelectedInvoice}
-          gstRate={allGst.enabled ? allGst.rate : 0}
-          gstin={allGst.gstin}
+          gstRate={allGst?.enabled ? allGst.rate : 0}
           courses={allCourses}
         />
       )
@@ -284,7 +282,7 @@ export default function Page() {
         courses={allCourses}
         onSaveCourse={handleSaveCourse}
         onDeleteCourse={handleDeleteCourse}
-        gstRate={allGst.enabled ? allGst.rate : 0}
+        gstRate={allGst?.enabled ? allGst.rate : 0}
       />
     )
     if (view === 'Settings') return (
@@ -390,7 +388,7 @@ export default function Page() {
           courses={allCourses}
           onClose={() => setAdding(false)}
           onSave={save}
-          gstRate={allGst.enabled ? allGst.rate : 0}
+          gstRate={allGst?.enabled ? allGst.rate : 0}
         />
       )}
       <div className={'sidebar-mobile ' + (mobileOpen ? 'open' : '')} onClick={e => e.stopPropagation()}>

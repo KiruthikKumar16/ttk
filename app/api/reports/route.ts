@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { unexpectedApiError } from '@/lib/api-response'
 import { listPayments, listStudents } from '@/lib/server-data'
 
 export async function GET() {
@@ -21,8 +22,8 @@ export async function GET() {
       summary[payment.method] = (summary[payment.method] ?? 0) + payment.amount
       return summary
     }, {})
-    return NextResponse.json({ data: { students, payments, revenue, outstanding, eligible: students.filter(student => student.status === 'Fully Paid').length, byMethod }, source: 'supabase' })
+    return NextResponse.json({ data: { students, payments, revenue, outstanding, eligible: students.filter(student => student.status === 'Fully Paid').length, byMethod } })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to build report' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to build report')
   }
 }

@@ -1,20 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+'use client'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+import { createBrowserClient as createSupabaseBrowserClient } from '@supabase/ssr'
+import { clientEnv } from '@/lib/env'
 
-export const hasBrowserSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
-
-export function createBrowserClient() {
-  if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
-  if (!supabaseAnonKey) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set')
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-  })
-}
-
-export const supabaseBrowser = hasBrowserSupabaseConfig ? createBrowserClient() : null
+export const supabaseBrowser = createSupabaseBrowserClient(
+  clientEnv.NEXT_PUBLIC_SUPABASE_URL,
+  clientEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+)

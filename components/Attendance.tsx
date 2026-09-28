@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Table } from '@/components/ui/table'
 import { TableHeader } from '@/components/ui/table-header'
 import { TableBody } from '@/components/ui/table-body'
 import { TableRow } from '@/components/ui/table-row'
 import { TableCell } from '@/components/ui/table-cell'
 import { TableHead } from '@/components/ui/table-head'
-import { ChevronDown, ChevronUp, Calendar, Filter, Search, User, List, RefreshCw } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, Filter, Search, User, List } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 type AttendanceRecord = {
@@ -258,13 +257,13 @@ export function Attendance() {
 
 // Helper icon components (since lucide-icons might not have all these, using alternatives)
 const RefreshCw = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg size={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M3 12a9 9 0 1 0 17.36 5.74M13.26 4.74a3 3 0 0 1 4.24 0l1.46 1.46a3 3 0 0 1 0 4.24l-1.46 1.46a3 3 0 0 1-4.24 0" />
   </svg>
 )
 
 const Eye = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg size={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
   </svg>

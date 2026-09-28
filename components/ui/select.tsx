@@ -6,12 +6,15 @@ interface SelectProps {
   placeholder?: string
   className?: string
   disabled?: boolean
+  required?: boolean
   children: React.ReactNode
 }
 
 interface SelectTriggerProps {
   children: React.ReactNode
   className?: string
+  onClick?: () => void
+  disabled?: boolean
 }
 
 interface SelectContentProps {
@@ -54,18 +57,18 @@ export function Select({
   )
 }
 
-export function SelectTrigger({ children, className = '' }: SelectTriggerProps) {
+export function SelectTrigger({ children, className = '', onClick, disabled = false }: SelectTriggerProps) {
   return (
-    <div
+    <button type="button" onClick={onClick} disabled={disabled}
       className={`flex items-center justify-between px-2 py-2 cursor-pointer text-sm text-gray-700 ${className}`}
     >
       {children}
-    </div>
+    </button>
   )
 }
 
-export function SelectValue({ children }: { children: React.ReactNode }) {
-  return <span className="text-gray-500">{children}</span>
+export function SelectValue({ children, placeholder }: { children?: React.ReactNode; placeholder?: string }) {
+  return <span className="text-gray-500">{children ?? placeholder}</span>
 }
 
 export function SelectContent({ className = '', children }: SelectContentProps) {

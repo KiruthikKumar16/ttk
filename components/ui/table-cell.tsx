@@ -1,16 +1,12 @@
-import { ReactNode } from 'react'
+import type { TdHTMLAttributes } from 'react'
 
-interface TableCellProps {
-  className?: string
-  children: ReactNode
-  colSpan?: number
-}
+type TableCellProps = TdHTMLAttributes<HTMLTableCellElement>
 
-export function TableCell({ className = '', children, colSpan }: TableCellProps) {
+export function TableCell({ className = '', children, ...props }: TableCellProps) {
   return (
     <td
       className={`px-4 py-2 text-sm text-gray-700 ${className}`}
-      colSpan={colSpan}
+      {...props}
     >
       {children}
     </td>

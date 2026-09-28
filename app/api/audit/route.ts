@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { unexpectedApiError } from '@/lib/api-response'
 
 export async function GET(req: NextRequest) {
   // Create a Supabase client with the anon key for this request
@@ -84,9 +85,6 @@ export async function GET(req: NextRequest) {
       hasMore: (offset + limit) < (count || 0)
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch audit logs' },
-      { status: 500 }
-    )
+    return unexpectedApiError(error, 'Failed to fetch audit logs')
   }
 }

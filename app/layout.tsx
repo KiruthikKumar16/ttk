@@ -33,6 +33,7 @@ const greatVibes = Great_Vibes({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(brand.websiteUrl),
   title: {
     default: brand.displayName,
     template: `%s | ${brand.displayName}`,

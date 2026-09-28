@@ -8,12 +8,12 @@ export function GstSettingsPage({
   settings,
   onSave,
 }: {
-  settings: GstSettings
+  settings: GstSettings | null
   onSave: (s: GstSettings) => Promise<void>
 }) {
-  const [rate, setRate] = useState(String(settings.rate))
-  const [gstin, setGstin] = useState(settings.gstin ?? '')
-  const [enabled, setEnabled] = useState(settings.enabled)
+  const [rate, setRate] = useState(settings ? String(settings.rate) : '')
+  const [gstin, setGstin] = useState(settings?.gstin ?? '')
+  const [enabled, setEnabled] = useState(settings?.enabled ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -62,6 +62,12 @@ export function GstSettingsPage({
           <p className="subcopy">Configure Goods & Services Tax rates, GSTIN, and tax computation for invoices.</p>
         </div>
       </div>
+
+      {!settings && (
+        <p className="mb-4 text-sm text-amber-800" role="status">
+          GST settings have not been configured yet. Save this form to create them.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* GST Configuration Card */}
@@ -115,7 +121,7 @@ export function GstSettingsPage({
               </label>
               <div className="relative">
                 <Percent size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
+        <input
                   type="number"
                   min="0"
                   max="100"

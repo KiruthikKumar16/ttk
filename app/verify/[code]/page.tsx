@@ -173,7 +173,7 @@ export default function VerificationPage({
                 {new Intl.NumberFormat('en-IN', {
                   style: 'currency',
                   currency: 'INR',
-                }).format(verificationResult.amount)}
+                }).format(verificationResult.amount ?? 0)}
               </h2>
             </div>
             <div className="space-y-2">

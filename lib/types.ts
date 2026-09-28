@@ -20,7 +20,7 @@ export type Course = {
 export type StudentStatus = 'Fully Paid' | 'Pending'
 
 export type Student = {
-  /** Internal UUID-style row id (Supabase only, optional for mock) */
+  /** Internal UUID-style row id from the database */
   id?: string
   /** Business-facing student register id (human-usable number) */
   registerId: number
@@ -98,7 +98,10 @@ export type CertificateRecord = {
   studentRegisterId: number
   courseName: string
   studentName: string
+  startDate?: string
+  endDate?: string
   issueDate: string
+  verificationCode?: string
   skills?: string[]
   directorName?: string
   trainerName?: string

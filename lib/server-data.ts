@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { initialPayments, initialStudents } from '@/lib/mock-data'
 import type { Payment, Student } from '@/lib/types'
 import { captureError } from '@/lib/errorReporting'
+import { normalizeJoined } from '@/lib/supabase/relations'
 
 export function studentFromRow(row: Record<string, unknown>): Student {
   const total = Number(row.total ?? 0)
@@ -15,7 +15,9 @@ export function studentFromRow(row: Record<string, unknown>): Student {
     paid,
     phone: String(row.phone ?? ''),
     status: paid >= total ? 'Fully Paid' : 'Pending',
-    gender: row.gender ?? undefined,
+    gender: row.gender === 'Male' || row.gender === 'Female' || row.gender === 'Others'
+      ? row.gender
+      : undefined,
     dob: row.dob ? String(row.dob) : undefined,
     altPhone: row.alt_phone ? String(row.alt_phone) : undefined,
     maritalStatus: row.marital_status ? String(row.marital_status) : undefined,
@@ -65,25 +67,13 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
 }
 
 export async function listStudents(
-  supabaseClient: SupabaseClient | null,
+  supabaseClient: SupabaseClient,
   options: { page?: number; pageSize?: number } = {}
 ) {
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
   const from = (page - 1) * pageSize
   const to = page * pageSize - 1
-
-  if (!supabaseClient) {
-    // Mock data pagination
-    const paginated = initialStudents.slice(from, to + 1)
-    return {
-      data: paginated.map(studentFromRow),
-      count: paginated.length,
-      page,
-      pageSize,
-      totalCount: initialStudents.length,
-    }
-  }
 
   const { data, error, count } = await supabaseClient
     .from('students')
@@ -102,31 +92,13 @@ export async function listStudents(
 }
 
 export async function listPayments(
-  supabaseClient: SupabaseClient | null,
+  supabaseClient: SupabaseClient,
   options: { page?: number; pageSize?: number } = {}
 ) {
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
   const from = (page - 1) * pageSize
   const to = page * pageSize - 1
-
-  if (!supabaseClient) {
-    // Mock data pagination
-    const paginated = initialPayments.slice(from, to + 1)
-    return {
-      data: paginated.map((row) =>
-        paymentFromRow({
-          ...row,
-          student_name: row.students?.name,
-          verification_code: undefined, // No verification code in mock data
-        })
-      ),
-      count: paginated.length,
-      page,
-      pageSize,
-      totalCount: initialPayments.length,
-    }
-  }
 
   const { data, error, count } = await supabaseClient
     .from('payments')
@@ -143,13 +115,15 @@ export async function listPayments(
 
   if (error) throw error
   return {
-    data: (data ?? []).map((row) =>
-      paymentFromRow({
+    data: (data ?? []).map((row) => {
+      const student = normalizeJoined(row.students)
+      const verification = normalizeJoined(row.verifiable_documents)
+      return paymentFromRow({
         ...row,
-        student_name: row.students?.name,
-        verification_code: row.verifiable_documents?.[0]?.verification_code,
+        student_name: student?.name,
+        verification_code: verification?.verification_code,
       })
-    ),
+    }),
     count: data?.length ?? 0,
     page,
     pageSize,
@@ -175,9 +149,7 @@ export type CertificateRow = {
   verification_code?: string
 }
 
-export async function listCertificates(supabaseClient: SupabaseClient | null) {
-  if (!supabaseClient) return [] as CertificateRow[]
-
+export async function listCertificates(supabaseClient: SupabaseClient) {
   // Fetch certificates with verification codes
   const { data, error } = await supabaseClient
     .from('certificates')
@@ -191,7 +163,7 @@ export async function listCertificates(supabaseClient: SupabaseClient | null) {
 
   if (error) {
     await captureError(error, { function: 'listCertificates' })
-    return [] as CertificateRow[]
+    throw error
   }
 
   // Map the data to include verification_code
@@ -204,7 +176,7 @@ export async function listCertificates(supabaseClient: SupabaseClient | null) {
 }
 
 export async function insertCertificate(
-  supabaseClient: SupabaseClient | null,
+  supabaseClient: SupabaseClient,
   payload: {
     certificate_id: string
     student_id: string
@@ -220,7 +192,6 @@ export async function insertCertificate(
     custom_note?: string
   }
 ) {
-  if (!supabaseClient) return null
   const { data, error } = await supabaseClient.from('certificates').insert(payload).select().single()
   if (error) throw new Error(error.message)
   return data as CertificateRow

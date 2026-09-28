@@ -62,7 +62,7 @@ test.describe('Additional API Tests', () => {
     } else {
       // If creation fails, maybe the student already exists? We'll try to fetch and use an existing one.
       // For simplicity, we'll skip this test if we can't create a student.
-      test.skip('Unable to create test student');
+      test.skip(true, 'Unable to create test student');
       return;
     }
 
@@ -98,7 +98,7 @@ test.describe('Additional API Tests', () => {
     });
 
     if (!studentRes.ok()) {
-      test.skip('Unable to create test student for GST test');
+      test.skip(true, 'Unable to create test student for GST test');
       return;
     }
 

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { attendanceSchema } from '@/lib/validation'
+import { unexpectedApiError } from '@/lib/api-response'
+import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 
 export async function GET(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -62,21 +64,26 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     // Format the response for easier consumption
-    const formattedData = (data || []).map(record => ({
-      id: record.id,
-      studentId: record.students?.register_id,
-      studentName: record.students?.name,
-      courseId: record.courses?.id,
-      courseName: record.courses?.name,
-      sessionDate: record.session_date,
-      status: record.status,
-      markedBy: record.profiles ? {
-        id: record.profiles.id,
-        fullName: record.profiles.full_name,
-        role: record.profiles.role
-      } : null,
-      createdAt: record.created_at
-    }))
+    const formattedData = (data || []).map(record => {
+      const student = normalizeJoined(record.students)
+      const course = normalizeJoined(record.courses)
+      const profile = normalizeJoined(record.profiles)
+      return {
+        id: record.id,
+        studentId: student?.register_id,
+        studentName: student?.name,
+        courseId: course?.id,
+        courseName: course?.name,
+        sessionDate: record.session_date,
+        status: record.status,
+        markedBy: profile ? {
+          id: profile.id,
+          fullName: profile.full_name,
+          role: profile.role
+        } : null,
+        createdAt: record.created_at
+      }
+    })
 
     return NextResponse.json({
       data: formattedData,
@@ -86,12 +93,12 @@ export async function GET(req: NextRequest) {
       totalCount: count || 0
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load attendance' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to load attendance')
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Create a Supabase client with the anon key for this request
+  // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   const session = user ? { user } : null
@@ -100,18 +107,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Get the current user's profile to get their ID and role
-  let profile = null
-  if (supabase) {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 400 })
-    }
-    profile = profileData
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single()
+  if (profileError || !profile) {
+    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch attendance creator profile')
   }
 
   try {
@@ -132,9 +134,10 @@ export async function POST(req: NextRequest) {
       .eq('register_id', studentId)
       .single()
 
-    if (studentError || !studentData) {
+    if (studentError?.code === 'PGRST116' || (!studentError && !studentData)) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 })
     }
+    if (studentError) return unexpectedApiError(studentError, 'Unable to load attendance student')
 
     // 2. Check if course exists
     const { data: courseData, error: courseError } = await supabase
@@ -143,9 +146,10 @@ export async function POST(req: NextRequest) {
       .eq('id', courseId)
       .single()
 
-    if (courseError || !courseData) {
+    if (courseError?.code === 'PGRST116' || (!courseError && !courseData)) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
+    if (courseError) return unexpectedApiError(courseError, 'Unable to load attendance course')
 
     // 3. Check if user has permission to mark attendance for this course
     // For now, allow staff, admin, and all trainers (as noted in migration)
@@ -171,7 +175,7 @@ export async function POST(req: NextRequest) {
     const { data: attendanceRecord, error: attendanceError } = await supabase
       .from('attendance')
       .upsert(attendanceData, {
-        onConflict: ['student_id', 'course_id', 'session_date'],
+        onConflict: 'student_id,course_id,session_date',
         ignoreDuplicates: false
       })
       .select()
@@ -205,6 +209,6 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to mark attendance' }, { status: 500 })
+    return unexpectedApiError(error, 'Unable to mark attendance')
   }
 }

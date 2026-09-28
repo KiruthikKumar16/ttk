@@ -376,7 +376,7 @@ export function Assessments() {
                     onChange={(e) => handleNewAssessmentChange('maxScore', e.target.value)}
                     placeholder="Enter max score (e.g., 100)"
                     type="number"
-                    min="0"
+                    min={0}
                     step="0.01"
                   />
                 </div>
@@ -575,7 +575,7 @@ export function Assessments() {
                     onChange={(e) => handleNewResultChange('score', e.target.value)}
                     placeholder="Enter score"
                     type="number"
-                    min="0"
+                    min={0}
                     step="0.01"
                   />
                 </div>
@@ -676,13 +676,13 @@ export function Assessments() {
 
 // Helper icon components (since lucide-icons might not have all these, using alternatives)
 const ArrowLeft = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg size={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M19 12H5M12 5l-7 7 7 7" />
   </svg>
 )
 
 const RefreshCw = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg size={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M3 12a9 9 0 1 0 17.36 5.74M13.26 4.74a3 3 0 0 1 4.24 0l1.46 1.46a3 3 0 0 1 0 4.24l-1.46 1.46a3 3 0 0 1-4.24 0" />
   </svg>
 )
