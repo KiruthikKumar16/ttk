@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import type { Student } from '@/lib/types'
 import { useEffect, useRef, useState, cloneElement } from 'react'
 import { createPortal } from 'react-dom'
+import QRCode from 'qrcode'
 
 const CERT_W = 620
 const CERT_H = 877
@@ -67,18 +68,46 @@ type CertFormState = {
   trainer: string
 }
 
-export function CertificatePrint({ student, onBack, className }: { student: Student; onBack: () => void; className?: string }) {
-  const [form, setForm] = useState<CertFormState>(() => ({
-    studentName: student.name,
-    courseName: student.course,
-    startDate: parseBatchToISO(student.batch),
-    endDate: todayISO(),
-    issueDate: todayISO(),
-    certId: `TAI-${new Date().getFullYear()}-${String(student.registerId).padStart(4, '0')}`,
-    skills: DEFAULT_SKILLS.join('\n'),
-    director: 'Dr. K. Subramanian',
-    trainer: 'A. Ravichandran',
-  }))
+export function CertificatePrint({
+  student,
+  onBack,
+  className,
+  certificateRecord
+}: {
+  student: Student;
+  onBack: () => void;
+  className?: string;
+  certificateRecord?: CertificateRecord
+}) {
+  const [form, setForm] = useState<CertFormState>(() => {
+    // If we have certificate record data (for viewing existing certificates), use it
+    if (certificateRecord) {
+      return {
+        studentName: certificateRecord.studentName,
+        courseName: certificateRecord.courseName,
+        startDate: certificateRecord.start_date ?? parseBatchToISO(student.batch),
+        endDate: certificateRecord.end_date ?? todayISO(),
+        issueDate: certificateRecord.issueDate ?? todayISO(),
+        certId: certificateRecord.certificateId ?? `TAI-${new Date().getFullYear()}-${String(student.registerId).padStart(4, '0')}`,
+        skills: certificateRecord.skills ? certificateRecord.skills.join('\n') : DEFAULT_SKILLS.join('\n'),
+        director: certificateRecord.directorName ?? 'Dr. K. Subramanian',
+        trainer: certificateRecord.trainerName ?? 'A. Ravichandran',
+      }
+    }
+
+    // Otherwise, use student data for preview mode
+    return {
+      studentName: student.name,
+      courseName: student.course,
+      startDate: parseBatchToISO(student.batch),
+      endDate: todayISO(),
+      issueDate: todayISO(),
+      certId: `TAI-${new Date().getFullYear()}-${String(student.registerId).padStart(4, '0')}`,
+      skills: DEFAULT_SKILLS.join('\n'),
+      director: 'Dr. K. Subramanian',
+      trainer: 'A. Ravichandran',
+    }
+  })
 
   // Add print styles when component mounts
   useEffect(() => {
@@ -121,6 +150,7 @@ export function CertificatePrint({ student, onBack, className }: { student: Stud
   const [scale, setScale] = useState(1)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [qrCode, setQrCode] = useState<string | null>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -136,6 +166,32 @@ export function CertificatePrint({ student, onBack, className }: { student: Stud
     observer.observe(container)
     return () => observer.disconnect()
   }, [])
+
+  // Generate QR code when verification code changes
+  useEffect(() => {
+    const generateQRCode = async () => {
+      try {
+        // Use certificateRecord verification_code if available (for viewing existing certificates)
+        // Otherwise use form.verification_code (for preview mode, which will be undefined)
+        const verificationCode = certificateRecord?.verification_code ?? form.verification_code
+        if (verificationCode) {
+          const verificationUrl = `https://verify.thoorigai.in/verify/${verificationCode}`
+          const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+            width: 120,
+            margin: 1,
+          })
+          setQrCode(qrCodeDataUrl)
+        } else {
+          setQrCode(null)
+        }
+      } catch (err) {
+        console.error('Failed to generate QR code:', err)
+        setQrCode(null)
+      }
+    }
+
+    generateQRCode()
+  }, [certificateRecord?.verification_code, form.verification_code])
 
   const set = <K extends keyof CertFormState>(key: K, value: CertFormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -253,6 +309,19 @@ export function CertificatePrint({ student, onBack, className }: { student: Stud
                       <div className="val">{fmtDate(form.issueDate)}</div>
                     </div>
                   </div>
+
+                  {/* Verification QR Code */}
+                  {certificateRecord?.verification_code || form.verification_code ? (
+                    <div className="verification-section">
+                      <div className="lbl">Verify Certificate</div>
+                      <div className="qr-code-container">
+                        {qrCode ? <img src={qrCode} alt="Verify certificate" className="qr-code" /> : null}
+                      </div>
+                      <div className="verification-url">
+                        https://verify.thoorigai.in/verify/{certificateRecord?.verification_code || form.verification_code || 'CODE'}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="sig-row">
                     <div className="sig-block">

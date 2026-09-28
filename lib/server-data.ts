@@ -1,6 +1,7 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { initialPayments, initialStudents } from '@/lib/mock-data'
 import type { Payment, Student } from '@/lib/types'
-import { supabase } from '@/lib/supabase/server'
+import { captureError } from '@/lib/errorReporting'
 
 export function studentFromRow(row: Record<string, unknown>): Student {
   const total = Number(row.total ?? 0)
@@ -14,7 +15,7 @@ export function studentFromRow(row: Record<string, unknown>): Student {
     paid,
     phone: String(row.phone ?? ''),
     status: paid >= total ? 'Fully Paid' : 'Pending',
-    gender: row.gender as any,
+    gender: row.gender ?? undefined,
     dob: row.dob ? String(row.dob) : undefined,
     altPhone: row.alt_phone ? String(row.alt_phone) : undefined,
     maritalStatus: row.marital_status ? String(row.marital_status) : undefined,
@@ -24,7 +25,9 @@ export function studentFromRow(row: Record<string, unknown>): Student {
     city: row.city ? String(row.city) : undefined,
     area: row.area ? String(row.area) : undefined,
     studentSource: row.lead_source ? String(row.lead_source) : undefined,
+    /** Free-form admin comments */
     comments: row.comments ? String(row.comments) : undefined,
+    /** Tags (Python, Java, Marketing, etc.) */
     knowledgeTags: Array.isArray(row.knowledge_tags) ? row.knowledge_tags : undefined,
   }
 }
@@ -46,6 +49,7 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
     amount,
     invoice: String(row.invoice ?? ''),
     studentId: Number(row.student_register_id ?? row.student_id),
+    verification_code: row.verification_code ? String(row.verification_code) : undefined,
   }
   if (cgst > 0 || sgst > 0 || row.transaction_id !== undefined || row.custom_note !== undefined || gstRate > 0) {
     return {
@@ -55,44 +59,101 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
       gstRate: gstRate > 0 ? gstRate : undefined,
       transactionId: row.transaction_id ? String(row.transaction_id) : undefined,
       customNote: row.custom_note ? String(row.custom_note) : undefined,
-    } as Payment & Record<string, unknown>
+    }
   }
   return base
 }
 
-export async function listStudents() {
-  if (!supabase) return initialStudents
-  try {
-    const { data, error } = await supabase.from('students').select('*').order('register_id', { ascending: false })
-    if (error) throw error
-    return (data ?? []).map(studentFromRow)
-  } catch (err) {
-    console.warn('Supabase query failed, falling back to mock students:', err)
-    return initialStudents
+export async function listStudents(
+  supabaseClient: SupabaseClient | null,
+  options: { page?: number; pageSize?: number } = {}
+) {
+  const page = options.page ?? 1
+  const pageSize = options.pageSize ?? 50
+  const from = (page - 1) * pageSize
+  const to = page * pageSize - 1
+
+  if (!supabaseClient) {
+    // Mock data pagination
+    const paginated = initialStudents.slice(from, to + 1)
+    return {
+      data: paginated.map(studentFromRow),
+      count: paginated.length,
+      page,
+      pageSize,
+      totalCount: initialStudents.length,
+    }
+  }
+
+  const { data, error, count } = await supabaseClient
+    .from('students')
+    .select('*', { count: 'exact' })
+    .order('register_id', { ascending: false })
+    .range(from, to)
+
+  if (error) throw error
+  return {
+    data: (data ?? []).map(studentFromRow),
+    count: data?.length ?? 0,
+    page,
+    pageSize,
+    totalCount: count ?? 0,
   }
 }
 
-export async function listPayments() {
-  if (!supabase) return initialPayments
-  try {
-    const { data, error } = await supabase
-      .from('payments')
-      .select(`
-        id, student_id, student_register_id, method, amount, invoice, payment_date,
-        transaction_id, custom_note, gst_rate, cgst, sgst,
-        students ( id, name )
-      `)
-      .order('payment_date', { ascending: false })
-    if (error) throw error
-    return (data ?? []).map((row: any) =>
+export async function listPayments(
+  supabaseClient: SupabaseClient | null,
+  options: { page?: number; pageSize?: number } = {}
+) {
+  const page = options.page ?? 1
+  const pageSize = options.pageSize ?? 50
+  const from = (page - 1) * pageSize
+  const to = page * pageSize - 1
+
+  if (!supabaseClient) {
+    // Mock data pagination
+    const paginated = initialPayments.slice(from, to + 1)
+    return {
+      data: paginated.map((row) =>
+        paymentFromRow({
+          ...row,
+          student_name: row.students?.name,
+          verification_code: undefined, // No verification code in mock data
+        })
+      ),
+      count: paginated.length,
+      page,
+      pageSize,
+      totalCount: initialPayments.length,
+    }
+  }
+
+  const { data, error, count } = await supabaseClient
+    .from('payments')
+    .select(`
+      id, student_id, student_register_id, method, amount, invoice, payment_date,
+      transaction_id, custom_note, gst_rate, cgst, sgst,
+      students ( id, name ),
+      verifiable_documents (
+        verification_code
+      )
+    `)
+    .order('payment_date', { ascending: false })
+    .range(from, to)
+
+  if (error) throw error
+  return {
+    data: (data ?? []).map((row) =>
       paymentFromRow({
         ...row,
         student_name: row.students?.name,
+        verification_code: row.verifiable_documents?.[0]?.verification_code,
       })
-    )
-  } catch (err) {
-    console.warn('Supabase query failed, falling back to mock payments:', err)
-    return initialPayments
+    ),
+    count: data?.length ?? 0,
+    page,
+    pageSize,
+    totalCount: count ?? 0,
   }
 }
 
@@ -111,37 +172,56 @@ export type CertificateRow = {
   trainer_name?: string
   custom_note?: string
   issued_at: string
+  verification_code?: string
 }
 
-export async function listCertificates() {
-  if (!supabase) return [] as CertificateRow[]
-  const { data, error } = await supabase
+export async function listCertificates(supabaseClient: SupabaseClient | null) {
+  if (!supabaseClient) return [] as CertificateRow[]
+
+  // Fetch certificates with verification codes
+  const { data, error } = await supabaseClient
     .from('certificates')
-    .select('*')
+    .select(`
+      *,
+      verifiable_documents (
+        verification_code
+      )
+    `)
     .order('issue_date', { ascending: false })
+
   if (error) {
-    console.warn('Supabase certificates query failed:', error)
+    await captureError(error, { function: 'listCertificates' })
     return [] as CertificateRow[]
   }
-  return (data ?? []) as CertificateRow[]
+
+  // Map the data to include verification_code
+  const mappedData = (data ?? []).map(row => ({
+    ...row,
+    verification_code: row.verifiable_documents?.[0]?.verification_code
+  }))
+
+  return mappedData as CertificateRow[]
 }
 
-export async function insertCertificate(payload: {
-  certificate_id: string
-  student_id: string
-  student_register_id: number
-  course_name: string
-  student_name: string
-  start_date?: string
-  end_date?: string
-  issue_date?: string
-  skills?: string[]
-  director_name?: string
-  trainer_name?: string
-  custom_note?: string
-}) {
-  if (!supabase) return null
-  const { data, error } = await supabase.from('certificates').insert(payload).select().single()
+export async function insertCertificate(
+  supabaseClient: SupabaseClient | null,
+  payload: {
+    certificate_id: string
+    student_id: string
+    student_register_id: number
+    course_name: string
+    student_name: string
+    start_date?: string
+    end_date?: string
+    issue_date?: string
+    skills?: string[]
+    director_name?: string
+    trainer_name?: string
+    custom_note?: string
+  }
+) {
+  if (!supabaseClient) return null
+  const { data, error } = await supabaseClient.from('certificates').insert(payload).select().single()
   if (error) throw new Error(error.message)
   return data as CertificateRow
 }

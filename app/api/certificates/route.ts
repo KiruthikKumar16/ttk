@@ -1,31 +1,40 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 import { listCertificates } from '@/lib/server-data'
-import { supabase } from '@/lib/supabase/server'
+import { certificateSchema } from '@/lib/validation'
+import { generateUniqueVerificationCode } from '@/lib/utils'
 import type { CertificateRecord } from '@/lib/types'
+import z from 'zod'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Create a Supabase client with the anon key for this request
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const session = user ? { user } : null
+  if (authError || !session) {
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  }
+
   try {
-    if (supabase) {
-      const rows = await listCertificates()
-      const mapped: CertificateRecord[] = rows.map((row: any) => ({
-        id: String(row.id),
-        certificateId: String(row.certificate_id),
-        studentRowId: row.student_id ? String(row.student_id) : undefined,
-        studentRegisterId: Number(row.student_register_id),
-        courseName: String(row.course_name),
-        studentName: String(row.student_name),
-        startDate: row.start_date ? String(row.start_date) : undefined,
-        endDate: row.end_date ? String(row.end_date) : undefined,
-        issueDate: String(row.issue_date),
-        skills: Array.isArray(row.skills) ? row.skills : undefined,
-        directorName: row.director_name ? String(row.director_name) : undefined,
-        trainerName: row.trainer_name ? String(row.trainer_name) : undefined,
-        customNote: row.custom_note ? String(row.custom_note) : undefined,
-        issuedAt: row.issued_at ? String(row.issued_at) : undefined,
-      }))
-      return NextResponse.json({ data: mapped, count: mapped.length, source: 'supabase' })
-    }
-    return NextResponse.json({ data: [], count: 0, source: 'mock' })
+    const rows = await listCertificates(supabase)
+    const mapped: CertificateRecord[] = rows.map((row) => ({
+      id: String(row.id),
+      certificateId: String(row.certificate_id),
+      studentRowId: row.student_id ? String(row.student_id) : undefined,
+      studentRegisterId: Number(row.student_register_id),
+      courseName: String(row.course_name),
+      studentName: String(row.student_name),
+      startDate: row.start_date ? String(row.start_date) : undefined,
+      endDate: row.end_date ? String(row.end_date) : undefined,
+      issueDate: String(row.issue_date),
+      skills: Array.isArray(row.skills) ? row.skills : undefined,
+      directorName: row.director_name ? String(row.director_name) : undefined,
+      trainerName: row.trainer_name ? String(row.trainer_name) : undefined,
+      customNote: row.custom_note ? String(row.custom_note) : undefined,
+      issuedAt: row.issued_at ? String(row.issued_at) : undefined,
+    }))
+    return NextResponse.json({ data: mapped, count: mapped.length, source: 'supabase' })
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to load certificates' },
@@ -34,53 +43,49 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Create a Supabase client with the anon key for this request
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const session = user ? { user } : null
+  if (authError || !session) {
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  }
+
+  // Fetch the user's profile to check role
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single()
+  if (profileError || !profile) {
+    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+  }
+
+  // Only staff and admin can create certificates
+  if (profile.role !== 'staff' && profile.role !== 'admin') {
+    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to create certificate' }), { status: 403 })
+  }
+
   try {
     const body = await req.json()
+    // Validate the request body with zod schema
+    const parsedBody = certificateSchema.parse(body)
 
-    const certificateId = String(body.certificateId ?? body.certificate_id ?? '').trim()
-    const studentRegisterId = Number(body.studentRegisterId ?? body.student_register_id)
-    const courseName = String(body.courseName ?? body.course_name ?? '').trim()
-    const studentName = String(body.studentName ?? body.student_name ?? '').trim()
-    const issueDate = String(body.issueDate ?? body.issue_date ?? new Date().toISOString().slice(0, 10))
-
-    if (!certificateId || !Number.isFinite(studentRegisterId) || !courseName || !studentName) {
-      return NextResponse.json(
-        { error: 'certificateId, studentRegisterId, courseName, and studentName are required.' },
-        { status: 400 }
-      )
-    }
-
-    const studentRowId = body.studentRowId ?? body.student_id ?? null
-    const startDate = body.startDate ?? body.start_date ?? null
-    const endDate = body.endDate ?? body.end_date ?? null
-    const skills = Array.isArray(body.skills) ? body.skills : []
-    const directorName = body.directorName ?? body.director_name ?? null
-    const trainerName = body.trainerName ?? body.trainer_name ?? null
-    const customNote = body.customNote ?? body.custom_note ?? null
-
-    if (!supabase) {
-      return NextResponse.json(
-        {
-          message: 'Certificate received (mock mode — no Supabase configured)',
-          data: {
-            certificateId,
-            studentRegisterId,
-            courseName,
-            studentName,
-            issueDate,
-            startDate,
-            endDate,
-            skills,
-            directorName,
-            trainerName,
-            customNote,
-          } as CertificateRecord,
-          source: 'mock',
-        },
-        { status: 201 }
-      )
-    }
+    const {
+      certificateId,
+      studentRegisterId,
+      courseName,
+      studentName,
+      issueDate,
+      studentRowId,
+      startDate,
+      endDate,
+      skills,
+      directorName,
+      trainerName,
+      customNote,
+    } = parsedBody
 
     const payload: Record<string, unknown> = {
       certificate_id: certificateId,
@@ -103,9 +108,26 @@ export async function POST(req: Request) {
       .insert(payload)
       .select()
       .single()
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    // Create verifiable document entry for this certificate (only in real Supabase mode)
+    if (supabase) {
+      try {
+        const verificationCode = await generateUniqueVerificationCode(supabase);
+        await supabase
+          .from('verifiable_documents')
+          .insert({
+            doc_type: 'certificate',
+            reference_id: data.id,
+            verification_code: verificationCode,
+            status: 'active'
+          });
+      } catch (verificationError) {
+        // Log the error but don't fail the certificate creation
+        console.error('Failed to create verifiable document entry:', verificationError);
+      }
     }
 
     return NextResponse.json(
@@ -132,6 +154,9 @@ export async function POST(req: Request) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to record certificate' },
       { status: 500 }

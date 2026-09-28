@@ -20,6 +20,8 @@ export function Certificates({
   const [tab, setTab] = useState<'eligibility' | 'issued'>('eligibility')
   const [showPreview, setShowPreview] = useState(false)
   const [previewStudent, setPreviewStudent] = useState<Student | null>(null)
+  const [showCertificatePreview, setShowCertificatePreview] = useState(false)
+  const [previewCertificate, setPreviewCertificate] = useState<CertificateRecord | null>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -206,6 +208,7 @@ export function Certificates({
                   <th>Issue Date</th>
                   <th>Signatories</th>
                   <th>Skills</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -273,6 +276,18 @@ export function Certificates({
                           <span style={{ color: 'var(--muted)' }}>—</span>
                         )}
                       </td>
+                      <td className="actions-column">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setPreviewCertificate(c)
+                            setShowCertificatePreview(true)
+                          }}
+                        >
+                          <Printer size={14} /> Print
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -293,7 +308,7 @@ export function Certificates({
         </div>
       </section>
       {/* Certificate Preview Modal */}
-      {showPreview && previewStudent && (
+      {(showPreview && previewStudent) || (showCertificatePreview && previewCertificate) ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-[1100px] max-h-[90vh] overflow-y-auto">
             {/* Certificate Preview Content */}
@@ -301,11 +316,14 @@ export function Certificates({
               <div className="certificate-preview-content">
                 {/* Use the CertificatePrint component for exact design match */}
                 <CertificatePrint
-                  student={previewStudent!}
+                  student={previewStudent ?? (previewCertificate! as any)}
                   onBack={() => {
                     setShowPreview(false)
                     setPreviewStudent(null)
+                    setShowCertificatePreview(false)
+                    setPreviewCertificate(null)
                   }}
+                  certificateRecord={previewCertificate}
                 />
               </div>
             </div>
@@ -314,6 +332,8 @@ export function Certificates({
               onClick={() => {
                 setShowPreview(false)
                 setPreviewStudent(null)
+                setShowCertificatePreview(false)
+                setPreviewCertificate(null)
               }}
               className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white/100 transition-all"
             >
@@ -323,29 +343,45 @@ export function Certificates({
             </button>
             {/* Action Buttons */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
-              <button
-                onClick={() => {
-                  onCertificate(previewStudent!)
-                  setShowPreview(false)
-                  setPreviewStudent(null)
-                }}
-                className="px-4 py-2 bg-navy/90 text-white rounded hover:bg-navy/100 transition-colors"
-              >
-                Generate Certificate
-              </button>
-              <button
-                onClick={() => {
-                  setShowPreview(false)
-                  setPreviewStudent(null)
-                }}
-                className="px-4 py-2 bg-white/90 text-navy/90 rounded hover:bg-white/100 transition-colors border border-navy/20"
-              >
-                Close
-              </button>
+              {showPreview && previewStudent ? (
+                <>
+                  <button
+                    onClick={() => {
+                      onCertificate(previewStudent!)
+                      setShowPreview(false)
+                      setPreviewStudent(null)
+                    }}
+                    className="px-4 py-2 bg-navy/90 text-white rounded hover:bg-navy/100 transition-colors"
+                  >
+                    Generate Certificate
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPreview(false)
+                      setPreviewStudent(null)
+                    }}
+                    className="px-4 py-2 bg-white/90 text-navy/90 rounded hover:bg-white/100 transition-colors border border-navy/20"
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowCertificatePreview(false)
+                      setPreviewCertificate(null)
+                    }}
+                    className="px-4 py-2 bg-white/90 text-navy/90 rounded hover:bg-white/100 transition-colors border border-navy/20"
+                  >
+                    Close
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   )
 }

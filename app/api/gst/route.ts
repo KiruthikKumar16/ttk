@@ -1,25 +1,33 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 import { gstSettings } from '@/lib/mock-data'
-import { supabase } from '@/lib/supabase/server'
+import { gstSchema } from '@/lib/validation'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Create a Supabase client with the anon key for this request
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const session = user ? { user } : null
+  if (authError || !session) {
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  }
+
   try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('gst_settings')
-        .select('*')
-        .limit(1)
-        .single()
-      if (!error && data) {
-        return NextResponse.json({
-          data: {
-            rate: Number(data.rate),
-            gstin: String(data.gstin),
-            enabled: Boolean(data.enabled),
-          },
-          source: 'supabase',
-        })
-      }
+    const { data, error } = await supabase
+      .from('gst_settings')
+      .select('*')
+      .limit(1)
+      .single()
+    if (!error && data) {
+      return NextResponse.json({
+        data: {
+          rate: Number(data.rate),
+          gstin: String(data.gstin),
+          enabled: Boolean(data.enabled),
+        },
+        source: 'supabase',
+      })
     }
     return NextResponse.json({ data: { ...gstSettings }, source: 'mock' })
   } catch (error) {
@@ -30,30 +38,52 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Create a Supabase client with the anon key for this request
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const session = user ? { user } : null
+  if (authError || !session) {
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  }
+
+  // Fetch the user's profile to check role
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single()
+  if (profileError || !profile) {
+    return new NextResponse(JSON.stringify({ error: 'Unable to fetch user profile' }), { status: 500 })
+  }
+
+  // Only admin can update GST settings
+  if (profile.role !== 'admin') {
+    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to update GST settings' }), { status: 403 })
+  }
+
   try {
     const body = await req.json()
-    const rate = body.rate !== undefined ? Number(body.rate) : gstSettings.rate
-    const gstin = body.gstin !== undefined ? String(body.gstin).trim() : gstSettings.gstin
-    const enabled = body.enabled !== undefined ? Boolean(body.enabled) : gstSettings.enabled
+    // Validate the request body with zod schema
+    const parsedBody = gstSchema.parse(body)
 
-    if (isNaN(rate) || rate < 0 || rate > 100) {
-      return NextResponse.json({ error: 'GST rate must be between 0 and 100.' }, { status: 400 })
-    }
+    const {
+      rate,
+      gstin,
+      enabled,
+    } = parsedBody
 
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('gst_settings')
-        .upsert({ id: 'default', rate, gstin, enabled, updated_at: new Date().toISOString() })
-        .select()
-        .single()
-      if (!error && data) {
-        return NextResponse.json({
-          data: { rate: Number(data.rate), gstin: String(data.gstin), enabled: Boolean(data.enabled) },
-          message: 'GST settings updated',
-          source: 'supabase',
-        })
-      }
+    const { data, error } = await supabase
+      .from('gst_settings')
+      .upsert({ id: 'default', rate, gstin, enabled, updated_at: new Date().toISOString() })
+      .select()
+      .single()
+    if (!error && data) {
+      return NextResponse.json({
+        data: { rate: Number(data.rate), gstin: String(data.gstin), enabled: Boolean(data.enabled) },
+        message: 'GST settings updated',
+        source: 'supabase',
+      })
     }
 
     // Update in-memory
@@ -67,6 +97,9 @@ export async function POST(req: Request) {
       source: 'mock',
     })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update GST settings' },
       { status: 500 }

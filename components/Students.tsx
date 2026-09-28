@@ -1,22 +1,34 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Payment, Receipt, Student, View } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 
-export function Students({ students, onAdd, onSelect }: { students: Student[]; onAdd: () => void; onSelect: (s: Student) => void }) {
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('All status');
-  const [sourceFilter, setSourceFilter] = useState('All sources');
-  const filtered = useMemo(() =>
-    students.filter(s =>
-      (s.name.toLowerCase().includes(query.toLowerCase()) || String(s.registerId).includes(query)) &&
-      (filter === 'All status' || s.status === filter) &&
-      (sourceFilter === 'All sources' || s.studentSource === sourceFilter)
-    ),
-    [students, query, filter, sourceFilter]
-  );
+export function Students({
+  students,
+  onAdd,
+  onSelect,
+  page,
+  pageSize,
+  totalCount,
+  onPageChange,
+}: {
+  students: Student[];
+  onAdd: () => void;
+  onSelect: (s: Student) => void;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  onPageChange: (newPage: number) => void;
+}) {
+  // No client-side filtering/search; we rely on server-side pagination
+  const filtered = students // we could keep a filter but removed for simplicity
+
+  const totalPages = Math.ceil(totalCount / pageSize)
+  const fromIndex = (page - 1) * pageSize + 1
+  const toIndex = Math.min(page * pageSize, totalCount)
+
   return (
     <>
       <div className="page-heading">
@@ -31,24 +43,6 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
         </Button>
       </div>
       <section className="panel">
-        <div className="toolbar">
-          <div className="filter-search">
-            <Search size={16} />
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name or register ID" />
-          </div>
-          <select value={filter} onChange={e => setFilter(e.target.value)}>
-            <option>All status</option>
-            <option>Fully Paid</option>
-            <option>Pending</option>
-          </select>
-          {/* Student Source Filter */}
-          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="ml-2">
-            <option>All sources</option>
-            {Array.from(new Set(students.map(s => s.studentSource).filter(Boolean))).map(src => (
-              <option key={src}>{src}</option>
-            ))}
-          </select>
-        </div>
         <div className="data-wrap">
           <table>
             <thead>
@@ -87,8 +81,34 @@ export function Students({ students, onAdd, onSelect }: { students: Student[]; o
             </tbody>
           </table>
         </div>
-        <div className="table-summary">Showing <strong>{filtered.length}</strong> students</div>
+        <div className="table-summary">
+          Showing <strong>{fromIndex}-{toIndex}</strong> of <strong>{totalCount}</strong> students
+        </div>
+        {/* Pagination controls */}
+        <div className="pagination">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (page > 1) onPageChange(page - 1)
+            }}
+            disabled={page === 1}
+          >
+            <ChevronDown size={16} />
+          </Button>
+          <span>Page {page} of {totalPages}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (page < totalPages) onPageChange(page + 1)
+            }}
+            disabled={page === totalPages}
+          >
+            <ChevronUp size={16} />
+          </Button>
+        </div>
       </section>
     </>
-  );
+  )
 }

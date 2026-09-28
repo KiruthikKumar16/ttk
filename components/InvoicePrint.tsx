@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import type { Course, Payment, Student } from '@/lib/types'
 import { money, amountInWords } from '@/lib/formatters'
 import { useEffect, useRef, useState } from 'react'
+import QRCode from 'qrcode'
 
 const INVOICE_W = 794
 const INVOICE_H = 562
@@ -132,6 +133,7 @@ export function InvoicePrint({
 
   const containerRef = useRef<HTMLElement>(null)
   const [scale, setScale] = useState(1)
+  const [qrCode, setQrCode] = useState<string | null>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -147,6 +149,31 @@ export function InvoicePrint({
     observer.observe(container)
     return () => observer.disconnect()
   }, [])
+
+  // Generate QR code when payment verification code changes
+  useEffect(() => {
+    const generateQRCode = async () => {
+      try {
+        // For invoices, we need to get the verification code from the payment data
+        // Since the InvoicePrint component receives a payment prop, we should check if it has verification_code
+        if (payment.verification_code) {
+          const verificationUrl = `https://verify.thoorigai.in/verify/${payment.verification_code}`
+          const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+            width: 120,
+            margin: 1,
+          })
+          setQrCode(qrCodeDataUrl)
+        } else {
+          setQrCode(null)
+        }
+      } catch (err) {
+        console.error('Failed to generate QR code:', err)
+        setQrCode(null)
+      }
+    }
+
+    generateQRCode()
+  }, [payment.verification_code])
 
   const set = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -464,6 +491,17 @@ function InvoiceCopy({
           <span>Receipt ID - [ {form.receiptId || '—'} ]</span>
         </div>
         <b>{copy}</b>
+        {payment.verification_code && (
+          <div className="invoice-verification-section">
+            <div className="lbl">Verify Invoice</div>
+            <div className="qr-code-container">
+              {qrCode ? <img src={qrCode} alt="Verify invoice" className="qr-code" /> : null}
+            </div>
+            <div className="verification-url">
+              https://verify.thoorigai.in/verify/{payment.verification_code}
+            </div>
+          </div>
+        )}
       </div>
       <header className="ttk-invoice-brand">
         <div className="ttk-invoice-logo">

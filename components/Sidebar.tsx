@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users } from 'lucide-react'
+import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users, List } from 'lucide-react'
 import type { Student, View } from '@/lib/types'
 import React from 'react'
 
@@ -10,6 +10,8 @@ export function Sidebar({ view, setView, collapsed, students }: { view: View; se
     ['Certificates', FileCheck2, 'Certificates'],
     ['Invoices', FileText, 'Invoices'],
     ['Reports', BarChart3, 'Reports'],
+    ['Audit Log', List, 'Audit Log'], // Added Audit Log
+    ['Assessments', List, 'Assessments'],
   ];
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>

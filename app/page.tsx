@@ -15,15 +15,28 @@ import { AddStudent } from '@/components/AddStudent'
 import { CoursesManager } from '@/components/CoursesManager'
 import { GstSettingsPage } from '@/components/GstSettings'
 import { SimpleView } from '@/components/SimpleView'
-import { Certificates } from '@/components/Certificates'
+import { AuditLog } from '@/components/AuditLog' // Import the new AuditLog component
+import { Assessments } from '@/components/Assessments' // Import the new Assessments component
 
 export default function Page() {
   const [view, setView] = useState<View>('Dashboard')
-  const [students, setStudents] = useState<Student[]>([])
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
-  const [certificates, setCertificates] = useState<CertificateRecord[]>([])
-  const [gst, setGst] = useState<GstSettings>({ rate: 18, gstin: '33AAZFT3654J1ZI', enabled: true })
+  const [allStudents, setAllStudents] = useState<Student[]>([])
+  const [allPayments, setAllPayments] = useState<Payment[]>([])
+  const [allCourses, setAllCourses] = useState<Course[]>([])
+  const [allCertificates, setAllCertificates] = useState<CertificateRecord[]>([])
+  const [allGst, setAllGst] = useState<GstSettings>({ rate: 18, gstin: '33AAZFT3654J1ZI', enabled: true })
+
+  // Pagination state for Students and Payments views
+  const [studentsPage, setStudentsPage] = useState(1)
+  const [paymentsPage, setPaymentsPage] = useState(1)
+  const [studentsTotalCount, setStudentsTotalCount] = useState(0)
+  const [paymentsTotalCount, setPaymentsTotalCount] = useState(0)
+  const [paginatedStudents, setPaginatedStudents] = useState<Student[]>([])
+  const [paginatedPayments, setPaginatedPayments] = useState<Payment[]>([])
+
+  // State for Assessments view (managed by the Assessments component itself)
+  // We don't need to add state here because the Assessments component manages its own filters and pagination
+
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedCertificate, setSelectedCertificate] = useState<Student | null>(null)
   const [adding, setAdding] = useState(false)
@@ -33,39 +46,86 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const selected = students.find(s => s.registerId === selectedId) ?? null
+  const selected = allStudents.find(s => s.registerId === selectedId) ?? null
 
   const fetchAll = async () => {
-    const [studentsRes, paymentsRes, coursesRes, gstRes, certsRes] = await Promise.all([
-      fetch('/api/students').then(res => res.json()),
-      fetch('/api/payments').then(res => res.json()),
-      fetch('/api/courses').then(res => res.json()),
-      fetch('/api/gst').then(res => res.json()),
-      fetch('/api/certificates').then(res => res.json()),
-    ])
-    if (studentsRes.data) setStudents(studentsRes.data)
-    if (paymentsRes.data) setPayments(paymentsRes.data)
-    if (coursesRes.data) setCourses(coursesRes.data)
-    if (gstRes.data) setGst(gstRes.data)
-    if (certsRes.data) setCertificates(certsRes.data)
+    try {
+      // Fetch all data (for Dashboard, etc.) with a large page size
+      const [allStudentsRes, allPaymentsRes, allCoursesRes, allGstRes, allCertsRes] = await Promise.all([
+        fetch('/api/students?page=1&pageSize=1000'),
+        fetch('/api/payments?page=1&pageSize=1000'),
+        fetch('/api/courses?page=1&pageSize=1000'),
+        fetch('/api/gst'),
+        fetch('/api/certificates?page=1&pageSize=1000'),
+      ])
+
+      // Helper to check response and throw error with message from body if available
+      const checkResponse = async (res: Response, defaultMessage: string) => {
+        if (!res.ok) {
+          let errorMessage = defaultMessage
+          try {
+            const errData = await res.json()
+            if (errData.error) errorMessage = errData.error
+          } catch (e) {
+            // If we can't parse json, use the default message
+          }
+          throw new Error(errorMessage)
+        }
+        return res.json()
+      }
+
+      const [
+        allStudentsData,
+        allPaymentsData,
+        allCoursesData,
+        allGstData,
+        allCertsData,
+      ] = await Promise.all([
+        checkResponse(allStudentsRes, 'Failed to load students'),
+        checkResponse(allPaymentsRes, 'Failed to load payments'),
+        checkResponse(allCoursesRes, 'Failed to load courses'),
+        checkResponse(allGstRes, 'Failed to load GST settings'),
+        checkResponse(allCertsRes, 'Failed to load certificates'),
+      ])
+
+      if (allStudentsData.data) setAllStudents(allStudentsData.data)
+      if (allPaymentsData.data) setAllPayments(allPaymentsData.data)
+      if (allCoursesData.data) setAllCourses(allCoursesData.data)
+      if (allGstData.data) setAllGst(allGstData.data)
+      if (allCertsData.data) setAllCertificates(allCertsData.data)
+
+      // Fetch paginated students for the Students view
+      const studentsPageRes = await fetch(`/api/students?page=${studentsPage}&pageSize=50`)
+      const studentsPageData = await checkResponse(studentsPageRes, 'Failed to load students page')
+      if (studentsPageData.data) {
+        setPaginatedStudents(studentsPageData.data)
+        setStudentsTotalCount(studentsPageData.totalCount ?? 0)
+      }
+
+      // Fetch paginated payments for the Payments view (if needed elsewhere)
+      const paymentsPageRes = await fetch(`/api/payments?page=${paymentsPage}&pageSize=50`)
+      const paymentsPageData = await checkResponse(paymentsPageRes, 'Failed to load payments page')
+      if (paymentsPageData.data) {
+        setPaginatedPayments(paymentsPageData.data)
+        setPaymentsTotalCount(paymentsPageData.totalCount ?? 0)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        await fetchAll()
-      } catch (err) {
-        setError('Failed to load data')
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+      setLoading(true)
+      setError(null)
+      await fetchAll()
     }
     fetchData()
-  }, [])
+  }, [studentsPage, paymentsPage]) // Refetch when pagination page changes
 
   // Refetch after mutations
   const refetch = async () => {
@@ -74,7 +134,7 @@ export default function Page() {
       setError(null)
       await fetchAll()
     } catch (err) {
-      setError('Failed to reload data')
+      setError(err instanceof Error ? err.message : 'Failed to reload data')
       console.error(err)
     } finally {
       setLoading(false)
@@ -159,10 +219,10 @@ export default function Page() {
     if (selectedInvoice) return (
       <InvoicePrint
         payment={selectedInvoice}
-        student={students.find(s => s.registerId === selectedInvoice.studentId)!}
+        student={allStudents.find(s => s.registerId === selectedInvoice.studentId)!}
         onBack={() => setSelectedInvoice(null)}
-        gstRate={gst.enabled ? gst.rate : 0}
-        courses={courses}
+        gstRate={allGst.enabled ? allGst.rate : 0}
+        courses={allCourses}
       />
     )
     if (selectedCertificate) return (
@@ -175,44 +235,57 @@ export default function Page() {
       />
     )
     if (selectedId !== null) {
-      const selectedStudent = students.find(s => s.registerId === selectedId)!
+      const selectedStudent = allStudents.find(s => s.registerId === selectedId)!
       return (
         <StudentDetail
           student={selectedStudent}
-          payments={payments}
+          payments={allPayments} // Provide all payments for history filtering
           onBack={() => setSelectedId(null)}
           onPayment={recordPayment}
           onCertificate={() => setSelectedCertificate(selectedStudent)}
           onInvoice={setSelectedInvoice}
-          gstRate={gst.enabled ? gst.rate : 0}
-          courses={courses}
+          gstRate={allGst.enabled ? allGst.rate : 0}
+          courses={allCourses}
         />
       )
     }
     if (view === 'Dashboard') return (
-      <Dashboard students={students} payments={payments} setView={handleSetView} onInvoice={setSelectedInvoice} />
+      <Dashboard
+        students={allStudents}
+        payments={allPayments}
+        setView={setView}
+        onInvoice={setSelectedInvoice}
+      />
     )
     if (view === 'Students') return (
-      <Students students={students} onAdd={() => setAdding(true)} onSelect={(s: Student) => setSelectedId(s.registerId)} />
+      <Students
+        students={paginatedStudents}
+        onAdd={() => setAdding(true)}
+        onSelect={(s: Student) => setSelectedId(s.registerId)}
+        page={studentsPage}
+        pageSize={50}
+        totalCount={studentsTotalCount}
+        onPageChange={setStudentsPage}
+      />
     )
     if (view === 'Certificates') return (
       <Certificates
-        students={students}
-        certificates={certificates}
+        students={allStudents}
+        certificates={allCertificates}
         onCertificate={setSelectedCertificate}
       />
     )
     if (view === 'Courses') return (
       <CoursesManager
-        courses={courses}
+        courses={allCourses}
         onSaveCourse={handleSaveCourse}
         onDeleteCourse={handleDeleteCourse}
-        gstRate={gst.enabled ? gst.rate : 0}
+        gstRate={allGst.enabled ? allGst.rate : 0}
       />
     )
     if (view === 'Settings') return (
       <GstSettingsPage
-        settings={gst}
+        settings={allGst}
         onSave={async (s) => {
           const res = await fetch('/api/gst', {
             method: 'POST',
@@ -224,15 +297,24 @@ export default function Page() {
             throw new Error(err.error || 'Failed to save GST settings')
           }
           const result = await res.json()
-          if (result.data) setGst(result.data)
+          if (result.data) setAllGst(result.data)
         }}
       />
+    )
+    if (view === 'Audit Log') return (
+      <AuditLog />
+    )
+    if (view === 'Attendance') return (
+      <Attendance />
+    )
+    if (view === 'Assessments') return (
+      <Assessments />
     )
     return (
       <SimpleView
         view={view}
-        students={students}
-        payments={payments}
+        students={allStudents}
+        payments={allPayments}
         onInvoice={setSelectedInvoice}
       />
     )
@@ -263,13 +345,13 @@ export default function Page() {
 
   return (
     <div className="app-shell">
-      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} students={students} />
+      <Sidebar view={view} setView={handleSetView} collapsed={sidebarCollapsed} students={allStudents} />
       <div className="main-area">
         <Topbar
           view={view}
           onMenu={() => setSidebarCollapsed(c => !c)}
-          students={students}
-          payments={payments}
+          students={allStudents}
+          payments={allPayments}
           selectedStudent={selected}
           selectedInvoice={selectedInvoice}
           selectedCertificate={selectedCertificate}
@@ -295,16 +377,16 @@ export default function Page() {
             setSelectedInvoice(p)
           }}
         />
-        <main className="content">
+        <div className="content">
           {renderContent()}
-        </main>
+        </div>
       </div>
       {adding && (
         <AddStudent
-          courses={courses}
+          courses={allCourses}
           onClose={() => setAdding(false)}
           onSave={save}
-          gstRate={gst.enabled ? gst.rate : 0}
+          gstRate={allGst.enabled ? allGst.rate : 0}
         />
       )}
       <div className={'sidebar-mobile ' + (mobileOpen ? 'open' : '')} onClick={e => e.stopPropagation()}>

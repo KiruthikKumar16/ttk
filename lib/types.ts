@@ -1,4 +1,4 @@
-export type View = 'Dashboard' | 'Students' | 'Courses' | 'Certificates' | 'Invoices' | 'Reports' | 'Settings'
+export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Settings' | 'Audit Log' | 'Attendance' | 'Assessments' | 'SimpleView'
 
 export type GstSettings = {
   rate: number
@@ -81,6 +81,8 @@ export type Payment = {
   sgst?: number
   /** ISO date (YYYY-MM-DD) — used when read from storage; same info as .date */
   paymentDate?: string
+  /** Verification code for public verification */
+  verification_code?: string
   createdAt?: string
 }
 
@@ -96,8 +98,6 @@ export type CertificateRecord = {
   studentRegisterId: number
   courseName: string
   studentName: string
-  startDate?: string
-  endDate?: string
   issueDate: string
   skills?: string[]
   directorName?: string

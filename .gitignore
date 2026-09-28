@@ -16,3 +16,16 @@ node_modules
 .DS_Store
 # gstack (global install)
 .amazonq/rules/gstack.md
+
+# Sample data and fixtures (keep in repo but ignore local exports)
+ttk/
+
+# Local agent instructions and generated files
+.agents/
+.claude/
+memory/
+skills-lock.json
+supabase/.temp/
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo
