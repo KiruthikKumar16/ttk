@@ -161,7 +161,7 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
 
   return {
     totalStudents: studentCount ?? (students?.length || 0),
-    activeStudents: (students ?? []).filter((s) => s.status === 'Active' || s.status === 'Pending').length,
+    activeStudents: (students ?? []).length,
     todayAttendance: {
       totalMarked: todayTotal,
       present: todayPresent,

@@ -264,7 +264,7 @@ export function StaffReportsView({
             <span className="text-xs text-slate-500">enrolled total</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            {students.filter((s) => s.status === 'Active').length} active in batches
+            {students.length} active in course batches
           </p>
         </div>
 
