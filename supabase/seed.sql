@@ -49,7 +49,7 @@ insert into public.profiles (id, role, full_name)
 values
   ('00000000-0000-4000-8000-000000000001', 'admin', 'Local Admin'),
   ('00000000-0000-4000-8000-000000000002', 'staff', 'Local Staff'),
-  ('00000000-0000-4000-8000-000000000003', 'trainer', 'Local Trainer')
+  ('00000000-0000-4000-8000-000000000003', 'staff', 'Local Trainer')
 on conflict (id) do update set role = excluded.role, full_name = excluded.full_name;
 
 insert into public.courses (id, name, fee, duration, description, gst_inclusive)
