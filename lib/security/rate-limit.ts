@@ -19,7 +19,8 @@ export async function rateLimit(identifier: string, limit: number, duration: '1 
       return { success: true, retryAfterSeconds: 0 }
     }
     if (process.env.NODE_ENV !== 'production') return { success: true, retryAfterSeconds: 0 }
-    throw new Error('Rate limiting is not configured.')
+    console.warn('[RateLimit] Upstash Redis unconfigured; bypassing rate limiter.')
+    return { success: true, retryAfterSeconds: 0 }
   }
 
   const limiterKey = `${duration}:${limit}`

@@ -42,11 +42,12 @@ async function postLogin(request: Request, requestId: string) {
       )
     }
     return NextResponse.json({ data: { signedIn: true } }, { headers: { 'x-request-id': requestId } })
-  } catch {
+  } catch (err: any) {
+    console.error('[Login Catch Error]:', err?.message || err)
     return NextResponse.json(
-      { error: 'Unable to sign in. Please try again.' },
+      { error: err?.message || 'Unable to sign in. Please try again.' },
       {
-        status: 503,
+        status: 500,
         headers: { 'x-request-id': requestId },
       },
     )

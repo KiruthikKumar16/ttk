@@ -623,7 +623,7 @@ export function ReportsView({
                     <span className="col-pillar-count">{count}</span>
                     <div className="col-pillar-bar" style={{ height: `${heightPercent}%` }} />
                     <span className="col-pillar-label">
-                      {course.replace(' Course', '').replace('ThoorigAI ', '').replace('Elysium ', '')}
+                      {course.replace(' Course', '').replace('ThoorigAI ', '')}
                     </span>
                   </div>
                 )
