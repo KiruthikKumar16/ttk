@@ -1,0 +1,8 @@
+# Database schema and authorization changes require explicit owner review.
+/supabase/migrations/ @KiruthikKumar16
+/supabase/tests/ @KiruthikKumar16
+/lib/auth/ @KiruthikKumar16
+/lib/security/ @KiruthikKumar16
+/app/api/auth/ @KiruthikKumar16
+/app/api/admin/ @KiruthikKumar16
+/proxy.ts @KiruthikKumar16

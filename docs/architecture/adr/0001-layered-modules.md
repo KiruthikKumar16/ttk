@@ -5,10 +5,10 @@
 
 ## Context
 
-The dashboard's client-side shell loads broad record sets on each visit, route handlers mix
-authentication, validation, database access, and business rules, and several large UI components
-duplicate domain calculations. These boundaries make failures hard to classify and make it easy for
-the UI and server to disagree about access or money.
+The original dashboard used a client-side `view` switch and loaded broad record sets on each visit.
+Route handlers mixed authentication, validation, database access, and business rules, and several
+large UI components duplicated domain calculations. These boundaries made deep links, browser
+history, data access, and permission checks difficult to reason about.
 
 ## Decisions
 
@@ -25,8 +25,19 @@ the UI and server to disagree about access or money.
    ratios; rupee-valued legacy form and response fields convert only at the application boundary.
    GST component allocation uses largest remainder with CGST winning equal remainders.
 6. `lib/logger.ts` provides structured Pino logging. Production logs are JSON; development logs are
-   pretty printed. Known personal fields and authorization headers are redacted, and unexpected API
-   errors log only a request ID and error type.
+   pretty printed. Personal fields and secrets are redacted; API request logs include request ID,
+   safe route, duration, status, and a hashed user identifier. Sentry handles exception tracking.
+7. Each dashboard view is an App Router route in the `(dashboard)` route group. Its server layout
+   verifies the cookie-bound session and renders the shared navigation shell. Route visibility and
+   route access use the same role permission matrix.
+8. List pages load through server-only domain services. Page, page size, search, filters, sort, and
+   direction are represented in URL search parameters; page size defaults to 25 and is capped at 100.
+   Client components handle interactions and mutations only.
+9. Dashboard aggregates come from PostgreSQL RPCs. Heavy print views and QR generation are loaded
+   lazily, while ordinary list and detail pages remain server-rendered.
+10. Route groups and nested route segments provide loading skeletons, retryable error boundaries, and
+    not-found UI. Domain components and services share domain types instead of importing another
+    domain's UI internals.
 
 ## Consequences
 

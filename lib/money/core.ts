@@ -13,9 +13,7 @@ export function rupeesToPaise(rupees: number): Paise {
   const digits = BigInt(`${whole}${fraction}`)
   const scale = exponent - fraction.length + 2
   const divisor = scale < 0 ? 10n ** BigInt(-scale) : 1n
-  const magnitude = scale >= 0
-    ? digits * 10n ** BigInt(scale)
-    : (digits + divisor / 2n) / divisor
+  const magnitude = scale >= 0 ? digits * 10n ** BigInt(scale) : (digits + divisor / 2n) / divisor
   const signed = rupees < 0 ? -magnitude : magnitude
   const paise = Number(signed)
   assertPaise(paise)
@@ -64,4 +62,3 @@ export function bigintToPaise(value: bigint): Paise {
   assertPaise(number)
   return number as Paise
 }
-

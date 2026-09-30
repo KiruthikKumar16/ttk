@@ -1,1 +1,1 @@
-export const certificateSkills = ['Project Development', 'Data Analysis', 'Team Collaboration', 'Problem Solving'];
+export const certificateSkills = ['Project Development', 'Data Analysis', 'Team Collaboration', 'Problem Solving']

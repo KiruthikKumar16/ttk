@@ -6,9 +6,5 @@ interface TableBodyProps {
 }
 
 export function TableBody({ className = '', children }: TableBodyProps) {
-  return (
-    <tbody className={className}>
-      {children}
-    </tbody>
-  )
+  return <tbody className={className}>{children}</tbody>
 }

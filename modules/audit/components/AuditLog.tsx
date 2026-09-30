@@ -38,7 +38,7 @@ export function AuditLog() {
     tableName: '',
     action: '',
     pageSize: 50,
-    page: 1
+    page: 1,
   })
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -67,7 +67,7 @@ export function AuditLog() {
       setHasMore(data.hasMore || false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Audit log request failed.')
     } finally {
       setLoading(false)
     }
@@ -79,17 +79,17 @@ export function AuditLog() {
   }, [filters.studentId, filters.paymentId, filters.tableName, filters.action, filters.pageSize, filters.page])
 
   const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       ...newFilters,
-      page: 1 // Reset to first page when filters change
+      page: 1, // Reset to first page when filters change
     }))
   }
 
   const handleLoadMore = () => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      page: prev.page + 1
+      page: prev.page + 1,
     }))
   }
 
@@ -104,10 +104,14 @@ export function AuditLog() {
 
   const getActionBadge = (action: 'insert' | 'update' | 'delete') => {
     switch (action) {
-      case 'insert': return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">INSERT</span>
-      case 'update': return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">UPDATE</span>
-      case 'delete': return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">DELETE</span>
-      default: return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{action}</span>
+      case 'insert':
+        return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">INSERT</span>
+      case 'update':
+        return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">UPDATE</span>
+      case 'delete':
+        return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">DELETE</span>
+      default:
+        return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{action}</span>
     }
   }
 
@@ -119,11 +123,9 @@ export function AuditLog() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">Audit Log</h1>
-          <p className="text-sm text-muted-foreground">
-            Track changes to payments and student records
-          </p>
+          <p className="text-sm text-muted-foreground">Track changes to payments and student records</p>
         </div>
-        <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}>
+        <Button variant="outline" onClick={() => setFilters((prev) => ({ ...prev, page: 1 }))}>
           <RefreshCw size={16} className="mr-2" /> Refresh
         </Button>
       </div>
@@ -223,9 +225,7 @@ export function AuditLog() {
                   {log.changed_by ? (
                     <>
                       <div className="font-medium">{log.changed_by.full_name || 'Unknown'}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {log.changed_by.role}
-                      </div>
+                      <div className="text-xs text-muted-foreground">{log.changed_by.role}</div>
                     </>
                   ) : (
                     <span className="text-muted-foreground">System</span>
@@ -244,8 +244,8 @@ export function AuditLog() {
                           </div>
                         ))}
                       </div>
-                  </div>
-                ) : log.action === 'delete' && log.old_values ? (
+                    </div>
+                  ) : log.action === 'delete' && log.old_values ? (
                     <div className="text-sm space-y-1">
                       <div className="text-red-600 font-medium">Deleted Record:</div>
                       <div className="text-xs space-y-0.5">
@@ -256,22 +256,22 @@ export function AuditLog() {
                           </div>
                         ))}
                       </div>
-                  </div>
-                ) : log.action === 'update' && log.old_values && log.new_values ? (
+                    </div>
+                  ) : log.action === 'update' && log.old_values && log.new_values ? (
                     <div className="text-sm space-y-1">
                       <div className="font-medium">Changed Fields:</div>
                       <div className="text-xs space-y-0.5">
-                        {Object.keys(log.new_values).filter(key =>
-                          String(log.old_values?.[key]) !== String(log.new_values?.[key])
-                        ).map((key) => (
-                          <div key={key} className="flex justify-between text-xs">
-                            <span className="font-medium">{key}:</span>
-                            <div className="flex space-x-2">
-                              <span className="text-red-600 line-through">{String(log.old_values?.[key])}</span>
-                              <span className="text-green-600">{String(log.new_values?.[key])}</span>
+                        {Object.keys(log.new_values)
+                          .filter((key) => String(log.old_values?.[key]) !== String(log.new_values?.[key]))
+                          .map((key) => (
+                            <div key={key} className="flex justify-between text-xs">
+                              <span className="font-medium">{key}:</span>
+                              <div className="flex space-x-2">
+                                <span className="text-red-600 line-through">{String(log.old_values?.[key])}</span>
+                                <span className="text-green-600">{String(log.new_values?.[key])}</span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   ) : (

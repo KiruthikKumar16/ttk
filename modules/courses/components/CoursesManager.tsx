@@ -1,10 +1,37 @@
 import { useState, useMemo } from 'react'
-import { ArrowLeft, ArrowUpRight, BarChart3, Bell, CheckCircle2, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Printer, Search, Settings, ShieldCheck, Users, X, MoreHorizontal, Download, BookOpen, Clock, Edit, AlertCircle, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  CheckCircle2,
+  ChevronDown,
+  CircleDollarSign,
+  FileCheck2,
+  FileText,
+  LayoutDashboard,
+  Menu,
+  Plus,
+  Printer,
+  Search,
+  Settings,
+  ShieldCheck,
+  Users,
+  X,
+  MoreHorizontal,
+  Download,
+  BookOpen,
+  Clock,
+  Edit,
+  AlertCircle,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Course } from '@/lib/types'
 import { money } from '@/lib/formatters'
-import { CourseMaterials } from '@/components/CourseMaterials'
 import { calculateGstForRupees } from '@/lib/money'
 
 export function CoursesManager({
@@ -12,16 +39,34 @@ export function CoursesManager({
   onSaveCourse,
   onDeleteCourse,
   gstRate = 18,
+  search = '',
+  page = 1,
+  pageSize = 25,
+  totalCount = courses.length,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+  sort = 'name',
+  direction = 'asc',
 }: {
   courses: Course[]
   onSaveCourse: (course: Partial<Course>) => Promise<void>
   onDeleteCourse: (id: string) => Promise<void>
   gstRate?: number
+  search?: string
+  page?: number
+  pageSize?: number
+  totalCount?: number
+  canCreate?: boolean
+  canUpdate?: boolean
+  canDelete?: boolean
+  sort?: string
+  direction?: 'asc' | 'desc'
 }) {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(search)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const router = useRouter()
 
   // Form state
   const [name, setName] = useState('')
@@ -117,19 +162,14 @@ export function CoursesManager({
     setConfirmCourseName(null)
   }
 
-  const handleSelectCourse = (course: Course) => {
-    setSelectedCourse(course)
-  }
-
-  const handleBackToCourseList = () => {
-    setSelectedCourse(null)
-  }
+  const handleSelectCourse = (course: Course) => router.push(`/courses/${encodeURIComponent(course.id)}/materials`)
 
   const filteredCourses = useMemo(() => {
-    return courses.filter(c =>
-      c.name.toLowerCase().includes(query.toLowerCase()) ||
-      (c.description && c.description.toLowerCase().includes(query.toLowerCase())) ||
-      c.duration.toLowerCase().includes(query.toLowerCase())
+    return courses.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query.toLowerCase()) ||
+        (c.description && c.description.toLowerCase().includes(query.toLowerCase())) ||
+        c.duration.toLowerCase().includes(query.toLowerCase()),
     )
   }, [courses, query])
 
@@ -140,42 +180,6 @@ export function CoursesManager({
   const modalGst = modalBreakdown.gstAmount
   const modalTotal = modalBreakdown.totalAmount
 
-  // If a course is selected, show the course details and materials
-  if (selectedCourse) {
-    const isInclusive = Boolean(selectedCourse.gstInclusive)
-    const courseBreakdown = calculateGstForRupees(selectedCourse.fee, gstRate, isInclusive)
-    const courseBase = courseBreakdown.taxableAmount
-    const courseGst = courseBreakdown.gstAmount
-    const courseTotal = courseBreakdown.totalAmount
-
-    return (
-      <div className="flex flex-col h-full">
-        {/* Header with back button and course title */}
-        <div className="flex flex-col items-start w-full mb-6 p-4 border-b border-gray-100">
-          <Button variant="secondary" onClick={handleBackToCourseList}>
-            <ArrowLeft size={16} className="mr-2" />
-            Back to Course List
-          </Button>
-          <div className="mt-4 text-left w-full">
-            <p className="eyebrow">COURSE DETAILS</p>
-            <h1 className="text-2xl font-bold">{selectedCourse.name}</h1>
-            <p className="text-sm text-gray-500">
-              Duration: {selectedCourse.duration} &bullet; Fee: {money(courseTotal)} {gstRate > 0 && `(${isInclusive ? 'GST Inclusive' : 'GST Exclusive'})`}
-            </p>
-            {selectedCourse.description && (
-              <p className="mt-2 text-gray-600">{selectedCourse.description}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Course Materials Section */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          <CourseMaterials courseId={selectedCourse.id} />
-        </div>
-      </div>
-    )
-  }
-
   // If no course is selected, show the list of courses and the add button
   return (
     <>
@@ -185,10 +189,12 @@ export function CoursesManager({
           <p>Configure academy curriculum programs, standard tuition fees, and durations</p>
         </div>
         <div className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={openAddModal} size="default">
-            <Plus size={16} className="mr-1.5" />
-            Add Course
-          </Button>
+          {canCreate && (
+            <Button variant="outline" onClick={openAddModal} size="default">
+              <Plus size={16} className="mr-1.5" />
+              Add Course
+            </Button>
+          )}
         </div>
       </div>
 
@@ -196,20 +202,38 @@ export function CoursesManager({
         <div className="panel-header">
           <div>
             <h2>Course Catalog ({filteredCourses.length})</h2>
-            <p>Academy curriculum with GST Inclusive and Exclusive pricing ({gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})</p>
+            <p>
+              Academy curriculum with GST Inclusive and Exclusive pricing (
+              {gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})
+            </p>
           </div>
-          <div className="search-box" style={{ maxWidth: 280 }}>
+          <form action="/courses" method="get" className="search-box" style={{ maxWidth: 280 }}>
             <Search size={16} />
             <input
+              name="search"
+              aria-label="Search courses"
               type="text"
               placeholder="Search courses..."
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
             />
-          </div>
+            <input type="hidden" name="pageSize" value={pageSize} />
+            <label className="sr-only" htmlFor="course-sort">
+              Sort courses by
+            </label>
+            <select id="course-sort" name="sort" defaultValue={sort}>
+              <option value="name">Name</option>
+              <option value="fee">Fee</option>
+              <option value="duration">Duration</option>
+            </select>
+            <input type="hidden" name="direction" value={direction} />
+            <button type="submit" className="sr-only">
+              Search
+            </button>
+          </form>
         </div>
 
-        <div className="data-wrap">
+        <div className="data-wrap" role="region" aria-label="Course list" tabIndex={0}>
           <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
             <thead>
               <tr>
@@ -220,7 +244,9 @@ export function CoursesManager({
                 <th className="align-right" style={{ width: '14%', whiteSpace: 'nowrap' }}>
                   Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                 </th>
-                <th className="align-right" style={{ width: '10%', whiteSpace: 'nowrap' }}>Actions</th>
+                <th className="align-right" style={{ width: '10%', whiteSpace: 'nowrap' }}>
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -231,18 +257,14 @@ export function CoursesManager({
                   </td>
                 </tr>
               ) : (
-                filteredCourses.map(c => {
+                filteredCourses.map((c) => {
                   const isInclusive = Boolean(c.gstInclusive)
                   const courseBreakdown = calculateGstForRupees(c.fee, gstRate, isInclusive)
                   const courseBase = courseBreakdown.taxableAmount
                   const courseGst = courseBreakdown.gstAmount
                   const courseTotal = courseBreakdown.totalAmount
                   return (
-                    <tr
-                      key={c.id}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSelectCourse(c)}
-                    >
+                    <tr key={c.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleSelectCourse(c)}>
                       <td>
                         <div className="flex items-center gap-2.5">
                           <div className="mini-avatar shrink-0" style={{ background: '#e0e7ff', color: '#4338ca' }}>
@@ -250,7 +272,7 @@ export function CoursesManager({
                           </div>
                           <div className="min-w-0">
                             <strong className="block font-semibold text-gray-900 leading-snug">{c.name}</strong>
-                            <small className="block text-gray-400 font-mono text-xs">{c.id}</small>
+                            <small className="block text-gray-600 font-mono text-xs">{c.id}</small>
                           </div>
                         </div>
                       </td>
@@ -277,50 +299,78 @@ export function CoursesManager({
                         </p>
                       </td>
                       <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
-                        <div className="text-sm font-bold text-gray-900 leading-tight">
-                          {money(courseTotal)}
-                        </div>
+                        <div className="text-sm font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
                         {gstRate > 0 && (
                           <div className="text-[11px] text-gray-500 mt-0.5">
                             {isInclusive ? (
-                              <>Base: {money(courseBase)} <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span></>
+                              <>
+                                Base: {money(courseBase)}{' '}
+                                <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span>
+                              </>
                             ) : (
-                              <>Base: {money(c.fee)} <span className="text-gray-400">+{money(courseGst)}</span></>
+                              <>
+                                Base: {money(c.fee)} <span className="text-gray-600">+{money(courseGst)}</span>
+                              </>
                             )}
                           </div>
                         )}
                       </td>
                       <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
                         <div className="flex justify-end items-center gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="btn-ghost text-xs px-2.5 py-1"
-                            onClick={() => openEditModal(c)}
-                            title="Edit Course"
-                          >
-                            <Edit size={13} className="mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="btn-ghost text-xs px-2.5 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => openConfirmDelete(c.id, c.name)}
-                            title="Delete Course"
-                          >
-                            <Trash2 size={13} className="mr-1" />
-                            Delete
-                          </Button>
+                          {canUpdate && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="btn-ghost text-xs px-2.5 py-1"
+                              onClick={() => openEditModal(c)}
+                              title="Edit Course"
+                            >
+                              <Edit size={13} className="mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="btn-ghost text-xs px-2.5 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => openConfirmDelete(c.id, c.name)}
+                              title="Delete Course"
+                            >
+                              <Trash2 size={13} className="mr-1" />
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
                   )
                 })
-              )
-              }
+              )}
             </tbody>
           </table>
+        </div>
+
+        <div className="panel-header flex items-center justify-between">
+          <span>
+            {totalCount} courses · Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+          </span>
+          <div className="flex gap-4">
+            <Link
+              aria-disabled={page <= 1}
+              className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+              href={`/courses?${new URLSearchParams({ ...(search ? { search } : {}), sort, direction, page: String(Math.max(1, page - 1)), pageSize: String(pageSize) })}`}
+            >
+              Previous
+            </Link>
+            <Link
+              aria-disabled={page >= Math.ceil(totalCount / pageSize)}
+              className={page >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : ''}
+              href={`/courses?${new URLSearchParams({ ...(search ? { search } : {}), sort, direction, page: String(page + 1), pageSize: String(pageSize) })}`}
+            >
+              Next
+            </Link>
+          </div>
         </div>
 
         {/* Add / Edit Course Modal */}
@@ -336,11 +386,7 @@ export function CoursesManager({
                     Configure curriculum tuition fee, GST pricing mode, and duration.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
-                >
+                <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
                   <X size={18} />
                 </button>
               </div>
@@ -362,7 +408,7 @@ export function CoursesManager({
                     required
                     placeholder="e.g. Full Stack Development"
                     value={name}
-                    onChange={e => setName(e.target.value)}
+                    onChange={(e) => setName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -384,15 +430,15 @@ export function CoursesManager({
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-900">Exclusive of GST</span>
-                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          !gstInclusive ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                        }`}>
+                        <span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            !gstInclusive ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                          }`}
+                        >
                           {!gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">
-                        +GST added on top of fee
-                      </span>
+                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">+GST added on top of fee</span>
                     </button>
 
                     <button
@@ -406,15 +452,15 @@ export function CoursesManager({
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-900">Inclusive of GST</span>
-                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          gstInclusive ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
-                        }`}>
+                        <span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            gstInclusive ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
+                          }`}
+                        >
                           {gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">
-                        Fee already contains GST
-                      </span>
+                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">Fee already contains GST</span>
                     </button>
                   </div>
                 </div>
@@ -430,7 +476,7 @@ export function CoursesManager({
                       required
                       placeholder="e.g. 42000"
                       value={fee}
-                      onChange={e => setFee(e.target.value)}
+                      onChange={(e) => setFee(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <span className="text-[11px] text-gray-400 mt-0.5 block">
@@ -447,7 +493,7 @@ export function CoursesManager({
                       required
                       placeholder="e.g. 6 Months / 45 Days"
                       value={duration}
-                      onChange={e => setDuration(e.target.value)}
+                      onChange={(e) => setDuration(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -459,9 +505,11 @@ export function CoursesManager({
                     <div className="font-semibold text-gray-900 flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         Fee Breakdown
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          gstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            gstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
                           {gstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
                         </span>
                       </span>
@@ -489,14 +537,12 @@ export function CoursesManager({
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course Description
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Course Description</label>
                   <textarea
                     rows={3}
                     placeholder="Brief curriculum overview or target skills..."
                     value={description}
-                    onChange={e => setDescription(e.target.value)}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />
                 </div>

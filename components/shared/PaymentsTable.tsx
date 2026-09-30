@@ -20,8 +20,12 @@ export function PaymentsTable({
             <th style={{ width: compact ? '25%' : '20%' }}>Receipt</th>
             <th style={{ width: compact ? '25%' : '26%' }}>Student</th>
             {!compact && <th style={{ width: '18%' }}>Date</th>}
-            <th className="align-right" style={{ width: compact ? '25%' : '18%', whiteSpace: 'nowrap' }}>Amount</th>
-            <th className="align-right" style={{ width: compact ? '25%' : '18%', whiteSpace: 'nowrap' }}>Action</th>
+            <th className="align-right" style={{ width: compact ? '25%' : '18%', whiteSpace: 'nowrap' }}>
+              Amount
+            </th>
+            <th className="align-right" style={{ width: compact ? '25%' : '18%', whiteSpace: 'nowrap' }}>
+              Action
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +36,7 @@ export function PaymentsTable({
               </td>
             </tr>
           ) : (
-            payments.map(p => (
+            payments.map((p) => (
               <tr key={p.id}>
                 <td className="mono" style={{ whiteSpace: 'nowrap', fontSize: '11px' }}>
                   {p.id}
@@ -69,5 +73,5 @@ export function PaymentsTable({
         </tbody>
       </table>
     </div>
-  );
+  )
 }

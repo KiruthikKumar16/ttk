@@ -3,9 +3,17 @@
 
 alter table public.payments drop column if exists grand_total;
 
+-- PostgreSQL cannot change the type of columns referenced by a trigger's
+-- UPDATE OF list, so recreate the student status trigger after the conversion.
+drop trigger if exists _300_derive_status on public.students;
+
 alter table public.students
   alter column total type bigint using round(total * 100)::bigint,
   alter column paid type bigint using round(paid * 100)::bigint;
+
+create trigger _300_derive_status
+before insert or update of total, paid on public.students
+for each row execute function public.tg__students__derive_status();
 
 alter table public.courses
   alter column fee type bigint using round(fee * 100)::bigint;

@@ -8,10 +8,7 @@ interface TableRowProps {
 
 export function TableRow({ className = '', children, onClick }: TableRowProps) {
   return (
-    <tr
-      className={`border-t ${className}`}
-      onClick={onClick}
-    >
+    <tr className={`border-t ${className}`} onClick={onClick}>
       {children}
     </tr>
   )

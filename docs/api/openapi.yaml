@@ -1,0 +1,325 @@
+openapi: 3.1.0
+info:
+  title: ThoorigAI Infotech Admin Dashboard API
+  version: 0.1.0
+  description: >-
+    App Router HTTP contract. Protected routes require the Supabase cookie session
+    and the role permission documented in docs/architecture/role-permissions.md.
+    Route handlers and Zod schemas remain authoritative when this reference changes.
+servers:
+  - url: https://{host}
+    variables:
+      host:
+        default: localhost:3000
+security:
+  - cookieAuth: []
+paths:
+  /api/health:
+    get:
+      operationId: getHealth
+      security: []
+      summary: Public liveness probe
+      responses:
+        '200': { description: Process is alive }
+  /api/ready:
+    get:
+      operationId: getReadiness
+      summary: Server-only readiness probe
+      responses:
+        '200': { description: Required schema and server dependencies are ready }
+        '503': { description: Required dependency is unavailable }
+  /api/auth/login:
+    post:
+      operationId: login
+      security: []
+      summary: Sign in with Supabase Auth credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 1 }
+      responses:
+        '200': { description: Session created or MFA challenge returned }
+        '400': { description: Invalid credentials or input }
+  /api/auth/logout:
+    post:
+      operationId: logout
+      summary: End the current cookie session
+      responses:
+        '200': { description: Session ended }
+        '401': { description: Authentication required }
+  /api/session:
+    get:
+      operationId: getSessionRole
+      summary: Read the current role
+      responses:
+        '200': { description: Current role }
+        '401': { description: Authentication required }
+  /api/students:
+    get:
+      operationId: listStudents
+      summary: Search and list students
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/Search' }
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      operationId: createStudent
+      summary: Create a student with optional initial payment atomically
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, description: Validated by the student creation Zod schema }
+      responses:
+        '201': { description: Student created; optional initial payment committed atomically }
+        '400': { description: Validation failed }
+  /api/payments:
+    get:
+      operationId: listPayments
+      summary: List and search invoices/payments with pagination
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/Search' }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: recordPayment
+      summary: Record a payment transactionally
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, description: Validated by the payment Zod schema }
+      responses:
+        '201': { description: Payment, invoice number, and verification code returned }
+        '409': { description: Idempotency key reused with a different request }
+        '422': { description: Payment exceeds the remaining balance }
+  /api/invoices/{invoice}/download:
+    get:
+      operationId: downloadInvoicePdf
+      summary: Download an authorized invoice PDF
+      parameters:
+        - name: invoice
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Private PDF attachment
+          content:
+            application/pdf: { schema: { type: string, format: binary } }
+        '404': { description: Invoice not found }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/attendance:
+    get:
+      operationId: listAttendance
+      summary: List course attendance and report data
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/Search' }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: markAttendance
+      summary: Mark or update an enrolled student's attendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, description: Validated by the attendance Zod schema }
+      responses:
+        '200': { description: Attendance saved }
+        '409': { description: Duplicate session or attendance conflict }
+  /api/assessments:
+    get:
+      operationId: listAssessments
+      summary: List assessments
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: createAssessment
+      summary: Create an assessment
+      responses:
+        '201': { description: Assessment created }
+  /api/assessments/{id}/results:
+    get:
+      operationId: listAssessmentResults
+      summary: List results for an assessment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: saveAssessmentResults
+      summary: Add or update one or more assessment results
+      responses:
+        '200': { description: Assessment results saved }
+    delete:
+      operationId: deleteAssessmentResult
+      summary: Delete an assessment result
+      responses:
+        '200': { description: Result deleted }
+  /api/course-materials:
+    get:
+      operationId: listCourseMaterials
+      summary: List materials for a course
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: uploadCourseMaterial
+      summary: Upload a validated course material
+      responses:
+        '201': { description: Material metadata created }
+    delete:
+      operationId: deleteCourseMaterial
+      summary: Delete a material and its private object
+      responses:
+        '200': { description: Material deleted }
+  /api/certificates:
+    get:
+      operationId: listCertificates
+      summary: List certificates
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    post:
+      operationId: issueCertificate
+      summary: Issue a fee-cleared certificate
+      responses:
+        '201': { description: Certificate and public verification document created }
+        '422': { description: Fees remain outstanding }
+  /api/verify/{code}:
+    get:
+      operationId: verifyDocument
+      security: []
+      summary: Public verification of invoice or certificate status
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Live verification status and minimal document details }
+        '404': { description: Code is invalid or not found }
+  /api/reports:
+    get:
+      operationId: getDashboardSummary
+      summary: Read server-computed dashboard metrics
+      responses:
+        '200': { description: Dashboard summary }
+  /api/reports/export:
+    get:
+      operationId: exportReportCsv
+      summary: Stream a date-filtered CSV report
+      parameters:
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Streamed CSV attachment
+          content:
+            text/csv: { schema: { type: string } }
+  /api/gst:
+    get:
+      operationId: getGstSettings
+      summary: Read GST settings
+      responses:
+        '200': { description: GST settings; sensitive business profile fields remain server-authorized }
+    post:
+      operationId: updateGstSettings
+      summary: Update GST settings (admin only)
+      responses:
+        '200': { description: Settings updated }
+  /api/course-trainers:
+    post:
+      operationId: assignTrainer
+      summary: Assign a trainer to a course (admin only)
+      responses:
+        '201': { description: Assignment created and audited }
+    delete:
+      operationId: unassignTrainer
+      summary: Unassign a trainer from a course (admin only)
+      responses:
+        '200': { description: Assignment removed and audited }
+  /api/admin/users:
+    get:
+      operationId: listUsers
+      summary: List users (admin with MFA)
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+    patch:
+      operationId: changeUserRole
+      summary: Change a user role (admin with MFA)
+      responses:
+        '200': { description: Role changed and audit entry written }
+  /api/audit:
+    get:
+      operationId: listAuditLog
+      summary: List immutable audit records (admin only)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/ListResult' }
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-<project-ref>-auth-token
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Search:
+      name: search
+      in: query
+      schema: { type: string, maxLength: 100 }
+  responses:
+    ListResult:
+      description: Paginated `{ data, meta }` response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { type: array, items: { type: object } }
+              meta: { type: object }
+    Forbidden:
+      description: User lacks permission for this action

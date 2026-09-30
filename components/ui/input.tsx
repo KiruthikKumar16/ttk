@@ -1,6 +1,8 @@
-import { ReactNode } from 'react'
+import type { HTMLAttributes } from 'react'
 
 interface InputProps {
+  id?: string
+  inputMode?: HTMLAttributes<HTMLInputElement>['inputMode']
   type?: string
   value: string
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
@@ -26,6 +28,8 @@ export function Input({
   min,
   max,
   step,
+  id,
+  inputMode,
 }: InputProps) {
   if (rows && rows > 1) {
     return (
@@ -44,6 +48,8 @@ export function Input({
   return (
     <input
       type={type}
+      id={id}
+      inputMode={inputMode}
       value={value}
       onChange={onChange}
       placeholder={placeholder}

@@ -1,9 +1,11 @@
 # Assessments Tracking
 
 ## Overview
+
 Added assessments tracking functionality to manage assessments (tests, exams, etc.) and record student results.
 
 ## Database Changes
+
 - Created `assessments` table with:
   - `id` (UUID primary key)
   - `course_id` (references courses)
@@ -26,6 +28,7 @@ Added assessments tracking functionality to manage assessments (tests, exams, et
 - Added trigger function to validate that score <= assessment.max_score before inserting or updating assessment results
 
 ## API
+
 - `GET /api/assessments` - Fetch assessments with filtering options:
   - `courseId`: Filter by course ID
   - `limit`: Number of records to return (default 50)
@@ -43,6 +46,7 @@ Added assessments tracking functionality to manage assessments (tests, exams, et
   - Validates that score <= assessment.max_score (both early validation and database trigger)
 
 ## Components
+
 - `<Assessments />` - Main assessments management component with:
   - Form to create new assessments (course, title, max score, date)
   - List of assessments with filtering by course
@@ -56,6 +60,7 @@ Added assessments tracking functionality to manage assessments (tests, exams, et
   - Can be viewed programmatically by setting view to 'Assessments'
 
 ## Usage
+
 1. Navigate to the Assessments view via the sidebar or by setting view to 'Assessments'
 2. To create a new assessment:
    - Select a course
@@ -68,6 +73,7 @@ Added assessments tracking functionality to manage assessments (tests, exams, et
    - Use the edit/delete buttons on individual results to modify or remove them
 
 ## Notes
+
 - Trainer permissions currently allow managing assessments and results for any course (follow-up needed to restrict to assigned courses once course ownership/assignment concept is implemented)
 - The assessment_results table uses a unique constraint to prevent duplicate entries for the same student and assessment - saving a result for the same student and assessment updates the existing record instead of creating a duplicate
 - The database trigger ensures that score cannot exceed the assessment's max_score, providing an additional layer of validation beyond the API validation

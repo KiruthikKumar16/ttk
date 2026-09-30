@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { Save, ToggleLeft, ToggleRight, Percent, Hash, AlertCircle, CheckCircle2, IndianRupee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,9 +10,11 @@ import { calculateGstForRupees } from '@/lib/money'
 export function GstSettingsPage({
   settings,
   onSave,
+  editable = true,
 }: {
   settings: GstSettings | null
   onSave: (s: GstSettings) => Promise<void>
+  editable?: boolean
 }) {
   const [rate, setRate] = useState(settings ? String(settings.rate) : '')
   const [gstin, setGstin] = useState(settings?.gstin ?? '')
@@ -24,7 +28,7 @@ export function GstSettingsPage({
   const rateNum = Number(rate) || 0
   const halfRate = rateNum / 2
   const sampleFee = 10000
-  
+
   // Exclusive computation
   const sampleExclusive = calculateGstForRupees(sampleFee, rateNum, false)
   const sampleGstExclusive = sampleExclusive.gstAmount
@@ -100,20 +104,19 @@ export function GstSettingsPage({
               <div>
                 <p className="text-sm font-semibold text-gray-900">GST Invoicing</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {enabled ? 'GST will be calculated and shown on all invoices' : 'Invoices will not include GST computation'}
+                  {enabled
+                    ? 'GST will be calculated and shown on all invoices'
+                    : 'Invoices will not include GST computation'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setEnabled(!enabled)}
+                disabled={!editable}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 title={enabled ? 'Disable GST' : 'Enable GST'}
               >
-                {enabled ? (
-                  <ToggleRight size={36} className="text-green-500" />
-                ) : (
-                  <ToggleLeft size={36} />
-                )}
+                {enabled ? <ToggleRight size={36} className="text-green-500" /> : <ToggleLeft size={36} />}
               </button>
             </div>
 
@@ -124,13 +127,14 @@ export function GstSettingsPage({
               </label>
               <div className="relative">
                 <Percent size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
+                <input
                   type="number"
                   min="0"
                   max="100"
                   step="0.5"
+                  disabled={!editable}
                   value={rate}
-                  onChange={e => setRate(e.target.value)}
+                  onChange={(e) => setRate(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="e.g. 18"
                 />
@@ -144,16 +148,15 @@ export function GstSettingsPage({
 
             {/* GSTIN */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                GSTIN
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">GSTIN</label>
               <div className="relative">
                 <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   value={gstin}
-                  onChange={e => setGstin(e.target.value.toUpperCase())}
+                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
                   maxLength={15}
+                  disabled={!editable}
                   className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-900 font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Enter GSTIN"
                 />
@@ -163,24 +166,24 @@ export function GstSettingsPage({
                   GSTIN not configured
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1.5">
-                15-character GST Identification Number
-              </p>
+              <p className="text-xs text-gray-500 mt-1.5">15-character GST Identification Number</p>
             </div>
 
             {/* Save Button */}
-            <div className="pt-4 border-t border-gray-100">
-              <Button
-                variant="default"
-                size="default"
-                onClick={handleSave}
-                disabled={saving}
-                style={{ width: '100%' }}
-              >
-                <Save size={16} className="mr-2" />
-                {saving ? 'Saving...' : 'Save Settings'}
-              </Button>
-            </div>
+            {editable && (
+              <div className="pt-4 border-t border-gray-100">
+                <Button
+                  variant="default"
+                  size="default"
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{ width: '100%' }}
+                >
+                  <Save size={16} className="mr-2" />
+                  {saving ? 'Saving...' : 'Save Settings'}
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -226,9 +229,13 @@ export function GstSettingsPage({
                 <p className="text-xs font-semibold tracking-wide uppercase">
                   {previewMode === 'exclusive' ? 'GST Exclusive Breakdown' : 'GST Inclusive Breakdown'}
                 </p>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                  previewMode === 'exclusive' ? 'bg-amber-500/20 text-amber-200' : 'bg-emerald-500/20 text-emerald-200'
-                }`}>
+                <span
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    previewMode === 'exclusive'
+                      ? 'bg-amber-500/20 text-amber-200'
+                      : 'bg-emerald-500/20 text-emerald-200'
+                  }`}
+                >
                   {previewMode === 'exclusive' ? '+GST Added On Top' : 'GST Included In Price'}
                 </span>
               </div>
@@ -246,11 +253,15 @@ export function GstSettingsPage({
                       <>
                         <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
                           <span className="text-xs text-gray-500">CGST ({halfRate}%)</span>
-                          <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+                          <span className="text-xs font-medium text-gray-600">
+                            {money(Math.round(sampleFee * (halfRate / 100)))}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
                           <span className="text-xs text-gray-500">SGST ({halfRate}%)</span>
-                          <span className="text-xs font-medium text-gray-600">{money(Math.round(sampleFee * (halfRate / 100)))}</span>
+                          <span className="text-xs font-medium text-gray-600">
+                            {money(Math.round(sampleFee * (halfRate / 100)))}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between px-5 py-3 bg-blue-50/50">
                           <span className="text-xs text-blue-600 font-medium">Total GST (+{rateNum}%)</span>
@@ -261,7 +272,9 @@ export function GstSettingsPage({
 
                     <div className="flex items-center justify-between px-5 py-4 bg-gray-900 text-white">
                       <span className="text-sm font-semibold">Total Payable</span>
-                      <span className="text-base font-bold">{enabled ? money(sampleTotalExclusive) : money(sampleFee)}</span>
+                      <span className="text-base font-bold">
+                        {enabled ? money(sampleTotalExclusive) : money(sampleFee)}
+                      </span>
                     </div>
                   </>
                 ) : (
@@ -279,7 +292,9 @@ export function GstSettingsPage({
                         </div>
                         <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50">
                           <span className="text-xs text-gray-500">SGST ({halfRate}%)</span>
-                          <span className="text-xs font-medium text-gray-600">{money(sampleGstInclusive - sampleHalfGstInclusive)}</span>
+                          <span className="text-xs font-medium text-gray-600">
+                            {money(sampleGstInclusive - sampleHalfGstInclusive)}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between px-5 py-3 bg-emerald-50/50">
                           <span className="text-xs text-emerald-700 font-medium">Included GST ({rateNum}%)</span>
@@ -298,14 +313,24 @@ export function GstSettingsPage({
             </div>
 
             {/* Info Note */}
-            <div className={`p-3 rounded-lg border ${
-              previewMode === 'exclusive' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-            }`}>
+            <div
+              className={`p-3 rounded-lg border ${
+                previewMode === 'exclusive'
+                  ? 'bg-amber-50 border-amber-200 text-amber-700'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              }`}
+            >
               <p className="text-xs">
                 {previewMode === 'exclusive' ? (
-                  <><strong>Exclusive Courses:</strong> GST is added on top of the course fee. Each student pays Base Fee + {rateNum}% GST.</>
+                  <>
+                    <strong>Exclusive Courses:</strong> GST is added on top of the course fee. Each student pays Base
+                    Fee + {rateNum}% GST.
+                  </>
                 ) : (
-                  <><strong>Inclusive Courses:</strong> The course price already contains {rateNum}% GST. Base taxable revenue and tax are extracted automatically.</>
+                  <>
+                    <strong>Inclusive Courses:</strong> The course price already contains {rateNum}% GST. Base taxable
+                    revenue and tax are extracted automatically.
+                  </>
                 )}
               </p>
             </div>
@@ -313,7 +338,8 @@ export function GstSettingsPage({
             {!enabled && (
               <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <p className="text-xs text-gray-500">
-                  GST is currently <strong>disabled</strong>. Invoices will show only the base course fee without tax computation.
+                  GST is currently <strong>disabled</strong>. Invoices will show only the base course fee without tax
+                  computation.
                 </p>
               </div>
             )}

@@ -28,4 +28,9 @@ skills-lock.json
 supabase/.temp/
 playwright-report/
 test-results/
+coverage/
+.next-size-report.json
+.next-client-size-report.json
+tests/.auth/
 tsconfig.tsbuildinfo
+blob-report/

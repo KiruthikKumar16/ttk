@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseBrowser } from '@/lib/supabase/browser'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { brand } from '@/lib/brand'
 
 export default function LoginPage() {
@@ -18,17 +18,17 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
-
-      if (signInError) throw signInError
+      if (!response.ok) throw new Error('Unable to sign in. Please try again.')
 
       // Sign in successful, redirect to home
       router.push('/')
-    } catch (err: any) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.')
+    } catch {
+      setError('Unable to sign in. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -37,9 +37,19 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-card" aria-labelledby="login-title">
-        <img className="login-logo" src={brand.logoPath} alt={`${brand.shortName} logo`} />
+        <Image
+          className="login-logo"
+          src={brand.logoPath}
+          alt={`${brand.shortName} logo`}
+          width={76}
+          height={76}
+          sizes="76px"
+          priority
+        />
         <p className="login-brand">{brand.displayName}</p>
-        <h1 id="login-title" className="login-title">Sign in to {brand.displayName}</h1>
+        <h1 id="login-title" className="login-title">
+          Sign in to {brand.displayName}
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -72,7 +82,9 @@ export default function LoginPage() {
             />
           </div>
           {error && (
-            <p className="login-error" role="alert">{error}</p>
+            <p className="login-error" role="alert">
+              {error}
+            </p>
           )}
           <button
             type="submit"
@@ -83,9 +95,7 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="login-help">
-          Don't have an account? Please contact an administrator.
-        </p>
+        <p className="login-help">Don't have an account? Please contact an administrator.</p>
       </section>
     </main>
   )

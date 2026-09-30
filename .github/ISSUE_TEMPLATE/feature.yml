@@ -1,0 +1,25 @@
+name: Feature request
+description: Propose a user or operations improvement
+title: 'feat: '
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome and acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: security-data
+    attributes:
+      label: Roles, data, and security considerations
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

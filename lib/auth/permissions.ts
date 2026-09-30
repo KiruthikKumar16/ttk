@@ -11,6 +11,7 @@ export const resources = [
   'audit',
   'reports',
   'gst',
+  'users',
   'verification',
 ] as const
 
@@ -39,7 +40,7 @@ export const permissions: Record<Role, PermissionMap> = {
     certificates: ['read'],
     attendance: ['read', 'create', 'update'],
     assessments: ['read', 'create', 'update', 'grade'],
-    materials: ['read'],
+    materials: ['read', 'create', 'update', 'delete'],
     reports: ['read'],
   },
 }

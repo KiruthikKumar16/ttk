@@ -8,15 +8,32 @@ import type { CertificateRecord } from '@/lib/types'
 import z from 'zod'
 import { unexpectedApiError } from '@/lib/api-response'
 import { pagePaginationFromSearchParams } from '@/lib/pagination'
+import { validateMutationRequest } from '@/lib/security/csrf'
+import { rateLimit } from '@/lib/security/rate-limit'
+import { adminMfaResponse } from '@/lib/security/admin-mfa'
+import { withApi } from '@/lib/http/handler'
+import { rolesFor } from '@/lib/auth/permissions'
 
-export async function GET(req: NextRequest) {
+async function getCertificates(req: NextRequest) {
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .maybeSingle()
+  if (!currentProfile || !['admin', 'staff', 'trainer'].includes(currentProfile.role))
+    return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
+  if (mfaResponse) return mfaResponse
 
   try {
     const pagination = pagePaginationFromSearchParams(new URL(req.url).searchParams)
@@ -44,10 +61,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function postCertificate(req: NextRequest) {
+  const rejected = validateMutationRequest(req)
+  if (rejected) return rejected
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
@@ -60,13 +82,33 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch certificate creator profile')
+    return unexpectedApiError(
+      profileError ?? new Error('User profile was not found.'),
+      'Unable to fetch certificate creator profile',
+    )
   }
 
   // Only staff and admin can create certificates
   if (profile.role !== 'staff' && profile.role !== 'admin') {
-    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to create certificate' }), { status: 403 })
+    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to create certificate' }), {
+      status: 403,
+    })
   }
+  if (profile.role === 'admin') {
+    const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
+    if (assuranceError || assurance?.claims.aal !== 'aal2') {
+      return new NextResponse(JSON.stringify({ error: 'Additional authentication is required.' }), { status: 403 })
+    }
+  }
+  const limit = await rateLimit(`user:${session.user.id}:/api/certificates`, 10, '15 m')
+  if (!limit.success)
+    return NextResponse.json(
+      { error: 'Too many requests.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limit.retryAfterSeconds) },
+      },
+    )
 
   try {
     const body = await req.json()
@@ -76,10 +118,7 @@ export async function POST(req: NextRequest) {
     const {
       certificateId,
       studentRegisterId,
-      courseName,
-      studentName,
       issueDate,
-      studentRowId,
       startDate,
       endDate,
       skills,
@@ -88,11 +127,25 @@ export async function POST(req: NextRequest) {
       customNote,
     } = parsedBody
 
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('id, register_id, name, course, paid, total')
+      .eq('register_id', studentRegisterId)
+      .maybeSingle()
+    if (studentError) throw studentError
+    if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 })
+    if (Number(student.paid) < Number(student.total)) {
+      return NextResponse.json(
+        { error: 'Clear the outstanding course fees before issuing a certificate.' },
+        { status: 409 },
+      )
+    }
+
     const payload: Record<string, unknown> = {
       certificate_id: certificateId,
       student_register_id: studentRegisterId,
-      course_name: courseName,
-      student_name: studentName,
+      course_name: student.course,
+      student_name: student.name,
       issue_date: issueDate,
       skills,
       director_name: directorName,
@@ -100,26 +153,20 @@ export async function POST(req: NextRequest) {
       custom_note: customNote,
     }
 
-    if (studentRowId) payload.student_id = studentRowId
+    payload.student_id = student.id
     if (startDate) payload.start_date = startDate
     if (endDate) payload.end_date = endDate
 
-    const { data, error } = await supabase
-      .from('certificates')
-      .insert(payload)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('certificates').insert(payload).select().single()
     if (error) throw error
 
     const verificationCode = await generateUniqueVerificationCode(supabase)
-    const { error: verificationError } = await supabase
-      .from('verifiable_documents')
-      .insert({
-        doc_type: 'certificate',
-        reference_id: data.id,
-        verification_code: verificationCode,
-        status: 'active',
-      })
+    const { error: verificationError } = await supabase.from('verifiable_documents').insert({
+      doc_type: 'certificate',
+      reference_id: data.id,
+      verification_code: verificationCode,
+      status: 'active',
+    })
     if (verificationError) throw verificationError
 
     return NextResponse.json(
@@ -143,7 +190,7 @@ export async function POST(req: NextRequest) {
           verificationCode: undefined,
         } as CertificateRecord,
       },
-      { status: 201 }
+      { status: 201 },
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -152,3 +199,10 @@ export async function POST(req: NextRequest) {
     return unexpectedApiError(error, 'Unable to record certificate')
   }
 }
+
+export const GET = withApi({ roles: rolesFor('certificates', 'read') }, async ({ request }) =>
+  getCertificates(request as NextRequest),
+)
+export const POST = withApi({ roles: rolesFor('certificates', 'create') }, async ({ request }) =>
+  postCertificate(request as NextRequest),
+)

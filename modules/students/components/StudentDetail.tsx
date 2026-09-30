@@ -1,10 +1,31 @@
 import { useState } from 'react'
-import { ArrowLeft, ArrowUpRight, BarChart3, Bell, CheckCircle2, ChevronDown, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Printer, Search, Settings, ShieldCheck, Users, X, MoreHorizontal, Download } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  CheckCircle2,
+  ChevronDown,
+  CircleDollarSign,
+  FileCheck2,
+  FileText,
+  LayoutDashboard,
+  Menu,
+  Plus,
+  Printer,
+  Search,
+  Settings,
+  ShieldCheck,
+  Users,
+  X,
+  MoreHorizontal,
+  Download,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Course, Payment, Receipt, Student, View } from '@/lib/types'
+import type { Course, Payment, Receipt, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
-import { PaymentsTable } from '@/components/PaymentsTable'
+import { PaymentsTable } from '@/components/shared/PaymentsTable'
 import { calculateGstForRupees, differenceRupees, percentageOfRupees, rupeesToPaise } from '@/lib/money'
 // We'll import CertificatePrint and InvoicePrint later, for now we'll comment out and use placeholders
 // import { CertificatePrint } from '@/components/CertificatePrint'
@@ -19,6 +40,7 @@ export function StudentDetail({
   onInvoice,
   gstRate = 18,
   courses,
+  canRecordPayment = true,
 }: {
   student: Student
   payments: Payment[]
@@ -28,24 +50,26 @@ export function StudentDetail({
   onInvoice?: (p: Payment) => void
   gstRate?: number
   courses?: Course[]
+  canRecordPayment?: boolean
 }) {
-  const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('UPI');
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const [error, setError] = useState('');
+  const [amount, setAmount] = useState('')
+  const [method, setMethod] = useState('UPI')
+  const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const [error, setError] = useState('')
   const balance = differenceRupees(student.total, student.paid)
-  const history = payments.filter(p => p.studentId === student.registerId);
+  const history = payments.filter((p) => p.studentId === student.registerId)
   const submit = async () => {
-    const value = Number(amount);
-    if (!value || value <= 0) return setError('Enter a payment amount greater than zero.');
+    const value = Number(amount)
+    if (!value || value <= 0) return setError('Enter a payment amount greater than zero.')
     // We assume onPayment returns a Promise that resolves to a Receipt or a string error
-    const result = await onPayment(value, method);
-    if (rupeesToPaise(value) > rupeesToPaise(balance)) return setError("Payment cannot exceed the remaining balance of " + money(balance) + ".");
-    if (typeof result === 'string') return setError(result);
-    setReceipt(result);
-    setAmount('');
-    setError('');
-  };
+    const result = await onPayment(value, method)
+    if (rupeesToPaise(value) > rupeesToPaise(balance))
+      return setError('Payment cannot exceed the remaining balance of ' + money(balance) + '.')
+    if (typeof result === 'string') return setError(result)
+    setReceipt(result)
+    setAmount('')
+    setError('')
+  }
   return (
     <>
       <div className="flex flex-col items-start w-full mb-8">
@@ -55,11 +79,21 @@ export function StudentDetail({
         </Button>
         <div className="mt-8 text-left">
           <p className="eyebrow">STUDENT DETAIL · TAI-{student.registerId}</p>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.15, margin: '4px 0 8px' }}>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 700,
+              color: 'var(--ink)',
+              lineHeight: 1.15,
+              margin: '4px 0 8px',
+            }}
+          >
             {student.name}
           </h1>
           <p className="subcopy">
-            {student.course} · Batch started {student.batch} · <span className="font-semibold text-gray-800">Phone: {student.phone || '—'}</span>
+            {student.course} · Batch started {student.batch} ·{' '}
+            <span className="font-semibold text-gray-800">Phone: {student.phone || '—'}</span>
           </p>
         </div>
       </div>
@@ -118,8 +152,11 @@ export function StudentDetail({
             <span className="text-gray-400 block mb-0.5 font-medium">Knowledge / Interest Tags</span>
             <div className="flex flex-wrap gap-1 mt-1">
               {student.knowledgeTags && student.knowledgeTags.length > 0 ? (
-                student.knowledgeTags.map(tag => (
-                  <span key={tag} className="px-2 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100">
+                student.knowledgeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100"
+                  >
                     {tag}
                   </span>
                 ))
@@ -149,11 +186,12 @@ export function StudentDetail({
           </div>
           <div className="balance-hero">
             <div className="balance-label">Balance</div>
-            <div className={balance === 0 ? "balance-amount zero" : "balance-amount owed"}>
-              {money(balance)}
-            </div>
+            <div className={balance === 0 ? 'balance-amount zero' : 'balance-amount owed'}>{money(balance)}</div>
             <div className="balance-progress">
-                 <div className="balance-progress-fill" style={{ width: percentageOfRupees(student.paid, student.total) + "%" }} />
+              <div
+                className="balance-progress-fill"
+                style={{ width: percentageOfRupees(student.paid, student.total) + '%' }}
+              />
             </div>
             <div className="fee-meta">
               <div>
@@ -167,109 +205,129 @@ export function StudentDetail({
             </div>
           </div>
         </section>
-        <section className="panel payment-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Record Payment</h2>
-              <p>Post a payment and issue its GST invoice</p>
-            </div>
-            <CircleDollarSign size={21} />
-          </div>
-          {receipt && balance === 0 ? (
-            <div className="certificate-inline">
-              <div className="receipt-check">
-                <CheckCircle2 size={18} />
-                <strong>Payment recorded</strong>
+        {canRecordPayment && (
+          <section className="panel payment-panel">
+            <div className="panel-header">
+              <div>
+                <h2>Record Payment</h2>
+                <p>Post a payment and issue its GST invoice</p>
               </div>
-              <p>Balance cleared. Certificate generation is ready below.</p>
+              <CircleDollarSign size={21} />
             </div>
-          ) : receipt ? (() => {
-            const isInclusive = Boolean(courses?.find(c => c.name === student.course)?.gstInclusive);
-            const receiptBreakdown = calculateGstForRupees(receipt.amount, gstRate, isInclusive);
-            const receiptTaxable = receiptBreakdown.taxableAmount;
-            const receiptGst = receiptBreakdown.gstAmount;
-            const receiptHalfGst = receiptBreakdown.cgstAmount;
-            const receiptSgst = receiptBreakdown.sgstAmount;
-            const receiptGrandTotal = receiptBreakdown.totalAmount;
-
-            return (
-              <div className="receipt-confirmation">
+            {receipt && balance === 0 ? (
+              <div className="certificate-inline">
                 <div className="receipt-check">
                   <CheckCircle2 size={18} />
                   <strong>Payment recorded</strong>
                 </div>
-                <div className="receipt-meta">
-                  <span>Invoice <b>{receipt.invoice}</b></span>
-                  <span>Taxable Amount <b>{money(receiptTaxable)}</b></span>
-                </div>
-                {gstRate > 0 ? (
-                  <div className="gst-breakdown">
-                    <span>Taxable Base <b>{money(receiptTaxable)}</b></span>
-                    <span>CGST ({(gstRate / 2)}%) <b>{money(receiptHalfGst)}</b></span>
-                    <span>SGST ({(gstRate / 2)}%) <b>{money(receiptSgst)}</b></span>
-                    <span>Grand Total <b>{money(receiptGrandTotal)}</b> {isInclusive && <small className="text-emerald-600 font-medium">(Incl. GST)</small>}</span>
-                  </div>
-                ) : (
-                  <div className="gst-breakdown">
-                    <span>Total Paid <b>{money(receipt.amount)}</b></span>
-                    <span>GST <b>Exempt</b></span>
-                  </div>
-                )}
-                {onInvoice && (
-                  <div className="mt-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onInvoice({
-                        id: receipt.id,
-                        student: receipt.student,
-                        method: receipt.method,
-                        date: receipt.date,
-                        amount: receipt.amount,
-                        invoice: receipt.invoice,
-                        studentId: receipt.studentId,
-                      })}
-                    >
-                      <Printer size={14} className="mr-1.5" /> View Invoice
-                    </Button>
-                  </div>
-                )}
+                <p>Balance cleared. Certificate generation is ready below.</p>
               </div>
-            );
-          })() : (
-            <div className="payment-fields">
-              <label>
-                Amount
-                <input
-                  type="number"
-                  min="1"
-                  value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  placeholder={money(balance)}
-                />
-              </label>
-              <label>
-                Payment method
-                <select
-                  value={method}
-                  onChange={e => setMethod(e.target.value)}
-                >
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                  <option>Cash</option>
-                  <option>Card</option>
-                </select>
-              </label>
-              <Button variant="default" size="default" onClick={submit}>
-                Record payment
-                <ArrowUpRight size={15} />
-              </Button>
-              {error && <p className="error">{error}</p>}
-            </div>
-          )}
-        </section>
+            ) : receipt ? (
+              (() => {
+                const isInclusive = Boolean(courses?.find((c) => c.name === student.course)?.gstInclusive)
+                const receiptBreakdown = calculateGstForRupees(receipt.amount, gstRate, isInclusive)
+                const receiptTaxable = receiptBreakdown.taxableAmount
+                const receiptGst = receiptBreakdown.gstAmount
+                const receiptHalfGst = receiptBreakdown.cgstAmount
+                const receiptSgst = receiptBreakdown.sgstAmount
+                const receiptGrandTotal = receiptBreakdown.totalAmount
+
+                return (
+                  <div className="receipt-confirmation">
+                    <div className="receipt-check">
+                      <CheckCircle2 size={18} />
+                      <strong>Payment recorded</strong>
+                    </div>
+                    <div className="receipt-meta">
+                      <span>
+                        Invoice <b>{receipt.invoice}</b>
+                      </span>
+                      <span>
+                        Taxable Amount <b>{money(receiptTaxable)}</b>
+                      </span>
+                    </div>
+                    {gstRate > 0 ? (
+                      <div className="gst-breakdown">
+                        <span>
+                          Taxable Base <b>{money(receiptTaxable)}</b>
+                        </span>
+                        <span>
+                          CGST ({gstRate / 2}%) <b>{money(receiptHalfGst)}</b>
+                        </span>
+                        <span>
+                          SGST ({gstRate / 2}%) <b>{money(receiptSgst)}</b>
+                        </span>
+                        <span>
+                          Grand Total <b>{money(receiptGrandTotal)}</b>{' '}
+                          {isInclusive && <small className="text-emerald-600 font-medium">(Incl. GST)</small>}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="gst-breakdown">
+                        <span>
+                          Total Paid <b>{money(receipt.amount)}</b>
+                        </span>
+                        <span>
+                          GST <b>Exempt</b>
+                        </span>
+                      </div>
+                    )}
+                    {onInvoice && (
+                      <div className="mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            onInvoice({
+                              id: receipt.id,
+                              student: receipt.student,
+                              method: receipt.method,
+                              date: receipt.date,
+                              amount: receipt.amount,
+                              invoice: receipt.invoice,
+                              studentId: receipt.studentId,
+                            })
+                          }
+                        >
+                          <Printer size={14} className="mr-1.5" /> View Invoice
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()
+            ) : (
+              <div className="payment-fields">
+                <label>
+                  Amount
+                  <input
+                    type="number"
+                    min="1"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder={money(balance)}
+                  />
+                </label>
+                <label>
+                  Payment method
+                  <select value={method} onChange={(e) => setMethod(e.target.value)}>
+                    <option>UPI</option>
+                    <option>Bank Transfer</option>
+                    <option>Cash</option>
+                    <option>Card</option>
+                  </select>
+                </label>
+                <Button variant="default" size="default" onClick={submit}>
+                  Record payment
+                  <ArrowUpRight size={15} />
+                </Button>
+                {error && <p className="error">{error}</p>}
+              </div>
+            )}
+          </section>
+        )}
       </div>
-      {receipt && differenceRupees(student.total, student.paid) === 0 ? (
+      {canRecordPayment && receipt && differenceRupees(student.total, student.paid) === 0 ? (
         <section className="certificate-banner">
           <div>
             <p className="eyebrow">PAYMENT COMPLETE</p>
@@ -286,11 +344,13 @@ export function StudentDetail({
         <div className="panel-header">
           <div>
             <h2>Payment history</h2>
-            <p>{history.length} payment{history.length === 1 ? '' : 's'} · Most recent first</p>
+            <p>
+              {history.length} payment{history.length === 1 ? '' : 's'} · Most recent first
+            </p>
           </div>
         </div>
         <PaymentsTable payments={history} onInvoice={onInvoice} />
       </section>
     </>
-  );
+  )
 }

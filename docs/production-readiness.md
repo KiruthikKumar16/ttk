@@ -1,44 +1,49 @@
 # Production readiness and deployment
 
-## Release status
+## Current release decision: NO-GO
 
-**Not cleared for production based on this repository audit.** The application changes and migrations need staging validation and security review before a production rollout. This guide is the release checklist, not evidence that deployment steps have already been completed.
+This repository is not cleared for production. The requested implementation work is still uncommitted, the four newest migrations have not been confirmed against the cloud project's migration history, and no current staging deployment or approval evidence is attached. Do not tag or promote v1.0.0 while any release gate below is open.
 
-## Configuration
+## Evidence ledger
 
-Set the following in the hosting provider's encrypted environment settings and in local `.env.local` for development:
+| Gate                  | Current evidence                                                                                                                                                                                                                                                                                                                                                                                  | Status                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Product flows         | Routes, services, tests, and per-feature flow docs exist; student CSV import, certificate revoke/reissue, credit notes, and authenticated E2E for trainer assignment are not implemented or proven.                                                                                                                                                                                               | OPEN - student import, certificate lifecycle, credit-note, and trainer-assignment evidence are incomplete |
+| Automated quality     | On 2026-09-29, standalone typecheck/lint/unit/build and two consecutive local `pnpm test:ci` runs passed; each run passed 20 pgTAP, 25 integration, and 47 E2E tests with coverage and build budgets met. Evidence is recorded in the [v1.0.0 checklist](release/v1.0.0-checklist.md).                                                                                                            | OPEN - local evidence only; clean-checkout and hosted CI are pending                                      |
+| Database              | Owner-provided CLI output reported successful cloud migrations through `20260929024205`; four newer migrations were added afterward. Live history was not queried during this pass.                                                                                                                                                                                                               | OPEN - staging project ref, access token, and database password are missing                               |
+| Auth/RLS              | Local pgTAP and role tests are configured; staging role/RLS and admin MFA behavior have not been independently verified.                                                                                                                                                                                                                                                                          | OPEN - staging verification is missing                                                                    |
+| Sentry and alerting   | `SENTRY_DSN` is empty in the current local environment, so no synthetic event was sent. Protected upload token, project/org, alert destinations, source-map association, and a delivered test alert are not confirmed.                                                                                                                                                                            | OPEN - local DSN is empty; event, source maps, and alert acknowledgement are unverified                   |
+| Backups/restore       | Backup/PITR configuration, marker, scratch-project restore, measured RPO/RTO, and owner sign-off are not attached.                                                                                                                                                                                                                                                                                | OPEN - staging and a scratch restore target are required                                                  |
+| Accessibility         | Axe tests exist; deployed Lighthouse ≥95 and manual WCAG contrast/keyboard review are not measured. The [current demo](https://ttk-lemon.vercel.app) returned 404 for `/login` and `/verify/...` during this check, so it cannot stand in for the release deployment.                                                                                                                             | OPEN - release deployment and manual review are missing                                                   |
+| Scale                 | k6 scripts, synthetic-volume SQL, and indexed query plans are documented; no target-volume data, 100-user run, p95, or LCP result exists.                                                                                                                                                                                                                                                         | OPEN - target environment and k6 run are missing                                                          |
+| Print                 | PDF text and A4 dimensions have local coverage; reviewed Chromium visual baselines and font rendering evidence are not attached.                                                                                                                                                                                                                                                                  | OPEN - real invoice and certificate A4 review is missing                                                  |
+| CI adversarial checks | [Latest main run](https://github.com/KiruthikKumar16/ttk/actions/runs/36404679515) failed before dependency installation because `setup-node` could not find pnpm. No release PR, disposable negative-check PR, or green hosted run exists.                                                                                                                                                       | OPEN - current main CI fails at setup-node; no disposable or release PR runs exist                        |
+| Reviewable PR split   | The release tree has 103 tracked worktree changes plus untracked files, and selected MFA/DB-job edits depend on release architecture and test infrastructure absent from `main`. No PRs were opened because extracting only the named hunks would create broken, misleading patches. The current `main` workflow has no `ci-success` job and its latest run fails before dependency installation. | OPEN - release foundation is absent from main; no isolated PRs were opened                                |
+| Legal/business        | License holder/terms, GSTIN and tax configuration, invoice/credit-note accounting policy, retention, and customer-facing verification wording need owner approval.                                                                                                                                                                                                                                | OPEN - owner/legal decisions are required                                                                 |
 
-| Variable | Exposure | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Browser and server | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server | Supabase publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Required for course material storage, public document verification, and privileged error logging; never expose to client code |
+## Deployment configuration
 
-Use distinct Supabase projects for local, staging, and production. Configure the production auth site URL and allowed redirect URLs to the deployed HTTPS origin. Ensure the first administrator is provisioned through a controlled process; the new-user trigger assigns the default `staff` role.
+Set environment values only in the relevant Vercel/GitHub Environment. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only and never expose it in client bundles. Required and optional values are described in `.env.example` and [the local setup guide](database/local-development.md). Use distinct local, staging, and production Supabase projects; configure exact auth site/redirect URLs and ensure a controlled administrator onboarding path.
 
-## Database release
+`vercel.json` targets `bom1` per the requested India deployment region. Confirm that the Supabase project's region matches before performance sign-off. The app uses Supabase Data API for application queries; migrations and any future direct PostgreSQL maintenance should use the appropriate database connection, not a client-side secret.
 
-Follow [Database migrations](database-migrations.md). Do not apply migrations until the staging schema, policies, trigger behavior, and migration history have been reviewed. The local CLI configuration is absent, so the repo does not yet have a reproducible linked database workflow.
+## Required release sequence
 
-## Application release
+1. Resolve the legal/business decisions in `docs/release/v1.0.0-checklist.md`.
+2. Review all uncommitted changes, secret-scan the complete repository, and create a clean commit on the release branch.
+3. From a clean checkout, run the exact commands in the release checklist twice and retain both outputs.
+4. On an isolated staging Supabase project, reconcile migration history, dry-run the four pending migrations, apply them, and run pgTAP plus the full authenticated smoke/E2E set.
+5. Verify that course materials and invoice cache buckets are private and that storage reads/writes are authorized.
+6. Verify Sentry delivery and alert routing, perform and time a restore drill, then capture the actual backup/PITR marker.
+7. Run the 100-user k6 profile against target-volume synthetic data; retain p95/p99, error rate, `EXPLAIN ANALYZE`, LCP, and client bundle reports.
+8. Review accessibility and A4 invoice/certificate print output in Chromium; record actual Lighthouse scores.
+9. Obtain required human approval in the production GitHub Environment. Deploy, smoke-test, and follow the rollback/forward-fix procedure if any gate fails.
+10. Create the release tag and GitHub release only after all evidence is attached and owners sign off.
 
-1. Confirm the production Supabase project has all reviewed migrations and the required auth configuration.
-2. Add environment variables in the hosting provider. Keep the service role key server-only.
-3. Create the private `course-materials` Supabase Storage bucket and validate its access rules. The application currently uses the service role key for storage operations, so route authorization must remain enforced.
-4. Deploy a preview build and verify sign-in, role restrictions, data reads/writes, invoice downloads, document verification, and `/api/health`.
-5. Confirm production error reporting and database backups are enabled and monitored.
-6. Promote the preview only after CI and the manual release checks pass.
+## Security incident note
 
-The application requires a Node.js server runtime; it is not a static export. On Vercel, use the Next.js preset and deploy from the protected main branch.
+The project owner pasted a Supabase secret-style key into the conversation and local editor context earlier. Treat that credential as exposed: rotate/revoke it in Supabase, update local and Vercel server-only environment settings, redeploy, and verify it is absent from the browser bundle and Git history. This repository does not include or repeat the key value.
 
-## Release blockers recorded in the audit
+## Release evidence record
 
-- The migration files have not been run against Postgres or reviewed by Supabase advisors. This audit corrected invalid `INSERT ... USING` clauses and removed older permissive policies that would have overridden the newer role rules. The policies, trigger behavior, role administration, and table grants still require staging validation.
-- The migration set includes a timestamp after the repository's current date. Confirm whether that migration is intended for this release.
-- The GitHub Actions workflow needs review for repeatability: use Node.js 22, pin/setup pnpm, and install the Playwright browser dependencies. The current end to end suite makes unauthenticated requests to protected APIs and writes shared test records without cleanup, so its assumptions conflict with the auth model and it is not safe to treat as release evidence.
-- API auth and Next.js 16 session refresh have been aligned to cookie-backed Supabase clients in this branch, but the sign-in, expiry, refresh, and unauthorized paths have not been exercised in a deployed preview.
-- Invoice/payment integrity and error handling across partial database failures need staging checks before production use.
-
-## Release evidence to record
-
-For each release, record the commit SHA, CI result, migration list before and after, backup reference, staging smoke-check result, production deploy URL, and rollback/forward-fix owner. Never put credentials or student data in the release record.
+For every release, record the commit SHA, lockfile hash, CI run URL, migration history before/after, backup/PITR marker, restore result and measured duration, staging/production deployment URLs, smoke results, Lighthouse and load-test reports, approver identities, and rollback/forward-fix owner. Do not store credentials or student data in the record.

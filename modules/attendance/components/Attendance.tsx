@@ -39,7 +39,7 @@ export function Attendance() {
     startDate: '',
     endDate: '',
     pageSize: 50,
-    page: 1
+    page: 1,
   })
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -68,7 +68,7 @@ export function Attendance() {
       setHasMore(data.hasMore || false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Attendance request failed.')
     } finally {
       setLoading(false)
     }
@@ -80,17 +80,17 @@ export function Attendance() {
   }, [filters.studentId, filters.courseId, filters.startDate, filters.endDate, filters.pageSize, filters.page])
 
   const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       ...newFilters,
-      page: 1 // Reset to first page when filters change
+      page: 1, // Reset to first page when filters change
     }))
   }
 
   const handleLoadMore = () => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      page: prev.page + 1
+      page: prev.page + 1,
     }))
   }
 
@@ -105,11 +105,16 @@ export function Attendance() {
 
   const getStatusBadge = (status: 'Present' | 'Absent' | 'Late' | 'Excused') => {
     switch (status) {
-      case 'Present': return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Present</span>
-      case 'Absent': return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Absent</span>
-      case 'Late': return <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Late</span>
-      case 'Excused': return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Excused</span>
-      default: return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{status}</span>
+      case 'Present':
+        return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Present</span>
+      case 'Absent':
+        return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Absent</span>
+      case 'Late':
+        return <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Late</span>
+      case 'Excused':
+        return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Excused</span>
+      default:
+        return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{status}</span>
     }
   }
 
@@ -121,12 +126,10 @@ export function Attendance() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">Attendance Records</h1>
-          <p className="text-sm text-muted-foreground">
-            Track student attendance across courses and sessions
-          </p>
+          <p className="text-sm text-muted-foreground">Track student attendance across courses and sessions</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}>
+          <Button variant="outline" onClick={() => setFilters((prev) => ({ ...prev, page: 1 }))}>
             <RefreshCw size={16} className="mr-2" /> Refresh
           </Button>
           {/* Button to mark new attendance would go here, likely linking to student/detail or course views */}
@@ -203,7 +206,10 @@ export function Attendance() {
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                      {record.studentName.split(' ').map(x => x[0]).join('')}
+                      {record.studentName
+                        .split(' ')
+                        .map((x) => x[0])
+                        .join('')}
                     </div>
                     <div>
                       <div className="font-medium">{record.studentName}</div>
@@ -214,7 +220,10 @@ export function Attendance() {
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                      {record.courseName.split(' ').map(x => x[0]).join('')}
+                      {record.courseName
+                        .split(' ')
+                        .map((x) => x[0])
+                        .join('')}
                     </div>
                     <div>
                       <div className="font-medium">{record.courseName}</div>

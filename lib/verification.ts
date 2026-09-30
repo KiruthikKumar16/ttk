@@ -4,44 +4,39 @@ import { paiseToRupees } from '@/lib/money'
 
 // Define the shape of the fetched document rows (we only fetch the needed fields)
 export type CertificateDoc = {
-  student_name: string;
-  course_name: string;
-  issue_date: string; // ISO date string
-};
+  student_name: string
+  course_name: string
+  issue_date: string // ISO date string
+}
 
 export type PaymentDoc = {
-  invoice: string;
-  amountPaise: number;
-  gst_rate: number;
-  payment_date: string; // ISO date string
-};
+  invoice: string
+  amountPaise: number
+  gst_rate: number
+  payment_date: string // ISO date string
+}
 
 // Define the shape of the public verification result for each document type
 export type CertificateVerificationResult = {
-  studentName: string;
-  courseName: string;
-  issueDate: string; // ISO date string
-  status: 'Valid';
-};
+  studentName: string
+  courseName: string
+  issueDate: string // ISO date string
+  status: 'Valid'
+}
 
 export type InvoiceVerificationResult = {
-  invoiceNumber: string;
-  amount: number;
-  gstStatus: string; // e.g., 'GST Applied' or 'GST Exempt'
-  issueDate: string; // ISO date string
-  status: 'Valid';
-};
+  invoiceNumber: string
+  amount: number
+  gstStatus: string // e.g., 'GST Applied' or 'GST Exempt'
+  issueDate: string // ISO date string
+  status: 'Valid'
+}
 
 // Union type for the possible verification results
-export type PublicVerificationResult =
-  | CertificateVerificationResult
-  | InvoiceVerificationResult
-  | { status: 'Invalid' };
+export type PublicVerificationResult = CertificateVerificationResult | InvoiceVerificationResult | { status: 'Invalid' }
 
 // Type for the selector function
-export type VerificationResultSelector<T> = (
-  doc: T
-) => PublicVerificationResult;
+export type VerificationResultSelector<T> = (doc: T) => PublicVerificationResult
 
 // Registry of document types to their selector functions
 export const verificationRegistry = {
@@ -58,11 +53,9 @@ export const verificationRegistry = {
     issueDate: doc.payment_date,
     status: 'Valid',
   }),
-} as const;
+} as const
 
 // Helper function to get the selector for a doc type
-export const getVerificationSelector = (
-  docType: string
-): VerificationResultSelector<any> | undefined => {
-  return verificationRegistry[docType as keyof typeof verificationRegistry];
-};
+export const getVerificationSelector = (docType: string): VerificationResultSelector<any> | undefined => {
+  return verificationRegistry[docType as keyof typeof verificationRegistry]
+}

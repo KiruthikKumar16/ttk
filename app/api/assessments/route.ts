@@ -6,24 +6,38 @@ import { unexpectedApiError } from '@/lib/api-response'
 import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 import { pagePaginationFromSearchParams } from '@/lib/pagination'
+import { validateMutationRequest } from '@/lib/security/csrf'
+import { adminMfaResponse } from '@/lib/security/admin-mfa'
+import { withApi } from '@/lib/http/handler'
+import { rolesFor } from '@/lib/auth/permissions'
 
-export async function GET(req: NextRequest) {
+async function getAssessments(req: NextRequest) {
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .maybeSingle()
+  if (!currentProfile) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
+  if (mfaResponse) return mfaResponse
 
   try {
     const { searchParams } = new URL(req.url)
     const courseId = searchParams.get('courseId')
     const pagination = pagePaginationFromSearchParams(searchParams)
 
-    let query = supabase
-      .from('assessments')
-      .select(`
+    let query = supabase.from('assessments').select(
+      `
         id,
         course_id,
         title,
@@ -33,7 +47,9 @@ export async function GET(req: NextRequest) {
         created_at,
         courses!assessments_course_id_fkey (id, name),
         profiles!assessments_created_by_fkey (id, full_name, role)
-      `, { count: 'exact' })
+      `,
+      { count: 'exact' },
+    )
 
     // Apply filters
     if (courseId) {
@@ -47,7 +63,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     // Format the response for easier consumption
-    const formattedData = (data || []).map(record => {
+    const formattedData = (data || []).map((record) => {
       const course = normalizeJoined(record.courses)
       const profile = normalizeJoined(record.profiles)
       return {
@@ -57,12 +73,14 @@ export async function GET(req: NextRequest) {
         title: record.title,
         maxScore: record.max_score,
         assessmentDate: record.assessment_date,
-        createdBy: profile ? {
-          id: profile.id,
-          fullName: profile.full_name,
-          role: profile.role
-        } : null,
-        createdAt: record.created_at
+        createdBy: profile
+          ? {
+              id: profile.id,
+              fullName: profile.full_name,
+              role: profile.role,
+            }
+          : null,
+        createdAt: record.created_at,
       }
     })
 
@@ -79,10 +97,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function postAssessment(req: NextRequest) {
+  const rejected = validateMutationRequest(req)
+  if (rejected) return rejected
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
@@ -95,8 +118,13 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch assessment creator profile')
+    return unexpectedApiError(
+      profileError ?? new Error('User profile was not found.'),
+      'Unable to fetch assessment creator profile',
+    )
   }
+  const mfaResponse = await adminMfaResponse(supabase, profile.role)
+  if (mfaResponse) return mfaResponse
 
   try {
     const body = await req.json()
@@ -121,10 +149,7 @@ export async function POST(req: NextRequest) {
     // 2. Check if user has permission to create assessments for this course
     // For now, allow staff, admin, and all trainers (as noted in migration)
     // TODO: Update this once course-assignment concept exists
-    const hasPermission =
-      profile.role === 'admin' ||
-      profile.role === 'staff' ||
-      profile.role === 'trainer'
+    const hasPermission = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'trainer'
 
     if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions to create assessment' }, { status: 403 })
@@ -136,7 +161,7 @@ export async function POST(req: NextRequest) {
       title,
       max_score: maxScore,
       assessment_date: assessmentDate,
-      created_by: session.user.id
+      created_by: session.user.id,
     }
 
     const { data: assessmentRecord, error: assessmentError } = await supabase
@@ -158,16 +183,18 @@ export async function POST(req: NextRequest) {
       createdBy: {
         id: assessmentRecord.created_by,
         fullName: profile.full_name,
-        role: profile.role
+        role: profile.role,
       },
-      createdAt: assessmentRecord.created_at
+      createdAt: assessmentRecord.created_at,
     }
 
-    return NextResponse.json({
-      data: formattedRecord,
-      message: 'Assessment created successfully'
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        data: formattedRecord,
+        message: 'Assessment created successfully',
+      },
+      { status: 201 },
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
@@ -175,3 +202,10 @@ export async function POST(req: NextRequest) {
     return unexpectedApiError(error, 'Unable to create assessment')
   }
 }
+
+export const GET = withApi({ roles: rolesFor('assessments', 'read') }, async ({ request }) =>
+  getAssessments(request as NextRequest),
+)
+export const POST = withApi({ roles: rolesFor('assessments', 'create') }, async ({ request }) =>
+  postAssessment(request as NextRequest),
+)

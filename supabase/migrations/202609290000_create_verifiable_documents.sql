@@ -6,7 +6,7 @@
 create table if not exists public.verifiable_documents (
   id uuid primary key default gen_random_uuid(),
   doc_type text not null check (doc_type in ('certificate', 'invoice')),
-  reference_id uuid not null,
+  reference_id text not null,
   verification_code text unique not null,
   status text not null check (status in ('active', 'revoked')) default 'active',
   issued_at timestamptz default now(),

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support and operations guidance
+    url: https://github.com/KiruthikKumar16/ttk/blob/main/.github/SUPPORT.md
+    about: Read the support guide before sharing environment details.

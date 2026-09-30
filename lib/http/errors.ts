@@ -1,11 +1,5 @@
 export type AppErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'RATE_LIMITED'
-  | 'INTERNAL_ERROR'
+  'VALIDATION_ERROR' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND' | 'CONFLICT' | 'RATE_LIMITED' | 'INTERNAL_ERROR'
 
 export class AppError extends Error {
   constructor(
@@ -50,7 +44,10 @@ export class ConflictError extends AppError {
 }
 
 export class RateLimitError extends AppError {
-  constructor(message = 'Too many requests.', readonly retryAfterSeconds?: number) {
+  constructor(
+    message = 'Too many requests.',
+    readonly retryAfterSeconds?: number,
+  ) {
     super(message, 429, 'RATE_LIMITED', retryAfterSeconds === undefined ? undefined : { retryAfterSeconds })
   }
 }

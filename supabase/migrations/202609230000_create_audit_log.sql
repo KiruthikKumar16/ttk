@@ -96,7 +96,12 @@ create policy "Only trigger can insert audit logs"
   to authenticated
   with check (false); -- Prevent direct inserts, only allow via trigger (which runs as definer)
 
--- Policy: No updates or deletes allowed on audit_log
-create policy "No updates or deletes on audit log"
-  on public.audit_log for update or delete
+-- Policies can target one command each. Keep audit rows immutable.
+create policy "No updates on audit log"
+  on public.audit_log for update
+  using (false)
+  with check (false);
+
+create policy "No deletes on audit log"
+  on public.audit_log for delete
   using (false);

@@ -1,7 +1,29 @@
 import { useMemo } from 'react'
-import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, ChevronDown, ChevronUp, CircleDollarSign, FileCheck2, FileText, LayoutDashboard, Menu, Plus, Search, Settings, ShieldCheck, Users, X, CheckCircle2, MoreHorizontal, Printer, Download } from 'lucide-react'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  CircleDollarSign,
+  FileCheck2,
+  FileText,
+  LayoutDashboard,
+  Menu,
+  Plus,
+  Search,
+  Settings,
+  ShieldCheck,
+  Users,
+  X,
+  CheckCircle2,
+  MoreHorizontal,
+  Printer,
+  Download,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Payment, Receipt, Student, View } from '@/lib/types'
+import type { Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { differenceRupees } from '@/lib/money'
 import { Status } from '@/components/Status'
@@ -15,13 +37,13 @@ export function Students({
   totalCount,
   onPageChange,
 }: {
-  students: Student[];
-  onAdd: () => void;
-  onSelect: (s: Student) => void;
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  onPageChange: (newPage: number) => void;
+  students: Student[]
+  onAdd: () => void
+  onSelect: (s: Student) => void
+  page: number
+  pageSize: number
+  totalCount: number
+  onPageChange: (newPage: number) => void
 }) {
   // No client-side filtering/search; we rely on server-side pagination
   const filtered = students // we could keep a filter but removed for simplicity
@@ -59,12 +81,17 @@ export function Students({
               </tr>
             </thead>
             <tbody>
-              {filtered.map(s => (
+              {filtered.map((s) => (
                 <tr key={s.registerId} className="clickable-row" onClick={() => onSelect(s)}>
                   <td className="mono">TAI-{s.registerId}</td>
                   <td>
                     <div className="student-cell">
-                      <div className="mini-avatar">{s.name.split(' ').map(x => x[0]).join('')}</div>
+                      <div className="mini-avatar">
+                        {s.name
+                          .split(' ')
+                          .map((x) => x[0])
+                          .join('')}
+                      </div>
                       <div>
                         <strong>{s.name}</strong>
                         <small>{s.phone}</small>
@@ -76,14 +103,20 @@ export function Students({
                   <td className="align-right">{money(s.total)}</td>
                   <td className="align-right amount">{money(differenceRupees(s.total, s.paid))}</td>
                   <td>{s.studentSource || '-'}</td>
-                  <td><Status status={s.status} /></td>
+                  <td>
+                    <Status status={s.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <div className="table-summary">
-          Showing <strong>{fromIndex}-{toIndex}</strong> of <strong>{totalCount}</strong> students
+          Showing{' '}
+          <strong>
+            {fromIndex}-{toIndex}
+          </strong>{' '}
+          of <strong>{totalCount}</strong> students
         </div>
         {/* Pagination controls */}
         <div className="pagination">
@@ -97,7 +130,9 @@ export function Students({
           >
             <ChevronDown size={16} />
           </Button>
-          <span>Page {page} of {totalPages}</span>
+          <span>
+            Page {page} of {totalPages}
+          </span>
           <Button
             variant="ghost"
             size="icon"

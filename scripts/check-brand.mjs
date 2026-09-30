@@ -4,11 +4,32 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const self = path.resolve(fileURLToPath(import.meta.url))
-const excludedDirectories = new Set(['node_modules', '.next', '.git'])
+const excludedDirectories = new Set([
+  'node_modules',
+  '.next',
+  '.git',
+  '.vercel',
+  'coverage',
+  'test-results',
+  'playwright-report',
+  'blob-report',
+  '.agents',
+  '.claude',
+  'memory',
+])
 const forbiddenBrand = new RegExp(['ely', 'sium'].join(''), 'i')
 const gstinLiteral = /\b\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]\b/
 const applicationSourceExtensions = new Set([
-  '.cjs', '.css', '.html', '.js', '.json', '.jsx', '.mjs', '.py', '.ts', '.tsx',
+  '.cjs',
+  '.css',
+  '.html',
+  '.js',
+  '.json',
+  '.jsx',
+  '.mjs',
+  '.py',
+  '.ts',
+  '.tsx',
 ])
 const failures = []
 

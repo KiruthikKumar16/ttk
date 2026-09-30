@@ -4,6 +4,7 @@ import { rolesFor } from '@/lib/auth/permissions'
 import { courseSchema } from '@/lib/validation'
 import { paginationMeta, paginationQuerySchema, pagePagination } from '@/lib/pagination'
 import { paiseToRupees, rupeesToPaise } from '@/lib/money'
+import { revalidateTag } from 'next/cache'
 
 const createCourseSchema = courseSchema.extend({ id: z.string().optional() })
 const deleteCourseQuerySchema = z.object({ id: z.string().min(1) })
@@ -53,16 +54,18 @@ export const POST = withApi(
       .single()
     if (error) throw error
     if (!data) throw new Error('No course row was returned after insert.')
+    revalidateTag('course-options', { expire: 0 })
 
     return { ...data, fee: paiseToRupees(Number(data.fee)), gstInclusive: Boolean(data.gst_inclusive) }
   },
 )
 
 export const DELETE = withApi(
-  { roles: rolesFor('courses', 'delete'), query: deleteCourseQuerySchema },
+  { roles: rolesFor('courses', 'delete'), query: deleteCourseQuerySchema, requireAal2: true },
   async ({ query, supabase }) => {
     const { error } = await supabase!.from('courses').delete().eq('id', query.id)
     if (error) throw error
+    revalidateTag('course-options', { expire: 0 })
     return { success: true, message: 'Course deleted' }
   },
 )

@@ -15,7 +15,7 @@ const adminDataRestriction = {
     ...mockDataRestriction.patterns,
     {
       group: ['**/supabase/admin'],
-      message: 'Service role access is limited to verification, storage signing, and error logging.',
+      message: 'Service role access is limited to readiness checks and authorized storage operations.',
     },
   ],
 }
@@ -29,6 +29,14 @@ export default [
     languageOptions: { parser: tsParser },
     rules: {
       'no-restricted-imports': ['error', mockDataRestriction],
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'MemberExpression[property.name="only"]', message: 'Focused tests must not be committed.' },
+        {
+          selector: 'MemberExpression[property.name="skip"]',
+          message: 'Skipped tests require an active issue and cannot be committed in this suite.',
+        },
+      ],
     },
   },
   {
@@ -36,7 +44,8 @@ export default [
     ignores: [
       'app/api/verify/**/route.ts',
       'app/api/course-materials/route.ts',
-      'lib/errorReporting.ts',
+      'app/api/invoices/**/download/route.ts',
+      'app/api/ready/route.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', adminDataRestriction],

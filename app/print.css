@@ -1,36 +1,105 @@
 @media print {
-  @page { size: A4 portrait; margin: 0; }
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   .app-shell .sidebar,
   .app-shell .topbar,
   .preview-layout .preview-sidebar,
   .sidebar-mobile,
   .modal-backdrop,
-  .toast { display: none !important; }
+  .toast {
+    display: none !important;
+  }
 
-  .app-shell { display: block !important; height: auto !important; }
-  .main-area { display: block !important; height: auto !important; }
-  .content { display: block !important; overflow: visible !important; padding: 0 !important; height: auto !important; }
-  .preview-layout { display: block !important; height: auto !important; }
-  .preview-document-container { display: block !important; overflow: visible !important; background: none !important; border: 0 !important; padding: 0 !important; }
-  .preview-scaler-wrapper { width: auto !important; height: auto !important; display: block !important; transform: none !important; }
-  .preview-scaler-content { transform: none !important; position: static !important; width: auto !important; height: auto !important; }
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+  }
+  .main-area {
+    display: block !important;
+    height: auto !important;
+  }
+  .content {
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    height: auto !important;
+  }
+  .preview-layout {
+    display: block !important;
+    height: auto !important;
+  }
+  .preview-document-container {
+    display: block !important;
+    overflow: visible !important;
+    background: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+  .preview-scaler-wrapper {
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+    transform: none !important;
+  }
+  .preview-scaler-content {
+    transform: none !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+  }
 
   .preview-page .ttk-certificate {
-    width: 210mm !important; min-height: 297mm !important; height: 297mm !important;
-    box-shadow: none !important; margin: 0 auto !important; page-break-after: always;
-    background: #fffdf8 !important; color: #0e1c3d !important; padding: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    page-break-after: always;
+    background: #fffdf8 !important;
+    color: #0e1c3d !important;
+    padding: 0 !important;
   }
-  .preview-page .ttk-certificate .corner-tri { width: 150px !important; height: 150px !important; }
-  .preview-page .ttk-certificate .corner-gold { width: 150px !important; height: 150px !important; }
-  .preview-page .ttk-certificate .frame-border { inset: 26px !important; }
-  .preview-page .ttk-certificate .frame-gold { inset: 34px !important; }
-  .preview-page .ttk-certificate .cert-inner { inset: 56px !important; }
-  .preview-page .ttk-certificate .cert-logo { width: 164px !important; }
-  .preview-page .ttk-certificate .cert-title { font-size: 33px !important; }
-  .preview-page .ttk-certificate .cert-name { font-size: 44px !important; }
-  .preview-page .ttk-certificate .seal { width: 78px !important; height: 78px !important; }
+  .preview-page .ttk-certificate .corner-tri {
+    width: 150px !important;
+    height: 150px !important;
+  }
+  .preview-page .ttk-certificate .corner-gold {
+    width: 150px !important;
+    height: 150px !important;
+  }
+  .preview-page .ttk-certificate .frame-border {
+    inset: 26px !important;
+  }
+  .preview-page .ttk-certificate .frame-gold {
+    inset: 34px !important;
+  }
+  .preview-page .ttk-certificate .cert-inner {
+    inset: 56px !important;
+  }
+  .preview-page .ttk-certificate .cert-logo {
+    width: 164px !important;
+  }
+  .preview-page .ttk-certificate .cert-title {
+    font-size: 33px !important;
+  }
+  .preview-page .ttk-certificate .cert-name {
+    font-size: 44px !important;
+  }
+  .preview-page .ttk-certificate .seal {
+    width: 78px !important;
+    height: 78px !important;
+  }
   .preview-page .ttk-certificate .verification-section {
     margin: 20px 0 10px 0;
     text-align: center;
@@ -57,13 +126,22 @@
     word-break: break-all;
   }
 
-  .ttk-invoice-paper { width: 210mm !important; box-shadow: none !important; margin: 0 auto !important; }
-  .ttk-invoice-copy {
-    min-height: 142mm !important; page-break-inside: avoid !important;
-    padding: 12mm 14mm 10mm !important; border-bottom: 2px dashed #b9bec8 !important;
-    font-family: Arial,Helvetica,sans-serif !important; color: #151515 !important;
+  .ttk-invoice-paper {
+    width: 210mm !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
   }
-  .ttk-invoice-copy:last-child { border-bottom: 0 !important; }
+  .ttk-invoice-copy {
+    min-height: 142mm !important;
+    page-break-inside: avoid !important;
+    padding: 12mm 14mm 10mm !important;
+    border-bottom: 2px dashed #b9bec8 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    color: #151515 !important;
+  }
+  .ttk-invoice-copy:last-child {
+    border-bottom: 0 !important;
+  }
 
   /* Invoice verification styles */
   .ttk-invoice-top .invoice-verification-section {
@@ -92,17 +170,50 @@
     word-break: break-all;
   }
 }
-@media(max-width:800px){
-  .preview-page .ttk-certificate{width:100%!important;min-height:auto!important;padding:6mm!important;height:auto!important}
-  .preview-page .ttk-certificate .cert-inner{inset:9mm 7mm!important}
-  .preview-page .ttk-certificate .cert-title{font-size:26px!important}
-  .preview-page .ttk-certificate .cert-name{font-size:35px!important}
-  .preview-page .ttk-certificate .sig-row{grid-template-columns:1fr 1fr!important;gap:18px!important}
-  .preview-page .ttk-certificate .seal{order:5!important;justify-self:center!important}
-  .ttk-invoice-paper{width:100%!important}
-  .ttk-invoice-copy{padding:24px!important;min-height:auto!important}
-  .ttk-invoice-meta{display:grid;grid-template-columns:1fr 1fr}
-  .ttk-invoice-grid{grid-template-columns:1fr}
-  .ttk-payment-aside{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-  .ttk-payment-aside strong{margin-bottom:0}
+@media (max-width: 800px) {
+  .preview-page .ttk-certificate {
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 6mm !important;
+    height: auto !important;
+  }
+  .preview-page .ttk-certificate .cert-inner {
+    inset: 9mm 7mm !important;
+  }
+  .preview-page .ttk-certificate .cert-title {
+    font-size: 26px !important;
+  }
+  .preview-page .ttk-certificate .cert-name {
+    font-size: 35px !important;
+  }
+  .preview-page .ttk-certificate .sig-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 18px !important;
+  }
+  .preview-page .ttk-certificate .seal {
+    order: 5 !important;
+    justify-self: center !important;
+  }
+  .ttk-invoice-paper {
+    width: 100% !important;
+  }
+  .ttk-invoice-copy {
+    padding: 24px !important;
+    min-height: auto !important;
+  }
+  .ttk-invoice-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .ttk-invoice-grid {
+    grid-template-columns: 1fr;
+  }
+  .ttk-payment-aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .ttk-payment-aside strong {
+    margin-bottom: 0;
+  }
 }

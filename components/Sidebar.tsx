@@ -1,68 +1,134 @@
-import { BarChart3, BookOpen, ChevronDown, FileCheck2, FileText, LayoutDashboard, Menu, Settings, Users, List } from 'lucide-react'
-import type { Role, Student, View } from '@/lib/types'
-import React from 'react'
+'use client'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import {
+  BarChart3,
+  BookOpen,
+  FileCheck2,
+  FileText,
+  LayoutDashboard,
+  List,
+  Settings,
+  Users,
+  CalendarDays,
+  ClipboardCheck,
+  CreditCard,
+  FolderOpen,
+  Building2,
+} from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { can, type Resource } from '@/lib/auth/permissions'
+import type { Role } from '@/lib/types'
 
-export function Sidebar({ view, setView, collapsed, students, role }: { view: View; setView: (v: View) => void; collapsed?: boolean; students?: Student[]; role: Role }) {
-  const nav: [View, typeof LayoutDashboard, string, Resource][] = [
-    ['Dashboard', LayoutDashboard, 'Dashboard', 'reports'],
-    ['Students', Users, 'Students', 'students'],
-    ['Courses', BookOpen, 'Courses', 'courses'],
-    ['Certificates', FileCheck2, 'Certificates', 'certificates'],
-    ['Invoices', FileText, 'Invoices', 'payments'],
-    ['Reports', BarChart3, 'Reports', 'reports'],
-    ['Audit Log', List, 'Audit Log', 'audit'],
-    ['Assessments', List, 'Assessments', 'assessments'],
-  ];
+const nav: { label: string; href: string; Icon: typeof LayoutDashboard; resource: Resource }[] = [
+  { label: 'Dashboard', href: '/', Icon: LayoutDashboard, resource: 'reports' },
+  { label: 'Students', href: '/students', Icon: Users, resource: 'students' },
+  { label: 'Payments', href: '/payments', Icon: CreditCard, resource: 'payments' },
+  { label: 'Invoices', href: '/invoices', Icon: FileText, resource: 'payments' },
+  { label: 'Courses', href: '/courses', Icon: BookOpen, resource: 'courses' },
+  { label: 'Course materials', href: '/materials', Icon: FolderOpen, resource: 'materials' },
+  { label: 'Certificates', href: '/certificates', Icon: FileCheck2, resource: 'certificates' },
+  { label: 'Attendance', href: '/attendance', Icon: CalendarDays, resource: 'attendance' },
+  { label: 'Assessments', href: '/assessments', Icon: ClipboardCheck, resource: 'assessments' },
+  { label: 'Reports', href: '/reports', Icon: BarChart3, resource: 'reports' },
+  { label: 'Audit Log', href: '/audit-log', Icon: List, resource: 'audit' },
+]
+
+export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: boolean }) {
+  const pathname = usePathname()
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
-      <div className="brand">
+      <Link href="/" className="brand" aria-label={`${brand.displayName} dashboard`}>
         <div className="brand-mark">
-          <img src={brand.logoPath} alt={brand.shortName} className="brand-mark-img" />
+          <Image src={brand.logoPath} alt="" width={72} height={72} sizes="72px" className="brand-mark-img" />
         </div>
         {!collapsed && (
           <div>
             <div className="brand-name">{brand.shortName.toUpperCase()}</div>
-            <div className="brand-sub">{brand.displayName.replace(`${brand.shortName} `, '').toUpperCase()}</div>
+            <div className="brand-sub">INFOTECH LLP</div>
           </div>
         )}
-      </div>
-      <nav>
-        {nav.filter(([, , , resource]) => can(role, resource, 'read')).map(([label, Icon]) => (
-          <button key={label} className={`nav-item ${view === label ? 'active' : ''}`} onClick={() => setView(label)} title={label}>
-            <Icon size={18} className="mr-2" />
-            {!collapsed && <span className="flex-1 text-left">{label}</span>}
-            {!collapsed && label === 'Students' && students && (
-              <span className="ml-auto flex-shrink-0">{students.length}</span>
-            )}
-          </button>
-        ))}
+      </Link>
+      <nav aria-label="Main navigation">
+        {nav
+          .filter((item) => can(role, item.resource, 'read'))
+          .map(({ label, href, Icon }) => {
+            const active =
+              href === '/'
+                ? pathname === '/'
+                : pathname === href ||
+                  pathname.startsWith(`${href}/`) ||
+                  (href === '/materials' && pathname.endsWith('/materials'))
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                className={`nav-item${active ? ' active' : ''}`}
+                title={label}
+              >
+                <Icon size={18} className="mr-2" />
+                {!collapsed && <span className="flex-1 text-left">{label}</span>}
+              </Link>
+            )
+          })}
       </nav>
       <div className="sidebar-bottom">
+        {!collapsed && <p className="eyebrow px-3">SETTINGS</p>}
         {can(role, 'gst', 'read') && (
-          <button
-            className={`nav-item${view === 'Settings' ? ' active' : ''}`}
-            onClick={() => setView('Settings')}
-            title="Settings"
+          <Link
+            href="/settings/gst"
+            aria-current={pathname.startsWith('/settings/gst') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/gst') ? ' active' : ''}`}
+            title="GST Settings"
           >
             <Settings size={18} className="mr-2" />
-            {!collapsed && <span className="flex-1 text-left">Settings</span>}
-          </button>
+            {!collapsed && <span className="flex-1 text-left">GST Settings</span>}
+          </Link>
         )}
+        {can(role, 'users', 'manage') && (
+          <Link
+            href="/settings/users"
+            aria-current={pathname.startsWith('/settings/users') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/users') ? ' active' : ''}`}
+            title="Users and roles"
+          >
+            <Users size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Users and roles</span>}
+          </Link>
+        )}
+        {can(role, 'courses', 'manage') && (
+          <Link
+            href="/settings/trainers"
+            aria-current={pathname.startsWith('/settings/trainers') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/trainers') ? ' active' : ''}`}
+            title="Trainer assignments"
+          >
+            <Users size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Trainer assignments</span>}
+          </Link>
+        )}
+        <Link
+          href="/settings/brand"
+          aria-current={pathname.startsWith('/settings/brand') ? 'page' : undefined}
+          className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
+          title="Brand information"
+        >
+          <Building2 size={18} className="mr-2" />
+          {!collapsed && <span className="flex-1 text-left">Brand information</span>}
+        </Link>
         <div className="account">
-          <div className="avatar">AK</div>
+          <div className="avatar">{role.slice(0, 1).toUpperCase()}</div>
           {!collapsed && (
-            <>
-              <div>
-                <strong>{role[0].toUpperCase() + role.slice(1)} account</strong>
-                <small>{brand.displayName}</small>
-              </div>
-              <ChevronDown size={15} />
-            </>
+            <div>
+              <strong>{role[0].toUpperCase() + role.slice(1)} account</strong>
+              <small>{brand.displayName}</small>
+            </div>
           )}
         </div>
       </div>
     </aside>
-  );
+  )
 }

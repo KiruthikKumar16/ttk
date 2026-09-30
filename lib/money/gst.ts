@@ -50,11 +50,7 @@ export function splitGstPaise(gstPaise: number): { cgstPaise: Paise; sgstPaise: 
   return { cgstPaise, sgstPaise }
 }
 
-export function calculateGstFromParts(
-  totalPaise: number,
-  cgstPaise: number,
-  sgstPaise: number,
-): GstBreakdown {
+export function calculateGstFromParts(totalPaise: number, cgstPaise: number, sgstPaise: number): GstBreakdown {
   assertPaise(totalPaise)
   assertPaise(cgstPaise)
   assertPaise(sgstPaise)

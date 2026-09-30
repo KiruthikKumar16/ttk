@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -10,35 +11,51 @@ import { TableBody } from '@/components/ui/table-body'
 import { TableRow } from '@/components/ui/table-row'
 import { TableCell } from '@/components/ui/table-cell'
 import { TableHead } from '@/components/ui/table-head'
-import { ChevronDown, ChevronUp, Calendar, Filter, Search, User, List, Edit, Trash2, Plus, Check, X, Paperclip, FileText } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Filter,
+  Search,
+  User,
+  List,
+  Edit,
+  Trash2,
+  Plus,
+  Check,
+  X,
+  Paperclip,
+  FileText,
+} from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import type { CourseMaterial } from '@/modules/materials/types'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useRouter } from 'next/navigation'
 
-type CourseMaterial = {
-  id: string
+export function CourseMaterials({
+  courseId,
+  initialMaterials = [],
+  serverLoaded = false,
+  canUpload = true,
+}: {
   courseId: string
-  courseName: string
-  title: string
-  type: string
-  storagePath: string
-  uploadedBy: {
-    id: string
-    fullName: string
-    role: string
-  } | null
-  createdAt: string
-  signedUrl: string | null
-}
-
-export function CourseMaterials({ courseId }: { courseId: string }) {
-  const [materials, setMaterials] = useState<CourseMaterial[]>([])
-  const [loading, setLoading] = useState(true)
+  initialMaterials?: CourseMaterial[]
+  serverLoaded?: boolean
+  canUpload?: boolean
+}) {
+  const router = useRouter()
+  const [materials, setMaterials] = useState<CourseMaterial[]>(initialMaterials)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newMaterial, setNewMaterial] = useState({
     title: '',
     type: '',
-    file: null as File | null
+    file: null as File | null,
   })
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
 
   // Fetch course materials for the given course
   const fetchMaterials = async () => {
@@ -54,7 +71,7 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
       setMaterials(data.data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Course material request failed.')
     } finally {
       setLoading(false)
     }
@@ -62,19 +79,31 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
 
   // Initial fetch
   useEffect(() => {
-    fetchMaterials()
-  }, [courseId])
+    if (!serverLoaded) fetchMaterials()
+  }, [courseId, serverLoaded])
 
   const handleNewMaterialChange = (field: keyof typeof newMaterial, value: any) => {
-    setNewMaterial(prev => ({
+    setNewMaterial((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      handleNewMaterialChange('file', e.target.files[0])
+      const file = e.target.files[0]
+      if (file.size > 20 * 1024 * 1024) {
+        setError('File must be 20 MB or smaller.')
+        e.target.value = ''
+        return
+      }
+      if (!['application/pdf', 'image/png', 'image/jpeg'].includes(file.type)) {
+        setError('Choose a PDF, PNG, or JPEG file.')
+        e.target.value = ''
+        return
+      }
+      setError(null)
+      setNewMaterial((current) => ({ ...current, file, type: file.type === 'application/pdf' ? 'pdf' : 'image' }))
     }
   }
 
@@ -94,47 +123,54 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
       formData.append('title', newMaterial.title)
       formData.append('type', newMaterial.type)
 
-      const response = await fetch('/api/course-materials', {
-        method: 'POST',
-        body: formData
+      await new Promise<void>((resolve, reject) => {
+        const request = new XMLHttpRequest()
+        request.open('POST', '/api/course-materials')
+        request.upload.onprogress = (event) => {
+          if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100))
+        }
+        request.onerror = () => reject(new Error('Upload failed. Check your connection and retry.'))
+        request.onload = () => {
+          if (request.status >= 200 && request.status < 300) resolve()
+          else reject(new Error('Upload failed. Check the file and your access, then retry.'))
+        }
+        request.send(formData)
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to upload course material')
-      }
 
       // Clear the form and refresh the list
       setNewMaterial({
         title: '',
         type: '',
-        file: null
+        file: null,
       })
-      await fetchMaterials()
+      setUploadProgress(0)
+      if (serverLoaded) router.refresh()
+      else await fetchMaterials()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Course material request failed.')
     } finally {
       setUploading(false)
     }
   }
 
-  const handleDeleteMaterial = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this course material? This action cannot be undone.')) {
-      return
-    }
-
+  const handleDeleteMaterial = async () => {
+    if (!deleteId) return
+    const id = deleteId
     setLoading(true)
     setError(null)
     try {
-      // Note: We don't have a DELETE endpoint for course materials yet.
-      // We would need to create one. For now, we'll just show a message.
-      // In a real implementation, we would call a DELETE endpoint.
-      setError('Delete functionality not yet implemented.')
-      setLoading(false)
+      const response = await fetch(`/api/course-materials?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!response.ok) throw new Error('Could not delete this material. Please retry.')
+      setMaterials((current) => current.filter((material) => material.id !== id))
+      setDeleteId(null)
+      setMessage('Course material deleted.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Course material request failed.')
       setLoading(false)
     }
   }
@@ -156,87 +192,80 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">Course Materials</h1>
-          <p className="text-sm text-muted-foreground">
-            Upload and manage learning resources for this course
-          </p>
+          <p className="text-sm text-muted-foreground">Upload and manage learning resources for this course</p>
         </div>
-        <Button variant="outline" onClick={() => {
-          // This would ideally go back to the course list, but we don't have a callback.
-          // We'll just reset the state or rely on the parent to handle navigation.
-          // For now, we'll just show an alert.
-          alert('Use the course list to navigate back.')
-        }}>
+        <Link href="/courses" className="btn-secondary">
           <ArrowLeft size={16} className="mr-2" />
           Back to Courses
-        </Button>
+        </Link>
       </div>
 
       {/* Upload Form */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 className="text-xl font-bold mb-4">Upload New Material</h2>
-        <form onSubmit={handleUpload} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Title</label>
-              <Input
-                value={newMaterial.title}
-                onChange={(e) => handleNewMaterialChange('title', e.target.value)}
-                placeholder="Enter material title"
+      {canUpload && (
+        <div className="bg-white p-6 rounded-lg shadow mb-6">
+          <h2 className="text-xl font-bold mb-4">Upload New Material</h2>
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Title</label>
+                <Input
+                  value={newMaterial.title}
+                  onChange={(e) => handleNewMaterialChange('title', e.target.value)}
+                  placeholder="Enter material title"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Type</label>
+                <Select
+                  value={newMaterial.type}
+                  onValueChange={(value) => handleNewMaterialChange('type', value as string)}
+                  placeholder="Select material type"
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF document</SelectItem>
+                    <SelectItem value="image">PNG or JPEG image</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium mb-2 block">File</label>
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                onChange={handleFileChange}
                 required
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
               />
+              {newMaterial.file && <p className="mt-2 text-sm text-gray-600">Selected: {newMaterial.file.name}</p>}
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Type</label>
-              <Select
-                value={newMaterial.type}
-                onValueChange={(value) => handleNewMaterialChange('type', value as string)}
-                placeholder="Select material type"
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pdf">PDF Document</SelectItem>
-                  <SelectItem value="video">Video</SelectItem>
-                  <SelectItem value="presentation">Presentation (PPT/PPTX)</SelectItem>
-                  <SelectItem value="document">Document (DOC/DOCX)</SelectItem>
-                  <SelectItem value="spreadsheet">Spreadsheet (XLS/XLSX)</SelectItem>
-                  <SelectItem value="zip">Archive (ZIP)</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium mb-2 block">File</label>
-            <input
-              type="file"
-              onChange={handleFileChange}
-              required
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-            />
-            {newMaterial.file && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: {newMaterial.file.name}
-              </p>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {uploading && (
+              <div aria-live="polite">
+                <label htmlFor="material-upload-progress" className="text-sm">
+                  Upload progress: {uploadProgress}%
+                </label>
+                <progress id="material-upload-progress" value={uploadProgress} max={100} className="block w-full" />
+              </div>
             )}
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button variant="default" type="submit" disabled={uploading}>
-            {uploading ? 'Uploading...' : 'Upload Material'}
-            <Plus size={16} className="mr-2" />
-          </Button>
-        </form>
-      </div>
+            <Button variant="default" type="submit" disabled={uploading}>
+              {uploading ? 'Uploading...' : 'Upload Material'}
+              <Plus size={16} className="mr-2" />
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* Materials List */}
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-bold mb-4">Materials List</h2>
         {materials.length === 0 ? (
-          <p className="text-center py-8 text-gray-500">
-            No course materials have been uploaded yet.
-          </p>
+          <p className="text-center py-8 text-gray-500">No course materials have been uploaded yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -255,7 +284,10 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                          {material.title.split(' ').map(x => x[0]).join('')}
+                          {material.title
+                            .split(' ')
+                            .map((x) => x[0])
+                            .join('')}
                         </div>
                         <div>
                           <div className="font-medium">{material.title}</div>
@@ -278,15 +310,35 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
                     <TableCell className="text-sm space-x-2">
                       {material.signedUrl ? (
                         <>
-                          <Button variant="ghost" size="icon" title="View">
+                          <a
+                            href={material.signedUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`View ${material.title}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-muted"
+                          >
                             <Eye size={14} />
-                          </Button>
-                          <Button variant="ghost" size="icon" title="Download">
+                          </a>
+                          <a
+                            href={material.signedUrl}
+                            download
+                            aria-label={`Download ${material.title}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-muted"
+                          >
                             <Download size={14} />
-                          </Button>
-                          <Button variant="ghost" size="icon" title="Delete" className="ml-2">
-                            <Trash2 size={14} />
-                          </Button>
+                          </a>
+                          {canUpload && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Delete"
+                              aria-label={`Delete ${material.title}`}
+                              className="ml-2"
+                              onClick={() => setDeleteId(material.id)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          )}
                         </>
                       ) : (
                         <span className="text-muted-italic">No URL available</span>
@@ -299,6 +351,18 @@ export function CourseMaterials({ courseId }: { courseId: string }) {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        isOpen={deleteId !== null}
+        title="Delete course material?"
+        description="This removes the file and its course listing."
+        confirmText="Delete material"
+        destructive
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => void handleDeleteMaterial()}
+      />
+      <p role="status" aria-live="polite" className="sr-only">
+        {message}
+      </p>
     </div>
   )
 }

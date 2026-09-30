@@ -1,5 +1,21 @@
-export { assertPaise, bigintToPaise, differenceRupees, paiseToRupees, percentageOfRupees, roundRatio, rupeesToPaise, sumPaise, sumRupees } from './core'
-export { allocatePaise, calculateGstExclusive, calculateGstFromParts, calculateGstInclusive, splitGstPaise } from './gst'
+export {
+  assertPaise,
+  bigintToPaise,
+  differenceRupees,
+  paiseToRupees,
+  percentageOfRupees,
+  roundRatio,
+  rupeesToPaise,
+  sumPaise,
+  sumRupees,
+} from './core'
+export {
+  allocatePaise,
+  calculateGstExclusive,
+  calculateGstFromParts,
+  calculateGstInclusive,
+  splitGstPaise,
+} from './gst'
 export type { GstBreakdown } from './gst'
 export { amountInWords, formatINR, numberToIndianWords } from './format'
 export { calculateGstForRupees } from './rupee-boundary'

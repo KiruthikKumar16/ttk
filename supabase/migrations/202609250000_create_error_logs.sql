@@ -34,7 +34,12 @@ create policy "Admins can view error logs"
     )
   );
 
--- No updates or deletes allowed on error_logs (immutable log)
-create policy "No updates or deletes on error log"
-  on public.error_logs for update or delete
+-- Policies can target one command each. Keep error logs immutable.
+create policy "No updates on error log"
+  on public.error_logs for update
+  using (false)
+  with check (false);
+
+create policy "No deletes on error log"
+  on public.error_logs for delete
   using (false);

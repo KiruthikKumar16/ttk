@@ -1,0 +1,11 @@
+enhancement:
+  - changed-files:
+      - any-glob-to-any-file: ['app/**', 'components/**', 'modules/**']
+      - any-glob-to-any-file: ['supabase/**', 'tests/**', '**/*.test.*', '**/*.spec.*']
+      - any-glob-to-any-file: ['.github/**', 'package.json', 'pnpm-lock.yaml']
+bug:
+  - changed-files:
+      - any-glob-to-any-file: ['lib/**', 'scripts/**']
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['docs/**', '**/*.md']

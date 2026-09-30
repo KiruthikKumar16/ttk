@@ -4,7 +4,6 @@ import type { Course, Payment, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { amountInWords, calculateGstExclusive, calculateGstInclusive, paiseToRupees, rupeesToPaise } from '@/lib/money'
 import { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { brand } from '@/lib/brand'
 
 const INVOICE_W = 794
@@ -159,6 +158,7 @@ export function InvoicePrint({
         // Since the InvoicePrint component receives a payment prop, we should check if it has verification_code
         if (payment.verification_code) {
           const verificationUrl = `${brand.verifyBaseUrl}/verify/${payment.verification_code}`
+          const QRCode = (await import('qrcode')).default
           const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
             width: 120,
             margin: 1,
@@ -168,7 +168,7 @@ export function InvoicePrint({
           setQrCode(null)
         }
       } catch (err) {
-        console.error('Failed to generate QR code:', err)
+        console.error('Invoice QR generation failed.')
         setQrCode(null)
       }
     }
@@ -401,7 +401,6 @@ export function InvoicePrint({
                 </label>
               </div>
             </div>
-
           </div>
 
           <div className="edit-sidebar-actions">

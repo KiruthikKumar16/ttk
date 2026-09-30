@@ -3,8 +3,7 @@ import { FileCheck2, History, Printer, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CertificateRecord, Student } from '@/lib/types'
 import { Status } from '@/components/Status'
-import { CertificatePrint } from '@/components/CertificatePrint'
-
+import { CertificatePrintDynamic as CertificatePrint } from '@/modules/certificates/components/CertificatePrintDynamic'
 
 export function Certificates({
   students,
@@ -25,17 +24,12 @@ export function Certificates({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return students.filter(s => {
+    return students.filter((s) => {
       const eligible = s.status === 'Fully Paid'
       const matchText =
-        !q ||
-        s.name.toLowerCase().includes(q) ||
-        String(s.registerId).includes(q) ||
-        s.course.toLowerCase().includes(q)
+        !q || s.name.toLowerCase().includes(q) || String(s.registerId).includes(q) || s.course.toLowerCase().includes(q)
       const matchFilter =
-        filter === 'All students' ||
-        (filter === 'Eligible' && eligible) ||
-        (filter === 'Pending fees' && !eligible)
+        filter === 'All students' || (filter === 'Eligible' && eligible) || (filter === 'Pending fees' && !eligible)
       return matchText && matchFilter
     })
   }, [students, query, filter])
@@ -44,7 +38,7 @@ export function Certificates({
     const q = query.trim().toLowerCase()
     const issued = certificates ?? []
     if (!q) return issued
-    return issued.filter(c => {
+    return issued.filter((c) => {
       return (
         c.studentName.toLowerCase().includes(q) ||
         c.certificateId.toLowerCase().includes(q) ||
@@ -54,7 +48,7 @@ export function Certificates({
     })
   }, [certificates, query])
 
-  const eligibleCount = students.filter(s => s.status === 'Fully Paid').length
+  const eligibleCount = students.filter((s) => s.status === 'Fully Paid').length
   const issuedCount = (certificates ?? []).length
 
   return (
@@ -63,7 +57,9 @@ export function Certificates({
         <div>
           <p className="eyebrow">COMPLETION RECORDS</p>
           <h1>Certificates</h1>
-          <p className="subcopy">Generate the official ThoorigAI completion certificate for students with cleared fees.</p>
+          <p className="subcopy">
+            Generate the official ThoorigAI completion certificate for students with cleared fees.
+          </p>
         </div>
       </div>
 
@@ -84,10 +80,7 @@ export function Certificates({
             >
               <FileCheck2 size={14} className="mr-2" /> Eligibility ({eligibleCount})
             </button>
-            <button
-              className={'tab-inline ' + (tab === 'issued' ? 'active' : '')}
-              onClick={() => setTab('issued')}
-            >
+            <button className={'tab-inline ' + (tab === 'issued' ? 'active' : '')} onClick={() => setTab('issued')}>
               <History size={14} className="mr-2" /> Issued ({issuedCount})
             </button>
           </div>
@@ -98,7 +91,7 @@ export function Certificates({
             <Search size={16} />
             <input
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder={
                 tab === 'eligibility'
                   ? 'Search by name, register ID or course'
@@ -107,7 +100,7 @@ export function Certificates({
             />
           </div>
           {tab === 'eligibility' && (
-            <select value={filter} onChange={e => setFilter(e.target.value)}>
+            <select value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option>Eligible</option>
               <option>Pending fees</option>
               <option>All students</option>
@@ -136,10 +129,10 @@ export function Certificates({
                     </td>
                   </tr>
                 ) : (
-                  filtered.map(s => {
+                  filtered.map((s) => {
                     const eligible = s.status === 'Fully Paid'
                     const issuedCountForStudent = (certificates ?? []).filter(
-                      c => c.studentRegisterId === s.registerId
+                      (c) => c.studentRegisterId === s.registerId,
                     ).length
                     return (
                       <tr
@@ -150,7 +143,12 @@ export function Certificates({
                         <td className="mono">TAI-{s.registerId}</td>
                         <td>
                           <div className="student-cell">
-                            <div className="mini-avatar">{s.name.split(' ').map(x => x[0]).join('')}</div>
+                            <div className="mini-avatar">
+                              {s.name
+                                .split(' ')
+                                .map((x) => x[0])
+                                .join('')}
+                            </div>
                             <div>
                               <strong>{s.name}</strong>
                               <small>{s.phone}</small>
@@ -180,7 +178,7 @@ export function Certificates({
                             size="sm"
                             className="btn-compact"
                             disabled={!eligible}
-                            onClick={e => {
+                            onClick={(e) => {
                               e.stopPropagation()
                               if (eligible) {
                                 setPreviewStudent(s)
@@ -221,14 +219,19 @@ export function Certificates({
                     </td>
                   </tr>
                 ) : (
-                  filteredIssued.map(c => (
+                  filteredIssued.map((c) => (
                     <tr key={c.id ?? c.certificateId}>
                       <td className="mono" style={{ fontWeight: 600, color: 'var(--ink)' }}>
                         {c.certificateId}
                       </td>
                       <td>
                         <div className="student-cell">
-                          <div className="mini-avatar">{c.studentName.split(' ').map(x => x[0]).join('')}</div>
+                          <div className="mini-avatar">
+                            {c.studentName
+                              .split(' ')
+                              .map((x) => x[0])
+                              .join('')}
+                          </div>
                           <div>
                             <strong>{c.studentName}</strong>
                             <small style={{ fontFamily: 'var(--font-mono)', opacity: 0.75 }}>
@@ -252,7 +255,7 @@ export function Certificates({
                       <td>
                         {c.skills && c.skills.length > 0 ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {c.skills.slice(0, 3).map(sk => (
+                            {c.skills.slice(0, 3).map((sk) => (
                               <span
                                 key={sk}
                                 style={{
@@ -267,9 +270,7 @@ export function Certificates({
                               </span>
                             ))}
                             {c.skills.length > 3 && (
-                              <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                                +{c.skills.length - 3} more
-                              </span>
+                              <span style={{ fontSize: 11, color: 'var(--muted)' }}>+{c.skills.length - 3} more</span>
                             )}
                           </div>
                         ) : (
@@ -298,11 +299,13 @@ export function Certificates({
         <div className="table-summary">
           {tab === 'eligibility' ? (
             <>
-              Showing <strong>{filtered.length}</strong> students &middot; <strong>{eligibleCount}</strong> ready for certificate
+              Showing <strong>{filtered.length}</strong> students &middot; <strong>{eligibleCount}</strong> ready for
+              certificate
             </>
           ) : (
             <>
-              Showing <strong>{filteredIssued.length}</strong> of <strong>{issuedCount}</strong> issued certificate records
+              Showing <strong>{filteredIssued.length}</strong> of <strong>{issuedCount}</strong> issued certificate
+              records
             </>
           )}
         </div>
@@ -337,8 +340,17 @@ export function Certificates({
               }}
               className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white/100 transition-all"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black/80 hover:text-black" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-black/80 hover:text-black"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
             {/* Action Buttons */}

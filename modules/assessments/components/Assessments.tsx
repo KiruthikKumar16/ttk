@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -10,10 +11,24 @@ import { TableBody } from '@/components/ui/table-body'
 import { TableRow } from '@/components/ui/table-row'
 import { TableCell } from '@/components/ui/table-cell'
 import { TableHead } from '@/components/ui/table-head'
-import { ChevronDown, ChevronUp, Calendar, Filter, Search, User, List, Edit, Trash2, Plus, Check, X } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Filter,
+  Search,
+  User,
+  List,
+  Edit,
+  Trash2,
+  Plus,
+  Check,
+  X,
+} from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
-type Assessment = {
+export type Assessment = {
   id: string
   courseId: string
   courseName: string
@@ -42,37 +57,61 @@ type AssessmentResult = {
   gradedAt: string
 }
 
-type Course = {
+export type Course = {
   id: string
   name: string
 }
 
-export function Assessments() {
-  const [assessments, setAssessments] = useState<Assessment[]>([])
+export function Assessments({
+  initialAssessments = [],
+  initialCourses = [],
+  initialTotalCount = 0,
+  initialPage = 1,
+  initialPageSize = 25,
+  initialCourseId = '',
+  initialSearch = '',
+  initialDataLoaded = false,
+}: {
+  initialAssessments?: Assessment[]
+  initialCourses?: Course[]
+  initialTotalCount?: number
+  initialPage?: number
+  initialPageSize?: number
+  initialCourseId?: string
+  initialSearch?: string
+  initialDataLoaded?: boolean
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments)
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
+  const [courses, setCourses] = useState<Course[]>(initialCourses)
   const [students, setStudents] = useState<any[]>([]) // We'll fetch students for the selected course when needed
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null)
+  const [deleteResultId, setDeleteResultId] = useState<string | null>(null)
+  const [editingResult, setEditingResult] = useState(false)
+  const [notice, setNotice] = useState('')
   const [newAssessment, setNewAssessment] = useState({
     courseId: '',
     title: '',
     maxScore: '',
-    assessmentDate: ''
+    assessmentDate: '',
   })
   const [newResult, setNewResult] = useState({
     studentId: '',
     score: '',
-    remarks: ''
+    remarks: '',
   })
+  const [bulkScores, setBulkScores] = useState<Record<string, string>>({})
   const [assessmentFilters, setAssessmentFilters] = useState({
-    courseId: '',
-    pageSize: 50,
-    page: 1
+    courseId: initialCourseId,
+    pageSize: initialPageSize,
+    page: initialPage,
   })
-  const [assessmentTotalCount, setAssessmentTotalCount] = useState(0)
-  const [assessmentHasMore, setAssessmentHasMore] = useState(false)
+  const [assessmentTotalCount, setAssessmentTotalCount] = useState(initialTotalCount)
+  const [assessmentHasMore, setAssessmentHasMore] = useState(initialTotalCount > initialPage * initialPageSize)
 
   // Fetch courses for the dropdown
   const fetchCourses = async () => {
@@ -84,7 +123,7 @@ export function Assessments() {
       const data = await response.json()
       setCourses(data.data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Assessment request failed.')
       // Non-fatal: we can still proceed without courses, but the form will be empty
     }
   }
@@ -110,7 +149,7 @@ export function Assessments() {
       setAssessmentHasMore(data.hasMore || false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Assessment request failed.')
     } finally {
       setLoading(false)
     }
@@ -126,7 +165,7 @@ export function Assessments() {
       const data = await response.json()
       setStudents(data.data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Assessment request failed.')
       setStudents([])
     }
   }
@@ -142,27 +181,24 @@ export function Assessments() {
       const data = await response.json()
       setAssessmentResults(data.data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Assessment request failed.')
       setAssessmentResults([])
     }
   }
 
   // Initial fetch
   useEffect(() => {
-    fetchCourses()
-    fetchAssessments()
-  }, [])
-
-  // Refetch assessments when filters change
-  useEffect(() => {
-    fetchAssessments()
-  }, [assessmentFilters.courseId, assessmentFilters.pageSize, assessmentFilters.page])
+    if (!initialDataLoaded) {
+      fetchCourses()
+      fetchAssessments()
+    }
+  }, [initialDataLoaded])
 
   // When selected assessment changes, fetch its results and students for its course
   useEffect(() => {
     if (selectedAssessmentId) {
       // We need to get the course ID of the selected assessment to fetch students
-      const selectedAssessment = assessments.find(a => a.id === selectedAssessmentId)
+      const selectedAssessment = assessments.find((a) => a.id === selectedAssessmentId)
       if (selectedAssessment) {
         fetchStudentsForCourse(selectedAssessment.courseId)
         fetchAssessmentResults(selectedAssessmentId)
@@ -174,31 +210,41 @@ export function Assessments() {
   }, [selectedAssessmentId, assessments])
 
   const handleAssessmentFiltersChange = (newFilters: Partial<typeof assessmentFilters>) => {
-    setAssessmentFilters(prev => ({
-      ...prev,
+    const next = {
+      ...assessmentFilters,
       ...newFilters,
-      page: 1 // Reset to first page when filters change
-    }))
+      page: 1,
+    }
+    setAssessmentFilters(next)
+    const params = new URLSearchParams()
+    if (next.courseId) params.set('courseId', next.courseId)
+    if (initialSearch) params.set('search', initialSearch)
+    params.set('page', String(next.page))
+    params.set('pageSize', String(next.pageSize))
+    router.push(`${pathname}?${params}`)
   }
 
   const handleLoadMoreAssessments = () => {
-    setAssessmentFilters(prev => ({
-      ...prev,
-      page: prev.page + 1
-    }))
+    const nextPage = assessmentFilters.page + 1
+    const params = new URLSearchParams()
+    if (assessmentFilters.courseId) params.set('courseId', assessmentFilters.courseId)
+    if (initialSearch) params.set('search', initialSearch)
+    params.set('page', String(nextPage))
+    params.set('pageSize', String(assessmentFilters.pageSize))
+    router.push(`${pathname}?${params}`)
   }
 
   const handleNewAssessmentChange = (field: keyof typeof newAssessment, value: string) => {
-    setNewAssessment(prev => ({
+    setNewAssessment((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
   }
 
   const handleNewResultChange = (field: keyof typeof newResult, value: string) => {
-    setNewResult(prev => ({
+    setNewResult((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
   }
 
@@ -226,8 +272,8 @@ export function Assessments() {
           courseId: newAssessment.courseId,
           title: newAssessment.title,
           maxScore: maxScoreNum,
-          assessmentDate: newAssessment.assessmentDate
-        })
+          assessmentDate: newAssessment.assessmentDate,
+        }),
       })
 
       if (!response.ok) {
@@ -240,12 +286,12 @@ export function Assessments() {
         courseId: '',
         title: '',
         maxScore: '',
-        assessmentDate: ''
+        assessmentDate: '',
       })
       await fetchAssessments()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Assessment request failed.')
     } finally {
       setLoading(false)
     }
@@ -274,8 +320,8 @@ export function Assessments() {
         body: JSON.stringify({
           studentId: parseInt(newResult.studentId, 10),
           score: scoreNum,
-          remarks: newResult.remarks
-        })
+          remarks: newResult.remarks,
+        }),
       })
 
       if (!response.ok) {
@@ -287,12 +333,95 @@ export function Assessments() {
       setNewResult({
         studentId: '',
         score: '',
-        remarks: ''
+        remarks: '',
       })
+      setEditingResult(false)
+      setNotice(editingResult ? 'Result updated.' : 'Result saved.')
       await fetchAssessmentResults(selectedAssessmentId!)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error(err)
+      console.error('Assessment request failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveBulkScores = async () => {
+    const entries = Object.entries(bulkScores).filter(([, score]) => score.trim() !== '')
+    const assessment = assessments.find((item) => item.id === selectedAssessmentId)
+    if (!selectedAssessmentId || !assessment || entries.length === 0) {
+      setError('Enter at least one score before saving the table.')
+      return
+    }
+    const results = entries.map(([studentId, score]) => ({ studentId: Number(studentId), score: Number(score) }))
+    if (
+      results.some((result) => !Number.isFinite(result.score) || result.score < 0 || result.score > assessment.maxScore)
+    ) {
+      setError(`Scores must be between 0 and ${assessment.maxScore}.`)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/assessments/${selectedAssessmentId}/results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error?.message ?? data?.error ?? 'Unable to save the bulk scores.')
+      }
+      setBulkScores({})
+      await fetchAssessmentResults(selectedAssessmentId)
+      setNotice(`Saved ${results.length} scores.`)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to save the bulk scores.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const exportResults = () => {
+    const assessment = assessments.find((item) => item.id === selectedAssessmentId)
+    if (!assessment || assessmentResults.length === 0) return
+    const escapeCell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`
+    const rows = [
+      ['Student', 'Register ID', 'Score', 'Maximum score', 'Percentage', 'Remarks'],
+      ...assessmentResults.map((result) => [
+        result.studentName,
+        result.studentId,
+        result.score,
+        assessment.maxScore,
+        assessment.maxScore > 0 ? ((result.score / assessment.maxScore) * 100).toFixed(1) : '0.0',
+        result.remarks ?? '',
+      ]),
+    ]
+    const blob = new Blob([rows.map((row) => row.map(escapeCell).join(',')).join('\r\n')], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `assessment-${assessment.id}-results.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const removeResult = async () => {
+    if (!selectedAssessmentId || !deleteResultId) return
+    setLoading(true)
+    try {
+      const response = await fetch(
+        `/api/assessments/${selectedAssessmentId}/results?resultId=${encodeURIComponent(deleteResultId)}`,
+        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } },
+      )
+      if (!response.ok) throw new Error('Could not delete this result. Please retry.')
+      setAssessmentResults((current) => current.filter((result) => result.id !== deleteResultId))
+      setDeleteResultId(null)
+      setNotice('Result deleted.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete this result.')
     } finally {
       setLoading(false)
     }
@@ -319,9 +448,7 @@ export function Assessments() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">Assessments</h1>
-          <p className="text-sm text-muted-foreground">
-            Create and manage assessments for courses
-          </p>
+          <p className="text-sm text-muted-foreground">Create and manage assessments for courses</p>
         </div>
         <Button variant="outline" onClick={() => setSelectedAssessmentId(null)}>
           <Plus size={16} className="mr-2" />
@@ -335,10 +462,13 @@ export function Assessments() {
           {/* New Assessment Form */}
           <div className="bg-white p-6 rounded-lg shadow mb-6">
             <h2 className="text-xl font-bold mb-4">Create New Assessment</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault()
-              handleCreateAssessment()
-            }} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleCreateAssessment()
+              }}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Course</label>
@@ -351,7 +481,7 @@ export function Assessments() {
                       <SelectValue placeholder="Select a course" />
                     </SelectTrigger>
                     <SelectContent>
-                      {courses.map(course => (
+                      {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.name}
                         </SelectItem>
@@ -415,7 +545,7 @@ export function Assessments() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All courses</SelectItem>
-                      {courses.map(course => (
+                      {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.name}
                         </SelectItem>
@@ -440,12 +570,19 @@ export function Assessments() {
                 </TableHeader>
                 <TableBody>
                   {assessments.map((assessment) => (
-                    <TableRow key={assessment.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleSelectAssessment(assessment.id)}>
+                    <TableRow
+                      key={assessment.id}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSelectAssessment(assessment.id)}
+                    >
                       <TableCell>{formatDate(assessment.assessmentDate)}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                            {assessment.courseName.split(' ').map(x => x[0]).join('')}
+                            {assessment.courseName
+                              .split(' ')
+                              .map((x) => x[0])
+                              .join('')}
                           </div>
                           <div className="text-xs font-medium">{assessment.courseName}</div>
                         </div>
@@ -463,7 +600,14 @@ export function Assessments() {
                         )}
                       </TableCell>
                       <TableCell className="text-sm space-x-2">
-                        <Button variant="ghost" size="icon" title="View Results">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title="View Results"
+                          aria-label={`View results for ${assessment.title}`}
+                          onClick={() => handleSelectAssessment(assessment.id)}
+                        >
                           <List size={14} />
                         </Button>
                       </TableCell>
@@ -497,21 +641,22 @@ export function Assessments() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h1 className="text-2xl font-bold">Assessment Results</h1>
-              <p className="text-sm text-muted-foreground">
-                Enter and view results for the selected assessment
-              </p>
+              <p className="text-sm text-muted-foreground">Enter and view results for the selected assessment</p>
             </div>
             <div className="flex space-x-3">
               <Button variant="outline" onClick={() => setSelectedAssessmentId(null)}>
                 <ArrowLeft size={16} className="mr-2" />
                 Back to Assessments
               </Button>
-              <Button variant="outline" onClick={() => {
-                // Refresh results
-                if (selectedAssessmentId) {
-                  fetchAssessmentResults(selectedAssessmentId)
-                }
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Refresh results
+                  if (selectedAssessmentId) {
+                    fetchAssessmentResults(selectedAssessmentId)
+                  }
+                }}
+              >
                 <RefreshCw size={16} className="mr-2" />
                 Refresh
               </Button>
@@ -524,30 +669,41 @@ export function Assessments() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Title</p>
-                <p className="text-lg font-semibold">{assessments.find(a => a.id === selectedAssessmentId)?.title || ''}</p>
+                <p className="text-lg font-semibold">
+                  {assessments.find((a) => a.id === selectedAssessmentId)?.title || ''}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Course</p>
-                <p className="text-lg font-semibold">{assessments.find(a => a.id === selectedAssessmentId)?.courseName || ''}</p>
+                <p className="text-lg font-semibold">
+                  {assessments.find((a) => a.id === selectedAssessmentId)?.courseName || ''}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Max Score</p>
-                <p className="text-lg font-semibold">{assessments.find(a => a.id === selectedAssessmentId)?.maxScore || ''}</p>
+                <p className="text-lg font-semibold">
+                  {assessments.find((a) => a.id === selectedAssessmentId)?.maxScore || ''}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Date</p>
-                <p className="text-lg font-semibold">{formatDate(assessments.find(a => a.id === selectedAssessmentId)?.assessmentDate || '')}</p>
+                <p className="text-lg font-semibold">
+                  {formatDate(assessments.find((a) => a.id === selectedAssessmentId)?.assessmentDate || '')}
+                </p>
               </div>
             </div>
           </div>
 
           {/* New Result Form */}
           <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-bold mb-4">Enter Result for Student</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault()
-              handleCreateResult()
-            }} className="space-y-4">
+            <h2 className="text-xl font-bold mb-4">{editingResult ? 'Edit result' : 'Enter Result for Student'}</h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleCreateResult()
+              }}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Student</label>
@@ -560,7 +716,7 @@ export function Assessments() {
                       <SelectValue placeholder="Select a student" />
                     </SelectTrigger>
                     <SelectContent>
-                      {students.map(student => (
+                      {students.map((student) => (
                         <SelectItem key={student.register_id} value={student.register_id.toString()}>
                           {student.name} (TAI-{student.register_id})
                         </SelectItem>
@@ -590,15 +746,138 @@ export function Assessments() {
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button variant="default" type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Result'}
+                {loading ? 'Saving...' : editingResult ? 'Update Result' : 'Save Result'}
                 <Plus size={16} className="mr-2" />
               </Button>
             </form>
           </div>
 
+          <section className="bg-white p-6 rounded-lg shadow mb-6" aria-labelledby="bulk-score-heading">
+            <h2 id="bulk-score-heading" className="text-xl font-bold mb-2">
+              Bulk score entry
+            </h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Enter scores for any students below. Existing scores for those students will be updated together.
+            </p>
+            {students.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No enrolled students were found for this course.</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <caption className="sr-only">Enter assessment scores for enrolled students</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col" className="p-2">
+                          Student
+                        </th>
+                        <th scope="col" className="p-2">
+                          Score
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student) => (
+                        <tr key={student.register_id} className="border-t">
+                          <th scope="row" className="p-2 font-medium">
+                            {student.name}
+                            <span className="ml-2 text-xs text-muted-foreground">#{student.register_id}</span>
+                          </th>
+                          <td className="p-2">
+                            <label className="sr-only" htmlFor={`bulk-score-${student.register_id}`}>
+                              Score for {student.name}
+                            </label>
+                            <Input
+                              id={`bulk-score-${student.register_id}`}
+                              type="number"
+                              min={0}
+                              max={assessments.find((a) => a.id === selectedAssessmentId)?.maxScore}
+                              step="0.01"
+                              inputMode="decimal"
+                              value={bulkScores[String(student.register_id)] ?? ''}
+                              onChange={(event) =>
+                                setBulkScores((current) => ({
+                                  ...current,
+                                  [String(student.register_id)]: event.target.value,
+                                }))
+                              }
+                              className="max-w-40"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Button
+                  type="button"
+                  className="mt-4 min-h-10"
+                  disabled={loading || Object.values(bulkScores).every((score) => score.trim() === '')}
+                  onClick={() => void handleSaveBulkScores()}
+                >
+                  {loading ? 'Saving scores…' : 'Save all scores'}
+                </Button>
+              </>
+            )}
+          </section>
+
+          {(() => {
+            const maxScore = assessments.find((item) => item.id === selectedAssessmentId)?.maxScore ?? 0
+            const bands = [
+              { label: '0–49%', min: 0, max: 50 },
+              { label: '50–69%', min: 50, max: 70 },
+              { label: '70–84%', min: 70, max: 85 },
+              { label: '85–100%', min: 85, max: 101 },
+            ]
+            const counts = bands.map(
+              (band) =>
+                assessmentResults.filter((result) => {
+                  const percent = maxScore > 0 ? (result.score / maxScore) * 100 : 0
+                  return percent >= band.min && percent < band.max
+                }).length,
+            )
+            const maxCount = Math.max(1, ...counts)
+            return (
+              <section className="bg-white p-6 rounded-lg shadow mb-6" aria-labelledby="grade-distribution-heading">
+                <h2 id="grade-distribution-heading" className="text-xl font-bold mb-4">
+                  Grade distribution
+                </h2>
+                {assessmentResults.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Scores will appear here after grading.</p>
+                ) : (
+                  <div
+                    role="img"
+                    aria-label={`Grade distribution across ${assessmentResults.length} results`}
+                    className="grid gap-3 sm:grid-cols-4"
+                  >
+                    {bands.map((band, index) => (
+                      <div key={band.label} className="rounded border p-3">
+                        <div className="flex justify-between text-sm">
+                          <span>{band.label}</span>
+                          <strong>{counts[index]}</strong>
+                        </div>
+                        <div className="mt-2 h-2 rounded bg-muted">
+                          <div
+                            className="h-2 rounded bg-primary"
+                            style={{ width: `${(counts[index] / maxCount) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })()}
+
           {/* Results List */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Results List</h2>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">Results List</h2>
+              <Button type="button" variant="outline" disabled={assessmentResults.length === 0} onClick={exportResults}>
+                Export CSV
+              </Button>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -615,7 +894,7 @@ export function Assessments() {
                 </TableHeader>
                 <TableBody>
                   {assessmentResults.map((result) => {
-                    const assessment = assessments.find(a => a.id === selectedAssessmentId)
+                    const assessment = assessments.find((a) => a.id === selectedAssessmentId)
                     const maxScore = assessment?.maxScore || 0
                     const percentage = maxScore > 0 ? ((result.score / maxScore) * 100).toFixed(1) + '%' : '0%'
                     return (
@@ -623,7 +902,10 @@ export function Assessments() {
                         <TableCell>
                           <div className="flex items-center space-x-3">
                             <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                              {result.studentName.split(' ').map(x => x[0]).join('')}
+                              {result.studentName
+                                .split(' ')
+                                .map((x) => x[0])
+                                .join('')}
                             </div>
                             <div>
                               <div className="font-medium">{result.studentName}</div>
@@ -647,10 +929,31 @@ export function Assessments() {
                         </TableCell>
                         <TableCell>{formatDate(result.gradedAt)}</TableCell>
                         <TableCell className="text-sm space-x-2">
-                          <Button variant="ghost" size="icon" title="Edit">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Edit"
+                            aria-label={`Edit result for ${result.studentName}`}
+                            onClick={() => {
+                              setNewResult({
+                                studentId: String(result.studentId),
+                                score: String(result.score),
+                                remarks: result.remarks ?? '',
+                              })
+                              setEditingResult(true)
+                              document.querySelector('form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            }}
+                          >
                             <Edit size={14} />
                           </Button>
-                          <Button variant="ghost" size="icon" title="Delete" className="ml-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Delete"
+                            aria-label={`Delete result for ${result.studentName}`}
+                            className="ml-2"
+                            onClick={() => setDeleteResultId(result.id)}
+                          >
                             <Trash2 size={14} />
                           </Button>
                         </TableCell>
@@ -670,6 +973,18 @@ export function Assessments() {
           </div>
         </>
       )}
+      <p role="status" aria-live="polite" className="sr-only">
+        {notice}
+      </p>
+      <ConfirmDialog
+        isOpen={deleteResultId !== null}
+        title="Delete assessment result?"
+        description="This removes the recorded score for this student."
+        confirmText="Delete result"
+        destructive
+        onCancel={() => setDeleteResultId(null)}
+        onConfirm={() => void removeResult()}
+      />
     </div>
   )
 }

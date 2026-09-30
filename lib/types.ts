@@ -1,5 +1,3 @@
-export type View = 'Dashboard' | 'Students' | 'Certificates' | 'Courses' | 'Invoices' | 'Reports' | 'Settings' | 'Audit Log' | 'Attendance' | 'Assessments' | 'SimpleView'
-
 export type Role = 'admin' | 'staff' | 'trainer'
 
 export type GstSettings = {

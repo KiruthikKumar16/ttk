@@ -26,17 +26,7 @@ const STUDENT_SOURCES = [
   'Other',
 ]
 
-const CITIES = [
-  'Tuticorin',
-  'Tirunelveli',
-  'Madurai',
-  'Chennai',
-  'Coimbatore',
-  'Trichy',
-  'Salem',
-  'Nagercoil',
-  'Other',
-]
+const CITIES = ['Tuticorin', 'Tirunelveli', 'Madurai', 'Chennai', 'Coimbatore', 'Trichy', 'Salem', 'Nagercoil', 'Other']
 
 const AVAILABLE_TAGS = [
   'Python',
@@ -62,9 +52,9 @@ export function AddStudent({
   onSave: (s: any) => void
   gstRate?: number
 }) {
-  const courseList = courses && courses.length > 0 ? courses.map(c => c.name) : DEFAULT_COURSE_OPTIONS
+  const courseList = courses && courses.length > 0 ? courses.map((c) => c.name) : DEFAULT_COURSE_OPTIONS
   const initialCourse = courseList[0]
-  const initialFee = courses?.find(c => c.name === initialCourse)?.fee
+  const initialFee = courses?.find((c) => c.name === initialCourse)?.fee
 
   // Core fields
   const [name, setName] = useState('')
@@ -91,16 +81,14 @@ export function AddStudent({
 
   const handleCourseChange = (selectedCourseName: string) => {
     setCourse(selectedCourseName)
-    const match = courses?.find(c => c.name === selectedCourseName)
+    const match = courses?.find((c) => c.name === selectedCourseName)
     if (match) {
       setTotal(String(match.fee))
     }
   }
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    )
+    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
   }
 
   const handleSave = (e?: React.FormEvent) => {
@@ -152,7 +140,7 @@ export function AddStudent({
     })
   }
 
-  const selectedCourseObj = courses?.find(c => c.name === course)
+  const selectedCourseObj = courses?.find((c) => c.name === course)
   const isGstInclusive = Boolean(selectedCourseObj?.gstInclusive)
 
   const enteredTotal = Number(total) || 0
@@ -167,9 +155,7 @@ export function AddStudent({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-slate-50/50">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-              Register Student
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Register Student</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Fill in student profile, communication channels, location details, and tuition fees.
             </p>
@@ -205,7 +191,7 @@ export function AddStudent({
                 required
                 placeholder="Enter Student Name"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -215,7 +201,7 @@ export function AddStudent({
                 Gender <span className="text-red-500">*</span>
               </label>
               <div className="flex items-center gap-4 pt-1">
-                {(['Male', 'Female', 'Others'] as const).map(g => (
+                {(['Male', 'Female', 'Others'] as const).map((g) => (
                   <label key={g} className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
                     <input
                       type="radio"
@@ -239,7 +225,7 @@ export function AddStudent({
                 id="student-dob"
                 type="date"
                 value={dob}
-                onChange={e => setDob(e.target.value)}
+                onChange={(e) => setDob(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -262,7 +248,7 @@ export function AddStudent({
                   maxLength={10}
                   placeholder="Enter Mobile Number"
                   value={phone}
-                  onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-r-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
@@ -278,7 +264,7 @@ export function AddStudent({
                 maxLength={10}
                 placeholder="Enter Alternate Mobile Number"
                 value={altPhone}
-                onChange={e => setAltPhone(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setAltPhone(e.target.value.replace(/\D/g, ''))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -290,7 +276,7 @@ export function AddStudent({
               <select
                 id="student-marital"
                 value={maritalStatus}
-                onChange={e => setMaritalStatus(e.target.value)}
+                onChange={(e) => setMaritalStatus(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="Single">Single</option>
@@ -311,7 +297,7 @@ export function AddStudent({
                 type="email"
                 placeholder="Enter E-Mail ID"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -323,7 +309,7 @@ export function AddStudent({
               <select
                 id="student-country"
                 value={country}
-                onChange={e => setCountry(e.target.value)}
+                onChange={(e) => setCountry(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="India">India</option>
@@ -341,7 +327,7 @@ export function AddStudent({
               <select
                 id="student-state"
                 value={state}
-                onChange={e => setState(e.target.value)}
+                onChange={(e) => setState(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="Tamil Nadu">Tamil Nadu</option>
@@ -364,11 +350,13 @@ export function AddStudent({
               <select
                 id="student-city"
                 value={city}
-                onChange={e => setCity(e.target.value)}
+                onChange={(e) => setCity(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                {CITIES.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -382,7 +370,7 @@ export function AddStudent({
                 type="text"
                 placeholder="Enter Area / Street"
                 value={area}
-                onChange={e => setArea(e.target.value)}
+                onChange={(e) => setArea(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -394,11 +382,13 @@ export function AddStudent({
               <select
                 id="student-source"
                 value={studentSource}
-                onChange={e => setStudentSource(e.target.value)}
+                onChange={(e) => setStudentSource(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                {STUDENT_SOURCES.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                {STUDENT_SOURCES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -414,7 +404,7 @@ export function AddStudent({
               rows={2}
               placeholder="Enter counselor notes, special requirements, or student background..."
               value={comments}
-              onChange={e => setComments(e.target.value)}
+              onChange={(e) => setComments(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
             />
           </div>
@@ -428,11 +418,13 @@ export function AddStudent({
               <select
                 id="student-course"
                 value={course}
-                onChange={e => handleCourseChange(e.target.value)}
+                onChange={(e) => handleCourseChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                {courseList.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {courseList.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -446,7 +438,7 @@ export function AddStudent({
                 type="date"
                 required
                 value={batch}
-                onChange={e => setBatch(e.target.value)}
+                onChange={(e) => setBatch(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
@@ -454,11 +446,9 @@ export function AddStudent({
 
           {/* Row 7: Student Knowledge Tags */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Knowledge / Skill Tags
-            </label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Knowledge / Skill Tags</label>
             <div className="flex flex-wrap gap-1.5">
-              {AVAILABLE_TAGS.map(tag => {
+              {AVAILABLE_TAGS.map((tag) => {
                 const active = selectedTags.includes(tag)
                 return (
                   <button
@@ -466,8 +456,8 @@ export function AddStudent({
                     type="button"
                     onClick={() => toggleTag(tag)}
                     className={`text-xs px-2.5 py-1 rounded-md transition-colors border ${
-                      active 
-                        ? 'bg-blue-600 text-white border-blue-600 font-medium' 
+                      active
+                        ? 'bg-blue-600 text-white border-blue-600 font-medium'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                     }`}
                   >
@@ -486,9 +476,13 @@ export function AddStudent({
                   Tuition Fee (₹) <span className="text-red-500">*</span>
                 </label>
                 {selectedCourseObj && (
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                    isGstInclusive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                  }`}>
+                  <span
+                    className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                      isGstInclusive
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}
+                  >
                     {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
                   </span>
                 )}
@@ -500,7 +494,7 @@ export function AddStudent({
                 required
                 placeholder="e.g. 42000"
                 value={total}
-                onChange={e => setTotal(e.target.value)}
+                onChange={(e) => setTotal(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
               <span className="text-[11px] text-gray-400 mt-0.5 block">
@@ -518,7 +512,7 @@ export function AddStudent({
                 min="0"
                 placeholder="e.g. 20000"
                 value={paid}
-                onChange={e => setPaid(e.target.value)}
+                onChange={(e) => setPaid(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
               <span className="text-[11px] text-gray-400 mt-0.5 block">Generates invoice immediately</span>
@@ -531,9 +525,11 @@ export function AddStudent({
               <div className="font-semibold text-gray-900 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   Fee Summary
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                    isGstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                  }`}>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      isGstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
                     {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
                   </span>
                 </span>
@@ -555,7 +551,9 @@ export function AddStudent({
               )}
               <div className="flex justify-between pt-1.5 border-t border-slate-200 text-sm font-bold text-gray-900">
                 <span>Total Payable:</span>
-                <span className={isGstInclusive ? 'text-emerald-700 font-bold' : 'text-blue-600 font-bold'}>{money(grandTotal)}</span>
+                <span className={isGstInclusive ? 'text-emerald-700 font-bold' : 'text-blue-600 font-bold'}>
+                  {money(grandTotal)}
+                </span>
               </div>
             </div>
           )}

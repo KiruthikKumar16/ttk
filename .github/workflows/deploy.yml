@@ -1,0 +1,183 @@
+name: Deploy
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deploy to production after approval
+        type: choice
+        options: [production]
+        required: true
+      pitr_reference:
+        description: Supabase PITR restore point or backup reference verified before migration
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  preview:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.0
+        with:
+          package_json_file: package.json
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Pull preview environment and build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN" && pnpm exec vercel build --token="$VERCEL_TOKEN"
+      - name: Deploy preview
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          URL="$(pnpm exec vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test preview deployment
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+        run: pnpm exec playwright install --with-deps chromium && pnpm exec playwright test --config=playwright.smoke.config.ts
+      - name: Comment preview URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Vercel preview: $PREVIEW_URL"
+
+  staging:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.0
+        with:
+          package_json_file: package.json
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply forward migrations to staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" && pnpm exec supabase db push --linked --yes
+      - name: Build and deploy staging
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          STAGING_DOMAIN: ${{ vars.VERCEL_STAGING_DOMAIN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ github.event.workflow_run.head_sha }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.event.workflow_run.head_sha }}
+          APP_ENV: staging
+          NEXT_PUBLIC_APP_ENV: staging
+        run: |
+          pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          pnpm exec vercel build --token="$VERCEL_TOKEN"
+          URL="$(pnpm exec vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
+          pnpm exec vercel alias set "$URL" "$STAGING_DOMAIN" --token="$VERCEL_TOKEN"
+          echo "url=https://$STAGING_DOMAIN" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test staging and run browser smoke tests
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+          CHECK_READINESS: '1'
+        run: pnpm exec playwright install --with-deps chromium && pnpm exec playwright test --config=playwright.smoke.config.ts
+
+  production:
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.0
+        with:
+          package_json_file: package.json
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Record the verified PITR restore point before changing schema
+        env:
+          PITR_REFERENCE: ${{ inputs.pitr_reference }}
+        run: |
+          test -n "$PITR_REFERENCE"
+          {
+            echo "### Production pre-deploy recovery point"
+            echo "- PITR/backup reference: $PITR_REFERENCE"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Timestamp (UTC): $(date -u +%FT%TZ)"
+            echo "- Operator confirmed restore point exists and is usable before approving the production environment."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Apply forward migrations after approval
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" && pnpm exec supabase db push --linked --yes
+      - name: Build and deploy production
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
+          APP_ENV: production
+          NEXT_PUBLIC_APP_ENV: production
+        run: |
+          pnpm exec vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          pnpm exec vercel build --prod --token="$VERCEL_TOKEN"
+          URL="$(pnpm exec vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test production deployment
+        id: smoke
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+          CHECK_READINESS: '1'
+        run: pnpm exec playwright install --with-deps chromium && pnpm exec playwright test --config=playwright.smoke.config.ts
+      - name: Roll back Vercel deployment if smoke checks fail
+        if: steps.smoke.outcome == 'failure'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel rollback --yes --token="$VERCEL_TOKEN"

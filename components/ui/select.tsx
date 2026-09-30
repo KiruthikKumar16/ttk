@@ -49,7 +49,9 @@ export function Select({
         <SelectValue>{placeholder}</SelectValue>
       </SelectTrigger>
       {isOpen && (
-        <SelectContent className={`absolute left-0 right-0 mt-2 border border-gray-300 rounded-md bg-white shadow-lg z-20 max-h-60 overflow-y-auto`}>
+        <SelectContent
+          className={`absolute left-0 right-0 mt-2 border border-gray-300 rounded-md bg-white shadow-lg z-20 max-h-60 overflow-y-auto`}
+        >
           {children}
         </SelectContent>
       )}
@@ -59,7 +61,10 @@ export function Select({
 
 export function SelectTrigger({ children, className = '', onClick, disabled = false }: SelectTriggerProps) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
       className={`flex items-center justify-between px-2 py-2 cursor-pointer text-sm text-gray-700 ${className}`}
     >
       {children}
@@ -75,12 +80,7 @@ export function SelectContent({ className = '', children }: SelectContentProps) 
   return <div className={className}>{children}</div>
 }
 
-export function SelectItem({
-  value,
-  children,
-  className = '',
-  disabled = false,
-}: SelectItemProps) {
+export function SelectItem({ value, children, className = '', disabled = false }: SelectItemProps) {
   const isSelected = value === ''
   // In a real implementation, we'd compare with the selected value from context/props
   // For now, we'll just highlight the first item as selected for demo purposes

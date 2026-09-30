@@ -11,7 +11,7 @@ import {
 
 describe('pagination helpers', () => {
   it('returns bounded offset pagination', () => {
-    expect(pagePagination()).toEqual({ page: 1, pageSize: 50, offset: 0, limit: 50 })
+    expect(pagePagination()).toEqual({ page: 1, pageSize: 25, offset: 0, limit: 25 })
     expect(pagePagination(3, 100)).toEqual({ page: 3, pageSize: 100, offset: 200, limit: 100 })
     expect(() => pagePagination(0, 10)).toThrow()
     expect(() => pagePagination(1, 101)).toThrow()
@@ -21,9 +21,9 @@ describe('pagination helpers', () => {
   it('validates URL pagination and default values', () => {
     expect(pagePaginationFromSearchParams(new URLSearchParams('courseId=1'))).toEqual({
       page: 1,
-      pageSize: 50,
+      pageSize: 25,
       offset: 0,
-      limit: 50,
+      limit: 25,
     })
     expect(pagePaginationFromSearchParams(new URLSearchParams('page=2&pageSize=25'))).toMatchObject({ offset: 25 })
     expect(() => pagePaginationFromSearchParams(new URLSearchParams('page=0'))).toThrow()

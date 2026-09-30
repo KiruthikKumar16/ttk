@@ -3,11 +3,12 @@
 Route handlers and server components use `lib/supabase/server.ts`, which reads the request cookies and
 keeps Row Level Security in force. Use `lib/supabase/admin.ts` only for these established cases:
 
-- `app/api/verify/[code]/route.ts`: public verification by code. Validate the code and active state,
-  then return only the document fields needed for verification.
 - `app/api/course-materials/route.ts`: after user authentication, sign storage URLs. Uploads and
   metadata queries use the cookie-bound client so storage and table policies still apply.
-- `lib/errorReporting.ts`: write operational error records only.
+- `app/api/ready/route.ts`: server-only readiness checks using the service role, without returning
+  dependency details to the caller.
+- Public verification uses a fixed-shape RPC through the publishable client; operational exceptions
+  are captured by Sentry and are not written to an error table.
 
 When reviewing a new privileged-client import, verify the route has explicit session and role or
 resource authorization before any privileged operation. Add a narrowly scoped ESLint exception only

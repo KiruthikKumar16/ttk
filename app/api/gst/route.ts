@@ -4,22 +4,36 @@ import { createClient } from '@/lib/supabase/server'
 import { gstSchema } from '@/lib/validation'
 import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
+import { validateMutationRequest } from '@/lib/security/csrf'
+import { adminMfaResponse } from '@/lib/security/admin-mfa'
+import { withApi } from '@/lib/http/handler'
+import { rolesFor } from '@/lib/auth/permissions'
+import { revalidateTag } from 'next/cache'
 
-export async function GET() {
+async function getGstSettings() {
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
 
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .maybeSingle()
+  if (currentProfile?.role !== 'admin' && currentProfile?.role !== 'staff')
+    return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+  const readMfaResponse = await adminMfaResponse(supabase, currentProfile.role)
+  if (readMfaResponse) return readMfaResponse
+
   try {
-    const { data, error } = await supabase
-      .from('gst_settings')
-      .select('*')
-      .limit(1)
-      .maybeSingle()
+    const { data, error } = await supabase.from('gst_settings').select('*').limit(1).maybeSingle()
     if (error) throw error
     return NextResponse.json({
       data: data
@@ -35,10 +49,15 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function updateGstSettings(req: NextRequest) {
+  const rejected = validateMutationRequest(req)
+  if (rejected) return rejected
   // Cookie-bound client: RLS applies to every query in this handler.
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   const session = user ? { user } : null
   if (authError || !session) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
@@ -51,12 +70,22 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
   if (profileError || !profile) {
-    return unexpectedApiError(profileError ?? new Error('User profile was not found.'), 'Unable to fetch GST editor profile')
+    return unexpectedApiError(
+      profileError ?? new Error('User profile was not found.'),
+      'Unable to fetch GST editor profile',
+    )
   }
 
   // Only admin can update GST settings
   if (profile.role !== 'admin') {
-    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to update GST settings' }), { status: 403 })
+    return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to update GST settings' }), {
+      status: 403,
+    })
+  }
+
+  const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
+  if (assuranceError || assurance?.claims.aal !== 'aal2') {
+    return NextResponse.json({ error: 'Additional authentication is required.' }, { status: 403 })
   }
 
   try {
@@ -64,11 +93,7 @@ export async function POST(req: NextRequest) {
     // Validate the request body with zod schema
     const parsedBody = gstSchema.parse(body)
 
-    const {
-      rate,
-      gstin,
-      enabled,
-    } = parsedBody
+    const { rate, gstin, enabled } = parsedBody
 
     const { data, error } = await supabase
       .from('gst_settings')
@@ -76,6 +101,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
     if (error || !data) throw error ?? new Error('No GST settings row was returned after save.')
+    revalidateTag('gst-settings', { expire: 0 })
     return NextResponse.json({
       data: {
         rate: Number(data.rate),
@@ -91,3 +117,8 @@ export async function POST(req: NextRequest) {
     return unexpectedApiError(error, 'Failed to update GST settings')
   }
 }
+
+export const GET = withApi({ roles: rolesFor('gst', 'read') }, async () => getGstSettings())
+export const POST = withApi({ roles: ['admin'] as const }, async ({ request }) =>
+  updateGstSettings(request as NextRequest),
+)
