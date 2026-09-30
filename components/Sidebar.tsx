@@ -103,10 +103,10 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
             href="/settings/trainers"
             aria-current={pathname.startsWith('/settings/trainers') ? 'page' : undefined}
             className={`nav-item${pathname.startsWith('/settings/trainers') ? ' active' : ''}`}
-            title="Trainer assignments"
+            title="Instructor assignments"
           >
             <Users size={18} className="mr-2" />
-            {!collapsed && <span className="flex-1 text-left">Trainer assignments</span>}
+            {!collapsed && <span className="flex-1 text-left">Instructor assignments</span>}
           </Link>
         )}
         {can(role, 'courses', 'manage') && (

@@ -223,7 +223,6 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
                     >
                       <option value="admin">Admin</option>
                       <option value="staff">Staff</option>
-                      <option value="trainer">Trainer</option>
                       <option value="pending">Pending</option>
                     </select>
                   </td>

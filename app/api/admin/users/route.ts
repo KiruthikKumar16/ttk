@@ -4,13 +4,13 @@ import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
 const roleSchema = z.object({
   userId: z.string().uuid(),
-  role: z.enum(['admin', 'staff', 'trainer', 'pending']),
+  role: z.enum(['admin', 'staff', 'pending']),
 })
 
 const createUserSchema = z.object({
   email: z.string().email().max(254),
   fullName: z.string().min(1).max(200),
-  role: z.enum(['admin', 'staff', 'trainer', 'pending']).default('staff'),
+  role: z.enum(['admin', 'staff', 'pending']).default('staff'),
   password: z.string().min(8).max(1024).optional(),
 })
 

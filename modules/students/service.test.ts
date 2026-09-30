@@ -62,11 +62,11 @@ describe('student service', () => {
       listStudentPage({ page: 1, pageSize: 10, search: '', sort: 'bad', direction: 'asc' }),
     ).resolves.toEqual({ data: [], totalCount: 0 })
     expect(mocks.listStudents).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ sort: 'register_id' }))
-    mocks.role = 'trainer'
+    mocks.role = 'staff'
     await expect(
       listStudentPage({ page: 1, pageSize: 10, search: '', sort: 'name', direction: 'desc' }),
     ).resolves.toBeDefined()
-    mocks.role = 'trainer'
+    mocks.role = 'pending'
     await expect(createStudent(input)).rejects.toThrow('not allowed')
   })
 

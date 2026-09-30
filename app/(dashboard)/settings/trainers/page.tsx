@@ -12,7 +12,7 @@ export default async function TrainerSettingsPage() {
     { data: assignments, error: assignmentError },
   ] = await Promise.all([
     supabase.from('courses').select('id,name').order('name').limit(200),
-    supabase.from('profiles').select('id,full_name').eq('role', 'trainer').order('full_name').limit(200),
+    supabase.from('profiles').select('id,full_name').in('role', ['staff', 'admin']).order('full_name').limit(200),
     supabase.from('course_trainers').select('course_id,trainer_id').order('course_id').limit(1000),
   ])
   if (courseError) throw courseError
@@ -24,9 +24,9 @@ export default async function TrainerSettingsPage() {
       <div className="page-heading">
         <div>
           <p className="eyebrow">SETTINGS</p>
-          <h1>Trainer assignments</h1>
+          <h1>Instructor assignments</h1>
           <p className="subcopy">
-            Trainers can access attendance, assessments, and materials only for courses assigned here.
+            Staff members assigned to a course can manage attendance, assessments, and course materials for that course.
           </p>
         </div>
       </div>

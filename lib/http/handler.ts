@@ -184,7 +184,7 @@ export function withApi<TOptions extends ApiOptions, TResult>(
           .single()
         if (profileError) throw new InternalError()
 
-        if (profile?.role !== 'admin' && profile?.role !== 'staff' && profile?.role !== 'trainer') {
+        if (profile?.role !== 'admin' && profile?.role !== 'staff') {
           throw new UnauthorizedError('An authorized profile is required.')
         }
         role = profile.role

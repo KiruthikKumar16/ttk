@@ -29,7 +29,7 @@ async function getCertificates(req: NextRequest) {
     .select('role')
     .eq('id', session.user.id)
     .maybeSingle()
-  if (!currentProfile || !['admin', 'staff', 'trainer'].includes(currentProfile.role))
+  if (!currentProfile || currentProfile.role !== 'admin')
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
   try {
@@ -85,8 +85,8 @@ async function postCertificate(req: NextRequest) {
     )
   }
 
-  // Only staff and admin can create certificates
-  if (profile.role !== 'staff' && profile.role !== 'admin') {
+  // Only admin can create certificates
+  if (profile.role !== 'admin') {
     return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to create certificate' }), {
       status: 403,
     })

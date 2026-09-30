@@ -16,7 +16,7 @@ export const getCurrentProfile = cache(async (): Promise<CurrentProfile> => {
   if (authError || !user) redirect('/login')
 
   const { data, error } = await supabase.from('profiles').select('id, role, full_name').eq('id', user.id).maybeSingle()
-  if (error || !data || !['admin', 'staff', 'trainer'].includes(data.role)) redirect('/login')
+  if (error || !data || !['admin', 'staff'].includes(data.role)) redirect('/login')
 
   return { id: user.id, role: data.role as Role, fullName: data.full_name ?? '' }
 })

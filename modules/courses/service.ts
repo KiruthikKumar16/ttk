@@ -209,6 +209,6 @@ export async function listCourseOptions(): Promise<Course[]> {
  */
 export async function getCachedCourseOptions() {
   const profile = await getCurrentProfile()
-  if (!can(profile.role, 'courses', 'read')) throw new ForbiddenError()
+  if (!['admin', 'staff'].includes(profile.role)) throw new ForbiddenError()
   return readCachedCourseOptions()
 }

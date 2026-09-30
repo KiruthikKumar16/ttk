@@ -3,7 +3,7 @@ import { brandSchema } from '@/modules/brand/schema'
 import { getBrandSettings, updateBrandSettings } from '@/modules/brand/service'
 
 export const GET = withApi(
-  { roles: ['admin', 'staff', 'trainer'] as const },
+  { roles: ['admin', 'staff'] as const },
   async () => apiResult(await getBrandSettings()),
 )
 

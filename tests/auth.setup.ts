@@ -4,7 +4,7 @@ import { test as setup, expect } from '@playwright/test'
 
 setup.describe.configure({ mode: 'serial' })
 
-for (const role of ['admin', 'staff', 'trainer'] as const) {
+for (const role of ['admin', 'staff'] as const) {
   setup(`sign in once as the seeded local ${role} user`, async ({ page }) => {
     const email = process.env[`E2E_${role.toUpperCase()}_EMAIL`]
     const password = process.env[`E2E_${role.toUpperCase()}_PASSWORD`]

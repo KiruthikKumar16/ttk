@@ -25,7 +25,7 @@ async function getCourseMaterials(req: NextRequest, requestId: string) {
   }
 
   const { data: currentProfile } = await supabase.from('profiles').select('role').eq('id', user!.id).maybeSingle()
-  if (!currentProfile || !['admin', 'staff', 'trainer'].includes(currentProfile.role)) {
+  if (!currentProfile || !['admin', 'staff'].includes(currentProfile.role)) {
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
   }
 
@@ -143,8 +143,8 @@ async function postCourseMaterial(req: NextRequest, requestId: string) {
     )
   }
 
-  // Check permissions: only staff, admin, and trainer can upload course materials
-  const hasPermission = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'trainer'
+  // Check permissions: only staff and admin can upload course materials
+  const hasPermission = profile.role === 'admin' || profile.role === 'staff'
 
   if (!hasPermission) {
     return NextResponse.json({ error: 'Insufficient permissions to upload course material' }, { status: 403 })

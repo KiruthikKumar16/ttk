@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'staff' | 'trainer' | 'pending'
+export type Role = 'admin' | 'staff' | 'pending'
 
 export type GstSettings = {
   rate: number

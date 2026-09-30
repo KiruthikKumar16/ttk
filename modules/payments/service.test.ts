@@ -48,15 +48,15 @@ const stored = {
 describe('payment service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.role = 'staff'
+    mocks.role = 'admin'
     mocks.rows = {}
-    mocks.getCurrentProfile.mockImplementation(async () => ({ id: 'u1', role: mocks.role, fullName: 'Staff' }))
+    mocks.getCurrentProfile.mockImplementation(async () => ({ id: 'u1', role: mocks.role, fullName: 'Admin' }))
     mocks.listPayments.mockResolvedValue({ data: [], totalCount: 0 })
     mocks.paymentFromRow.mockReturnValue({ invoice: 'TAI-1' })
     mocks.recordPaymentAtomic.mockResolvedValue(stored)
   })
 
-  it('uses safe sorting for payment pages and denies trainer access', async () => {
+  it('uses safe sorting for payment pages and denies staff access', async () => {
     await expect(
       listPaymentPage({ page: 1, pageSize: 10, search: '', sort: 'bad', direction: 'asc' }),
     ).resolves.toEqual({ data: [], totalCount: 0 })
@@ -64,7 +64,7 @@ describe('payment service', () => {
       expect.anything(),
       expect.objectContaining({ sort: 'payment_date' }),
     )
-    mocks.role = 'trainer'
+    mocks.role = 'staff'
     await expect(
       listPaymentPage({ page: 1, pageSize: 10, search: '', sort: 'amount', direction: 'desc' }),
     ).rejects.toThrow('not allowed')

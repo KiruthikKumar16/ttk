@@ -66,7 +66,7 @@ describe('withApi authentication and authorization', () => {
   })
 
   it('returns 403 when the current role is not allowed', async () => {
-    authState.role = 'trainer'
+    authState.role = 'staff'
     const response = await adminOnly(request())
     expect(response.status).toBe(403)
   })
@@ -98,7 +98,7 @@ describe('withApi authentication and authorization', () => {
     ['PATCH /api/admin/users', 'users', 'manage'],
   ] as const)('%s applies its declared role policy', async (_route, resource: Resource, action: Action) => {
     const handler = withApi({ roles: rolesFor(resource, action) }, async () => ({ allowed: true }))
-    for (const role of ['admin', 'staff', 'trainer'] as const) {
+    for (const role of ['admin', 'staff'] as const) {
       authState.role = role
       const response = await handler(request())
       const expected = rolesFor(resource, action).includes(role) ? 200 : 403

@@ -144,7 +144,7 @@ async function postAssessment(req: NextRequest) {
     // 2. Check if user has permission to create assessments for this course
     // For now, allow staff, admin, and all trainers (as noted in migration)
     // TODO: Update this once course-assignment concept exists
-    const hasPermission = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'trainer'
+    const hasPermission = profile.role === 'admin' || profile.role === 'staff'
 
     if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions to create assessment' }, { status: 403 })

@@ -55,7 +55,7 @@ async function getAssessmentResults(req: NextRequest, { params }: { params: Prom
 
     if (profileError || !profileData) throw profileError ?? new Error('User profile was not found.')
 
-    const hasPermission = profileData.role === 'admin' || profileData.role === 'staff' || profileData.role === 'trainer'
+    const hasPermission = profileData.role === 'admin' || profileData.role === 'staff'
 
     if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions to view assessment results' }, { status: 403 })
@@ -237,7 +237,7 @@ async function postAssessmentResult(req: NextRequest, { params }: { params: Prom
     // 3. Check if user has permission to create results for this assessment
     // For now, allow staff, admin, and all trainers (as noted in migration)
     // TODO: Update this once course-assignment concept exists
-    const hasPermission = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'trainer'
+    const hasPermission = profile.role === 'admin' || profile.role === 'staff'
 
     if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions to create assessment result' }, { status: 403 })

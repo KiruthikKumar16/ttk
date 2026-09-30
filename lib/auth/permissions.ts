@@ -25,23 +25,10 @@ export const permissions: Record<Role, PermissionMap> = {
   admin: Object.fromEntries(resources.map((resource) => [resource, allActions])) as Record<Resource, readonly Action[]>,
   staff: {
     students: ['read', 'create', 'update'],
-    payments: ['read', 'create'],
-    courses: ['read', 'create'],
-    certificates: ['read', 'create', 'issue'],
     attendance: ['read', 'create', 'update'],
     assessments: ['read', 'create', 'update', 'grade'],
     materials: ['read', 'create', 'update', 'delete'],
     reports: ['read', 'export'],
-    gst: ['read'],
-  },
-  trainer: {
-    students: ['read'],
-    courses: ['read'],
-    certificates: ['read'],
-    attendance: ['read', 'create', 'update'],
-    assessments: ['read', 'create', 'update', 'grade'],
-    materials: ['read', 'create', 'update', 'delete'],
-    reports: ['read'],
   },
   pending: {},
 }
