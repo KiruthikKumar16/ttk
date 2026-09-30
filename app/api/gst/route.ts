@@ -5,7 +5,6 @@ import { gstSchema } from '@/lib/validation'
 import { unexpectedApiError } from '@/lib/api-response'
 import z from 'zod'
 import { validateMutationRequest } from '@/lib/security/csrf'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { rolesFor } from '@/lib/auth/permissions'
 import { revalidateTag } from 'next/cache'
@@ -29,8 +28,6 @@ async function getGstSettings() {
     .maybeSingle()
   if (currentProfile?.role !== 'admin' && currentProfile?.role !== 'staff')
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
-  const readMfaResponse = await adminMfaResponse(supabase, currentProfile.role)
-  if (readMfaResponse) return readMfaResponse
 
   try {
     const { data, error } = await supabase.from('gst_settings').select('*').limit(1).maybeSingle()
@@ -81,11 +78,6 @@ async function updateGstSettings(req: NextRequest) {
     return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to update GST settings' }), {
       status: 403,
     })
-  }
-
-  const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
-  if (assuranceError || assurance?.claims.aal !== 'aal2') {
-    return NextResponse.json({ error: 'Additional authentication is required.' }, { status: 403 })
   }
 
   try {

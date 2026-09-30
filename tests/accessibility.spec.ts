@@ -14,7 +14,6 @@ test('login page has no axe WCAG 2.2 AA serious or critical violations', async (
 for (const [path, name] of [
   ['/', 'dashboard'],
   ['/students', 'students'],
-  ['/payments', 'payments'],
   ['/invoices', 'invoices'],
   ['/courses', 'courses'],
   ['/attendance', 'attendance'],

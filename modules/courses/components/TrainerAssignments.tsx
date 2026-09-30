@@ -62,56 +62,91 @@ export function TrainerAssignments({
   }
 
   return (
-    <section className="panel p-4 sm:p-6">
-      <form onSubmit={assign} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-        <label className="grid gap-1 text-sm">
-          Course
-          <select className="input" value={courseId} onChange={(event) => setCourseId(event.target.value)} required>
-            {courses.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm">
-          Trainer
-          <select className="input" value={trainerId} onChange={(event) => setTrainerId(event.target.value)} required>
-            {trainers.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button disabled={!courseId || !trainerId} className="btn-primary min-h-11">
-          Assign trainer
-        </button>
-      </form>
+    <section className="space-y-6">
+      {/* Assignment form */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <form onSubmit={assign} className="p-6 space-y-4 sm:grid sm:grid-cols-[1fr_1fr_auto] sm:gap-4 sm:items-end">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 block">Course</label>
+            <select
+              className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
+              value={courseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              required
+            >
+              {courses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 block">Trainer</label>
+            <select
+              className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
+              value={trainerId}
+              onChange={(e) => setTrainerId(e.target.value)}
+              required
+            >
+              {trainers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            disabled={!courseId || !trainerId}
+            className="btn-primary min-h-10 px-4 py-2 text-sm font-medium"
+          >
+            Assign trainer
+          </button>
+        </form>
+      </div>
+
+      {/* Status / Error */}
       {error && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
+        <p role="alert" className="mb-3 text-sm text-red-700 bg-red-50 p-3 rounded">
           {error}
         </p>
       )}
-      <p role="status" aria-live="polite" className="mt-2 min-h-5 text-sm">
-        {status}
-      </p>
-      <div className="data-wrap">
-        <table>
-          <thead>
+      {status && (
+        <p role="status" aria-live="polite" className="mb-3 text-sm text-green-700 bg-green-50 p-3 rounded">
+          {status}
+        </p>
+      )}
+
+      {/* Assignments table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th>Course</th>
-              <th>Trainer</th>
-              <th>Action</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Course
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Trainer
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Action
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {assignments.map((row) => (
-              <tr key={`${row.courseId}-${row.trainerId}`}>
-                <td>{courses.find((item) => item.id === row.courseId)?.name ?? row.courseId}</td>
-                <td>{trainers.find((item) => item.id === row.trainerId)?.name ?? 'Trainer unavailable'}</td>
-                <td>
-                  <button className="btn-secondary" onClick={() => setRemove(row)}>
+              <tr key={`${row.courseId}-${row.trainerId}`} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {courses.find((item) => item.id === row.courseId)?.name ?? row.courseId}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {trainers.find((item) => item.id === row.trainerId)?.name ?? 'Trainer unavailable'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <button
+                    className="btn-secondary min-h-9 px-3 text-xs font-medium"
+                    onClick={() => setRemove(row)}
+                  >
                     Unassign
                   </button>
                 </td>
@@ -119,12 +154,16 @@ export function TrainerAssignments({
             ))}
             {assignments.length === 0 && (
               <tr>
-                <td colSpan={3}>No trainer assignments yet.</td>
+                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No trainer assignments yet.
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation dialog */}
       <ConfirmDialog
         isOpen={remove !== null}
         title="Unassign trainer?"

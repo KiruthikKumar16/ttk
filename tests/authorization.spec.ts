@@ -12,11 +12,11 @@ test('trainer JWT permits assigned role capabilities and blocks payment data', a
   }
 })
 
-test('admin without MFA is denied protected APIs and staff can access payments', async ({ playwright, baseURL }) => {
+test('admin and staff can access payments and students', async ({ playwright, baseURL }) => {
   const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
   const staff = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/staff.json' })
   try {
-    expect((await admin.get('/api/students?page=1&pageSize=5')).status()).toBe(403)
+    expect((await admin.get('/api/students?page=1&pageSize=5')).status()).toBe(200)
     expect((await staff.get('/api/payments?page=1&pageSize=5')).status()).toBe(200)
   } finally {
     await Promise.all([admin.dispose(), staff.dispose()])

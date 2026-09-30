@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import type { Course, Payment, Receipt, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
+import { CategoryBadge, getCategoryBadgeStyle } from '@/components/CategoryBadge'
 import { PaymentsTable } from '@/components/shared/PaymentsTable'
 import { calculateGstForRupees, differenceRupees, percentageOfRupees, rupeesToPaise } from '@/lib/money'
 // We'll import CertificatePrint and InvoicePrint later, for now we'll comment out and use placeholders
@@ -70,6 +71,12 @@ export function StudentDetail({
     setAmount('')
     setError('')
   }
+  const matchedCourse = courses?.find(
+    (c) => c.name.toLowerCase().trim() === (student.course || '').toLowerCase().trim(),
+  )
+  const categoryName = matchedCourse?.categoryName
+  const courseDuration = matchedCourse?.duration
+
   return (
     <>
       <div className="flex flex-col items-start w-full mb-8">
@@ -91,14 +98,27 @@ export function StudentDetail({
           >
             {student.name}
           </h1>
-          <p className="subcopy">
-            {student.course} · Batch started {student.batch} ·{' '}
-            <span className="font-semibold text-gray-800">Phone: {student.phone || '—'}</span>
-          </p>
+          <div className="flex items-center gap-2 flex-wrap text-sm text-slate-600 mt-1">
+            <span className="font-semibold text-slate-900">{student.course}</span>
+            {categoryName && (
+              <CategoryBadge categoryName={categoryName} duration={courseDuration} />
+            )}
+            <span>·</span>
+            <span>Batch started {student.batch}</span>
+            <span>·</span>
+            <span className="font-semibold text-slate-800">Phone: {student.phone || '—'}</span>
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Status status={student.status} />
+        {categoryName && (
+          <span
+            className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${getCategoryBadgeStyle(categoryName).badge}`}
+          >
+            {categoryName} Tier {courseDuration ? `(${courseDuration})` : ''}
+          </span>
+        )}
         {(student.studentSource || (student as any).leadSource) && (
           <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200">
             Source: {student.studentSource || (student as any).leadSource}

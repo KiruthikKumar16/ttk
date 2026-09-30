@@ -10,7 +10,6 @@ import { unexpectedApiError } from '@/lib/api-response'
 import { pagePaginationFromSearchParams } from '@/lib/pagination'
 import { validateMutationRequest } from '@/lib/security/csrf'
 import { rateLimit } from '@/lib/security/rate-limit'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { rolesFor } from '@/lib/auth/permissions'
 
@@ -32,8 +31,6 @@ async function getCertificates(req: NextRequest) {
     .maybeSingle()
   if (!currentProfile || !['admin', 'staff', 'trainer'].includes(currentProfile.role))
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
-  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const pagination = pagePaginationFromSearchParams(new URL(req.url).searchParams)
@@ -93,12 +90,6 @@ async function postCertificate(req: NextRequest) {
     return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to create certificate' }), {
       status: 403,
     })
-  }
-  if (profile.role === 'admin') {
-    const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
-    if (assuranceError || assurance?.claims.aal !== 'aal2') {
-      return new NextResponse(JSON.stringify({ error: 'Additional authentication is required.' }), { status: 403 })
-    }
   }
   const limit = await rateLimit(`user:${session.user.id}:/api/certificates`, 10, '15 m')
   if (!limit.success)

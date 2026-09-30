@@ -1,36 +1,52 @@
 import Link from 'next/link'
 import { requirePermission } from '@/lib/auth/current-profile'
 import { createClient } from '@/lib/supabase/server'
+import { listCourseCategories } from '@/modules/courses/service'
+import { MaterialsDirectory } from '@/modules/materials/components/MaterialsDirectory'
 
 export default async function MaterialsPage() {
   await requirePermission('materials', 'read')
   const supabase = await createClient()
-  const { data, error } = await supabase.from('courses').select('id,name').order('name').limit(100)
+
+  const [categories, { data: courses, error }] = await Promise.all([
+    listCourseCategories(),
+    supabase
+      .from('courses')
+      .select('id, name, duration, category_id, category:course_categories(id, name, duration), course_materials(count)')
+      .order('name')
+      .limit(200),
+  ])
+
   if (error) throw error
+
+  const items = (courses ?? []).map((c: any) => ({
+    id: String(c.id),
+    name: String(c.name),
+    duration: String(c.duration),
+    categoryId: c.category_id ? String(c.category_id) : null,
+    categoryName: c.category?.name ? String(c.category.name) : null,
+    materialsCount: Array.isArray(c.course_materials) && c.course_materials[0]
+      ? Number(c.course_materials[0].count)
+      : 0,
+  }))
+
   return (
     <main>
       <div className="page-heading">
         <div>
           <p className="eyebrow">LEARNING RESOURCES</p>
           <h1>Course materials</h1>
-          <p className="subcopy">Choose a course to view, download, or manage its resources.</p>
+          <p className="subcopy">Choose a curriculum program to view, download, or manage its learning resources.</p>
         </div>
       </div>
-      {data?.length ? (
-        <div className="stats-grid">
-          {data.map((course) => (
-            <Link key={course.id} href={`/courses/${encodeURIComponent(course.id)}/materials`} className="panel p-5">
-              <h2 className="font-semibold">{course.name}</h2>
-              <span className="text-sm text-muted-foreground">Open materials →</span>
-            </Link>
-          ))}
-        </div>
+      {items.length ? (
+        <MaterialsDirectory courses={items} categories={categories} />
       ) : (
         <section className="panel p-6">
           <h2>No courses yet</h2>
           <p>Create a course before adding learning materials.</p>
-          <Link href="/courses/new" className="btn-primary mt-3 inline-flex">
-            Create course
+          <Link href="/courses" className="btn-primary mt-3 inline-flex">
+            Go to courses
           </Link>
         </section>
       )}

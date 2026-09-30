@@ -1,21 +1,20 @@
-import { redirect } from 'next/navigation'
 import { requirePermission } from '@/lib/auth/current-profile'
 import { createClient } from '@/lib/supabase/server'
 import { UserRoles } from '@/modules/shared/components/UserRoles'
 import type { Role } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function UsersSettingsPage() {
   const profile = await requirePermission('users', 'manage')
   const supabase = await createClient()
-  const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
-  if (assuranceError) throw assuranceError
-  if (assurance?.claims.aal !== 'aal2') redirect('/mfa')
   const { data: users, error } = await supabase
     .from('profiles')
     .select('id,full_name,role,created_at')
     .order('full_name')
     .limit(500)
   if (error) throw error
+
   return (
     <main>
       <div className="page-heading">

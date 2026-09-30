@@ -11,13 +11,14 @@ export default async function TrainerSettingsPage() {
     { data: trainers, error: trainerError },
     { data: assignments, error: assignmentError },
   ] = await Promise.all([
-    supabase.from('courses').select('id,name').order('name').limit(100),
-    supabase.from('profiles').select('id,full_name').eq('role', 'trainer').order('full_name').limit(100),
+    supabase.from('courses').select('id,name').order('name').limit(200),
+    supabase.from('profiles').select('id,full_name').eq('role', 'trainer').order('full_name').limit(200),
     supabase.from('course_trainers').select('course_id,trainer_id').order('course_id').limit(1000),
   ])
   if (courseError) throw courseError
   if (trainerError) throw trainerError
   if (assignmentError) throw assignmentError
+
   return (
     <main>
       <div className="page-heading">

@@ -53,6 +53,7 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
     amount,
     invoice: String(row.invoice ?? ''),
     studentId: Number(row.student_register_id ?? row.student_id),
+    course: (row.students as any)?.course ? String((row.students as any).course) : undefined,
     verification_code: row.verification_code ? String(row.verification_code) : undefined,
   }
   if (cgst > 0 || sgst > 0 || row.transaction_id !== undefined || row.custom_note !== undefined || gstRate > 0) {
@@ -76,6 +77,8 @@ export async function listStudents(
     search?: string
     sort?: 'register_id' | 'name' | 'created_at'
     direction?: 'asc' | 'desc'
+    categoryId?: string
+    course?: string
   } = {},
 ) {
   const page = options.page ?? 1
@@ -89,6 +92,23 @@ export async function listStudents(
     const registerId = /^\d+$/.test(safeSearch) ? `,register_id.eq.${Number(safeSearch)}` : ''
     query = query.or(`name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%${registerId}`)
   }
+
+  if (options.course && options.course.trim()) {
+    query = query.eq('course', options.course.trim())
+  } else if (options.categoryId && options.categoryId.trim()) {
+    const { data: coursesInCategory, error: catError } = await supabaseClient
+      .from('courses')
+      .select('name')
+      .eq('category_id', options.categoryId.trim())
+    if (catError) throw catError
+    const names = (coursesInCategory ?? []).map((c: any) => c.name)
+    if (names.length > 0) {
+      query = query.in('course', names)
+    } else {
+      query = query.eq('course', '__no_matching_course__')
+    }
+  }
+
   const { data, error, count } = await query
     .order(options.sort ?? 'register_id', { ascending: options.direction === 'asc' })
     .range(pagination.offset, pagination.offset + pagination.limit - 1)
@@ -125,7 +145,7 @@ export async function listPayments(
     `
       id, student_id, student_register_id, method, amount, invoice, payment_date,
       transaction_id, custom_note, gst_rate, cgst, sgst,
-      students!payments_student_id_fkey ( id, name )
+      students!payments_student_id_fkey ( id, name, course )
     `,
     options.keyset ? undefined : { count: 'exact' },
   )
@@ -235,6 +255,8 @@ export async function listCertificates(
     search?: string
     sort?: 'issue_date' | 'student_name' | 'certificate_id'
     direction?: 'asc' | 'desc'
+    categoryId?: string
+    course?: string
   } = {},
 ) {
   const page = options.page ?? 1
@@ -247,9 +269,25 @@ export async function listCertificates(
       .slice(0, 100)
       .replace(/[\\%_,()]/g, ' ')
     query = query.or(
-      `certificate_id.ilike.%${safeSearch}%,student_name.ilike.%${safeSearch}%,student_register_id.eq.${/^\d+$/.test(safeSearch) ? Number(safeSearch) : -1}`,
+      `certificate_id.ilike.%${safeSearch}%,student_name.ilike.%${safeSearch}%,course_name.ilike.%${safeSearch}%,student_register_id.eq.${/^\d+$/.test(safeSearch) ? Number(safeSearch) : -1}`,
     )
   }
+
+  if (options.course && options.course.trim()) {
+    query = query.eq('course_name', options.course.trim())
+  } else if (options.categoryId && options.categoryId.trim()) {
+    const { data: coursesInCategory } = await supabaseClient
+      .from('courses')
+      .select('name')
+      .eq('category_id', options.categoryId.trim())
+    const names = (coursesInCategory ?? []).map((c: any) => c.name)
+    if (names.length > 0) {
+      query = query.in('course_name', names)
+    } else {
+      query = query.eq('course_name', '__no_matching_course__')
+    }
+  }
+
   const { data, error, count } = await query
     .order(options.sort ?? 'issue_date', { ascending: options.direction === 'asc' })
     .range(pagination.offset, pagination.offset + pagination.limit - 1)

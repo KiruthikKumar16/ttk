@@ -64,6 +64,13 @@ describe('withApi authentication and authorization', () => {
     expect((await adminOnly(request())).status).toBe(403)
   })
 
+  it('denies pending role access to any protected route', async () => {
+    authState.role = 'pending'
+    const handler = withApi({ roles: rolesFor('students', 'read') }, async () => ({ allowed: true }))
+    const response = await handler(request())
+    expect(response.status).toBe(401)
+  })
+
   it.each([
     ['GET /api/students', 'students', 'read'],
     ['POST /api/students', 'students', 'create'],

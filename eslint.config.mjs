@@ -46,6 +46,7 @@ export default [
       'app/api/course-materials/route.ts',
       'app/api/invoices/**/download/route.ts',
       'app/api/ready/route.ts',
+      'app/api/admin/users/route.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', adminDataRestriction],

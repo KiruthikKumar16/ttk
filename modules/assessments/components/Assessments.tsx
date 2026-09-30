@@ -27,6 +27,8 @@ import {
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import type { CourseCategory } from '@/lib/types'
+import { CategoryBadge } from '@/components/CategoryBadge'
 
 export type Assessment = {
   id: string
@@ -60,11 +62,14 @@ type AssessmentResult = {
 export type Course = {
   id: string
   name: string
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export function Assessments({
   initialAssessments = [],
   initialCourses = [],
+  categories = [],
   initialTotalCount = 0,
   initialPage = 1,
   initialPageSize = 25,
@@ -74,6 +79,7 @@ export function Assessments({
 }: {
   initialAssessments?: Assessment[]
   initialCourses?: Course[]
+  categories?: CourseCategory[]
   initialTotalCount?: number
   initialPage?: number
   initialPageSize?: number
@@ -86,6 +92,7 @@ export function Assessments({
   const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments)
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([])
   const [courses, setCourses] = useState<Course[]>(initialCourses)
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('')
   const [students, setStudents] = useState<any[]>([]) // We'll fetch students for the selected course when needed
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -532,24 +539,56 @@ export function Assessments({
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4">Assessments List</h2>
             <div className="mb-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-wrap items-center gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Filter by Course</label>
+                  <label className="text-sm font-medium mb-1.5 block">Category Tier</label>
+                  <Select
+                    value={selectedCategoryFilter}
+                    onValueChange={(value) => {
+                      const newCat = (value as string) || ''
+                      setSelectedCategoryFilter(newCat)
+                      if (newCat) {
+                        const currentCrs = courses.find((c) => c.id === assessmentFilters.courseId)
+                        if (currentCrs && currentCrs.categoryId !== newCat) {
+                          handleAssessmentFiltersChange({ courseId: '' })
+                        }
+                      }
+                    }}
+                    placeholder="All categories"
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name} ({cat.duration})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Course</label>
                   <Select
                     value={assessmentFilters.courseId}
                     onValueChange={(value) => handleAssessmentFiltersChange({ courseId: value as string })}
                     placeholder="All courses"
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-[240px]">
                       <SelectValue placeholder="All courses" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All courses</SelectItem>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.name}
-                        </SelectItem>
-                      ))}
+                      {courses
+                        .filter((c) => !selectedCategoryFilter || c.categoryId === selectedCategoryFilter)
+                        .map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -577,14 +616,16 @@ export function Assessments({
                     >
                       <TableCell>{formatDate(assessment.assessmentDate)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                            {assessment.courseName
-                              .split(' ')
-                              .map((x) => x[0])
-                              .join('')}
-                          </div>
-                          <div className="text-xs font-medium">{assessment.courseName}</div>
+                        <div className="flex flex-col items-start gap-1">
+                          <strong className="text-xs font-semibold text-slate-900">{assessment.courseName}</strong>
+                          {(() => {
+                            const crs = courses.find(
+                              (c) => c.id === assessment.courseId || c.name === assessment.courseName,
+                            )
+                            const catName = crs?.categoryName
+                            if (!catName) return null
+                            return <CategoryBadge categoryName={catName} />
+                          })()}
                         </div>
                       </TableCell>
                       <TableCell className="text-left">{assessment.title}</TableCell>

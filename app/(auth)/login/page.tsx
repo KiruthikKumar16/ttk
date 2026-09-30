@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { brand } from '@/lib/brand'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,40 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const handledAuthRedirect = useRef(false)
+
+  useEffect(() => {
+    if (handledAuthRedirect.current || !window.location.hash) return
+
+    const authParams = new URLSearchParams(window.location.hash.slice(1))
+    const accessToken = authParams.get('access_token')
+    const refreshToken = authParams.get('refresh_token')
+    const authError = authParams.get('error') || authParams.get('error_code')
+    if (!accessToken && !refreshToken && !authError) return
+
+    handledAuthRedirect.current = true
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+
+    if (authError || !accessToken || !refreshToken) {
+      setError('This sign-in link is invalid, expired, or already used. Ask an administrator to send a new link.')
+      return
+    }
+
+    setLoading(true)
+    void supabaseBrowser.auth
+      .setSession({ access_token: accessToken, refresh_token: refreshToken })
+      .then(({ data, error: sessionError }) => {
+        if (sessionError || !data.session) {
+          setError('This sign-in link is invalid, expired, or already used. Ask an administrator to send a new link.')
+          return
+        }
+        window.location.replace('/')
+      })
+      .catch(() => {
+        setError('Unable to complete sign-in. Ask an administrator to send a new link.')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,12 +58,15 @@ export default function LoginPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      if (!response.ok) throw new Error('Unable to sign in. Please try again.')
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.error || 'Unable to sign in. Please try again.')
+      }
 
       // Sign in successful, redirect to home
       router.push('/')
-    } catch {
-      setError('Unable to sign in. Please try again.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.')
     } finally {
       setLoading(false)
     }

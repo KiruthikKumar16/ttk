@@ -1,70 +1,43 @@
-import Link from 'next/link'
 import { requirePermission } from '@/lib/auth/current-profile'
 import { listStudentPage } from '@/modules/students/service'
+import { listCourseCategories, listCourseOptions } from '@/modules/courses/service'
 import { parseListQuery } from '@/modules/shared/list-query'
-import { RecordList } from '@/modules/shared/components/RecordList'
+import { StudentsView } from '@/modules/students/components/StudentsView'
+
+export const dynamic = 'force-dynamic'
 
 export default async function StudentsPage({ searchParams }: PageProps<'/students'>) {
-  await requirePermission('students', 'read')
-  const query = parseListQuery(await searchParams)
-  const result = await listStudentPage({ ...query, search: query.search, sort: query.sort, direction: query.direction })
+  const sp = await searchParams
+  const query = parseListQuery(sp)
+  const categoryId = typeof sp.categoryId === 'string' && sp.categoryId ? sp.categoryId : undefined
+  const course = typeof sp.course === 'string' && sp.course ? sp.course : undefined
+
+  const [profile, result, categories, courses] = await Promise.all([
+    requirePermission('students', 'read'),
+    listStudentPage({
+      ...query,
+      search: query.search,
+      sort: query.sort,
+      direction: query.direction,
+      categoryId,
+      course,
+    }),
+    listCourseCategories(),
+    listCourseOptions(),
+  ])
+
   return (
-    <>
-      <RecordList
-        title="Students"
-        description="Manage enrollment, fees, and student records."
-        basePath="/students"
-        page={query.page}
-        pageSize={query.pageSize}
-        totalCount={result.totalCount}
-        search={query.search}
-        sort={query.sort}
-        direction={query.direction}
-        sortOptions={[
-          { label: 'Register ID', value: 'register_id' },
-          { label: 'Name', value: 'name' },
-          { label: 'Created', value: 'created_at' },
-        ]}
-      >
-        <thead>
-          <tr>
-            <th>Register ID</th>
-            <th>Student</th>
-            <th>Course</th>
-            <th>Phone</th>
-            <th>Batch start</th>
-            <th className="align-right">Total fees</th>
-            <th className="align-right">Balance</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.data.map((student) => (
-            <tr key={student.registerId}>
-              <td>
-                <Link href={`/students/${student.registerId}`}>{student.registerId}</Link>
-              </td>
-              <td>
-                <Link href={`/students/${student.registerId}`}>{student.name}</Link>
-              </td>
-              <td>{student.course}</td>
-              <td>{student.phone}</td>
-              <td>{student.batch}</td>
-              <td className="align-right">{student.total.toLocaleString('en-IN')}</td>
-              <td className="align-right">{Math.max(0, student.total - student.paid).toLocaleString('en-IN')}</td>
-              <td>{student.status}</td>
-            </tr>
-          ))}
-          {result.data.length === 0 && (
-            <tr>
-              <td colSpan={8}>No students match this search.</td>
-            </tr>
-          )}
-        </tbody>
-      </RecordList>
-      <Link className="btn-primary mt-4 inline-block" href="/students/new">
-        Add student
-      </Link>
-    </>
+    <StudentsView
+      students={result.data}
+      categories={categories}
+      courses={courses}
+      selectedCategoryId={categoryId}
+      selectedCourse={course}
+      totalCount={result.totalCount}
+      page={query.page}
+      pageSize={query.pageSize}
+      search={query.search}
+      canCreate={profile.role === 'admin' || profile.role === 'staff'}
+    />
   )
 }

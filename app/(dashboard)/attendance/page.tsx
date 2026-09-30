@@ -4,7 +4,8 @@ import { parseCursorListQuery } from '@/modules/shared/list-query'
 import { RecordList } from '@/modules/shared/components/RecordList'
 import { createClient } from '@/lib/supabase/server'
 import { AttendanceMarking } from '@/modules/attendance/components/AttendanceMarking'
-import { getCachedCourseOptions } from '@/modules/courses/service'
+import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
+import { CategoryBadge } from '@/components/CategoryBadge'
 
 export default async function AttendancePage({ searchParams }: PageProps<'/attendance'>) {
   await requirePermission('attendance', 'read')
@@ -12,8 +13,18 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
   const courseId = Array.isArray(params.courseId) ? params.courseId[0] : params.courseId
   const date = Array.isArray(params.date) ? params.date[0] : params.date
   const supabase = await createClient()
-  const courseOptions = await getCachedCourseOptions()
-  const courses = courseOptions.map((course) => ({ id: course.id, name: course.name }))
+  const [courseOptions, categories] = await Promise.all([
+    getCachedCourseOptions(),
+    listCourseCategories(),
+  ])
+  const courses = courseOptions.map((course) => ({
+    id: course.id,
+    name: course.name,
+    categoryId: course.categoryId,
+    categoryName: course.categoryName,
+    duration: course.duration,
+  }))
+  const courseCategoryMap = new Map(courses.map((c) => [c.id, c.categoryName]))
   let roster: { registerId: number; name: string; status: string | null }[] = []
   if (courseId && date) {
     const selectedCourse = courses.find((course) => course.id === courseId)
@@ -78,11 +89,30 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
             Course
             <select name="courseId" required defaultValue={courseId ?? ''} className="input">
               <option value="">Choose a course</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.name}
-                </option>
-              ))}
+              {categories.map((cat) => {
+                const catCourses = courses.filter((c) => c.categoryId === cat.id)
+                if (!catCourses.length) return null
+                return (
+                  <optgroup key={cat.id} label={`${cat.name} (${cat.duration})`}>
+                    {catCourses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              })}
+              {courses.some((c) => !c.categoryId) && (
+                <optgroup label="Other / Uncategorized">
+                  {courses
+                    .filter((c) => !c.categoryId)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </optgroup>
+              )}
             </select>
           </label>
           <label className="grid gap-1 text-sm">
@@ -102,13 +132,14 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
       <section className="panel mb-6">
         <div className="panel-header">
           <h2>Attendance by course</h2>
-          <p className="subcopy">Present sessions divided by recorded sessions, computed in Postgres.</p>
+          <p className="subcopy">Present sessions divided by recorded sessions, categorized by curriculum tier.</p>
         </div>
         <div className="data-wrap">
           <table>
             <thead>
               <tr>
                 <th>Course</th>
+                <th>Category</th>
                 <th>Students</th>
                 <th>Recorded sessions</th>
                 <th>Present</th>
@@ -116,18 +147,34 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
               </tr>
             </thead>
             <tbody>
-              {(courseReports ?? []).map((row) => (
-                <tr key={row.course_id}>
-                  <td>{row.course_name}</td>
-                  <td>{row.students}</td>
-                  <td>{row.sessions}</td>
-                  <td>{row.present_sessions}</td>
-                  <td>{Number(row.attendance_percent).toFixed(1)}%</td>
-                </tr>
-              ))}
+              {(courseReports ?? []).map((row) => {
+                const categoryName = courseCategoryMap.get(row.course_id)
+                return (
+                  <tr key={row.course_id}>
+                    <td>
+                      <strong className="font-semibold text-slate-900">{row.course_name}</strong>
+                    </td>
+                    <td>
+                      {categoryName ? (
+                        <CategoryBadge categoryName={categoryName} />
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Unassigned</span>
+                      )}
+                    </td>
+                    <td>{row.students}</td>
+                    <td>{row.sessions}</td>
+                    <td>{row.present_sessions}</td>
+                    <td>
+                      <span className="font-medium text-slate-900">
+                        {Number(row.attendance_percent).toFixed(1)}%
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
               {courseReports?.length === 0 && (
                 <tr>
-                  <td colSpan={5}>No attendance has been recorded.</td>
+                  <td colSpan={6}>No attendance has been recorded.</td>
                 </tr>
               )}
             </tbody>

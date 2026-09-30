@@ -1,9 +1,29 @@
-export type Role = 'admin' | 'staff' | 'trainer'
+export type Role = 'admin' | 'staff' | 'trainer' | 'pending'
 
 export type GstSettings = {
   rate: number
   gstin: string | null
   enabled: boolean
+}
+
+export type BrandSettings = {
+  displayName: string
+  legalName: string
+  shortName: string
+  tagline: string
+  supportEmail: string
+  websiteUrl: string
+  verifyBaseUrl: string
+  invoicePrefix: string
+}
+
+export type CourseCategory = {
+  id: string
+  name: string
+  duration: string
+  createdAt?: string
+  updatedAt?: string
+  courseCount?: number
 }
 
 export type Course = {
@@ -14,6 +34,8 @@ export type Course = {
   duration: string
   description?: string
   gstInclusive?: boolean
+  categoryId?: string | null
+  categoryName?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -70,6 +92,8 @@ export type Payment = {
   invoice: string
   /** Matches Student.registerId */
   studentId: number
+  /** Student enrolled course */
+  course?: string
   /** Internal student row id (Supabase only, optional) */
   studentRowId?: string
   /** Optional bank / UPI transaction reference */

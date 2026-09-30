@@ -8,12 +8,13 @@ describe('permissions matrix', () => {
     expect(can('staff', 'courses', 'create')).toBe(true)
     expect(can('trainer', 'courses', 'create')).toBe(false)
     expect(can(undefined, 'students', 'read')).toBe(false)
+    expect(can('pending', 'students', 'read')).toBe(false)
   })
 
   it('derives route role sets from the same matrix used by the UI', () => {
     expect(rolesFor('courses', 'read')).toEqual(['admin', 'staff', 'trainer'])
     expect(rolesFor('courses', 'delete')).toEqual(['admin'])
-    expect(Object.keys(permissions)).toEqual(['admin', 'staff', 'trainer'])
+    expect(Object.keys(permissions)).toEqual(['admin', 'staff', 'trainer', 'pending'])
   })
 
   it('requires authentication and enforces route roles', () => {

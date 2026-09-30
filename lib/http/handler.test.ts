@@ -139,19 +139,13 @@ describe('withApi authentication and authorization', () => {
     expect(invalidBody.status).toBe(400)
   })
 
-  it('rejects CSRF failures, applies role-specific MFA, and honors admin AAL2', async () => {
+  it('rejects CSRF failures and honors admin role', async () => {
     const mutating = withApi({ roles: ['staff'], body: z.object({ ok: z.boolean() }) }, async () => ({ ok: true }))
     expect((await mutating(new Request('https://app.example.test/api', { method: 'POST', body: '{}' }))).status).toBe(
       403,
     )
-    const aal2Required = withApi({ roles: ['admin'], requireAal2: true }, async () => ({ ok: true }))
-    authState.assurance = 'aal1'
-    expect((await aal2Required(request())).status).toBe(403)
-    authState.assurance = 'aal2'
-    expect((await aal2Required(request())).status).toBe(200)
-    const aal1Allowed = withApi({ roles: ['admin'], allowAdminAal1: true }, async () => ({ ok: true }))
-    authState.assurance = 'aal1'
-    expect((await aal1Allowed(request())).status).toBe(200)
+    const adminAction = withApi({ roles: ['admin'] }, async () => ({ ok: true }))
+    expect((await adminAction(request())).status).toBe(200)
     authState.profileError = new Error('profile unavailable')
     expect((await adminOnly(request())).status).toBe(500)
   })

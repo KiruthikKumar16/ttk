@@ -10,7 +10,6 @@ import { unexpectedApiError } from '@/lib/api-response'
 import QRCode from 'qrcode'
 import { brand } from '@/lib/brand'
 import { calculateGstFromParts, calculateGstInclusive, formatINR, rupeesToPaise } from '@/lib/money'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { z } from 'zod'
 import { createHash } from 'node:crypto'
@@ -67,8 +66,6 @@ async function getInvoicePdf(_request: Request, context: { params: Promise<{ inv
   if (profile?.role !== 'admin' && profile?.role !== 'staff') {
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
   }
-  const mfaResponse = await adminMfaResponse(supabase, profile.role)
-  if (mfaResponse) return mfaResponse
 
   const { invoice } = await context.params
   const decodedInvoice = decodeURIComponent(invoice)

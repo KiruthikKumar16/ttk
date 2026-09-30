@@ -29,11 +29,12 @@ async function postLogin(request: Request, requestId: string) {
     const parsed = credentialsSchema.safeParse(await request.json())
     if (!parsed.success) return NextResponse.json({ error: 'Unable to sign in. Please try again.' }, { status: 400 })
     const supabase = await createClient(requestId)
-    const { error } = await supabase.auth.signInWithPassword(parsed.data)
+    const { data: authData, error } = await supabase.auth.signInWithPassword(parsed.data)
     if (error) {
+      console.error('[Login Failed]:', error.message, 'for email:', parsed.data.email)
       logProductEvent('login_failed', requestId)
       return NextResponse.json(
-        { error: 'Unable to sign in. Please try again.' },
+        { error: error.message || 'Unable to sign in. Please try again.' },
         {
           status: 401,
           headers: { 'x-request-id': requestId },

@@ -14,9 +14,9 @@ import {
   Users,
   CalendarDays,
   ClipboardCheck,
-  CreditCard,
   FolderOpen,
   Building2,
+  Layers,
 } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { can, type Resource } from '@/lib/auth/permissions'
@@ -25,7 +25,6 @@ import type { Role } from '@/lib/types'
 const nav: { label: string; href: string; Icon: typeof LayoutDashboard; resource: Resource }[] = [
   { label: 'Dashboard', href: '/', Icon: LayoutDashboard, resource: 'reports' },
   { label: 'Students', href: '/students', Icon: Users, resource: 'students' },
-  { label: 'Payments', href: '/payments', Icon: CreditCard, resource: 'payments' },
   { label: 'Invoices', href: '/invoices', Icon: FileText, resource: 'payments' },
   { label: 'Courses', href: '/courses', Icon: BookOpen, resource: 'courses' },
   { label: 'Course materials', href: '/materials', Icon: FolderOpen, resource: 'materials' },
@@ -108,6 +107,17 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
           >
             <Users size={18} className="mr-2" />
             {!collapsed && <span className="flex-1 text-left">Trainer assignments</span>}
+          </Link>
+        )}
+        {can(role, 'courses', 'manage') && (
+          <Link
+            href="/settings/course-categories"
+            aria-current={pathname.startsWith('/settings/course-categories') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/course-categories') ? ' active' : ''}`}
+            title="Course categories"
+          >
+            <Layers size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Course categories</span>}
           </Link>
         )}
         <Link

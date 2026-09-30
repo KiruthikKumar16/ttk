@@ -20,6 +20,8 @@ export async function listStudentPage(options: {
   search: string
   sort: string
   direction: 'asc' | 'desc'
+  categoryId?: string
+  course?: string
 }) {
   authorizeStudent((await getCurrentProfile()).role, 'read')
   const supabase = await createClient()
@@ -27,7 +29,13 @@ export async function listStudentPage(options: {
   const sort = allowedSort.includes(options.sort as (typeof allowedSort)[number])
     ? (options.sort as (typeof allowedSort)[number])
     : 'register_id'
-  return listStudents(supabase, { ...options, sort, direction: options.direction })
+  return listStudents(supabase, {
+    ...options,
+    sort,
+    direction: options.direction,
+    categoryId: options.categoryId,
+    course: options.course,
+  })
 }
 
 /** Creates a student and optional first payment through the atomic database workflow. */
