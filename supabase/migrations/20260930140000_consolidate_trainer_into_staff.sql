@@ -82,14 +82,19 @@ begin
     return;
   end if;
 
+  if v_old_role = 'admin' and p_role <> 'admin'
+    and (select count(*) from public.profiles where role = 'admin') <= 1 then
+    raise exception using errcode = '23514', message = 'At least one admin account must remain';
+  end if;
+
   update public.profiles set role = p_role where id = p_user_id;
 
-  insert into public.audit_logs (actor_id, action, target_type, target_id, old_values, new_values)
+  insert into public.audit_log (table_name, record_id, action, changed_by, old_values, new_values)
   values (
-    v_actor,
-    'change_role',
-    'profile',
+    'profiles',
     p_user_id,
+    'update',
+    v_actor,
     pg_catalog.jsonb_build_object('role', v_old_role),
     pg_catalog.jsonb_build_object('role', p_role)
   );

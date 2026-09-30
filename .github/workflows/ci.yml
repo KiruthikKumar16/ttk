@@ -86,7 +86,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec supabase --version
       - name: Start local Supabase and apply migrations from scratch
-        run: pnpm exec supabase start --exclude studio > "$RUNNER_TEMP/supabase-start.log" 2>&1
+        run: pnpm exec supabase start --exclude studio > "$RUNNER_TEMP/supabase-start.log" 2>&1 || (cat "$RUNNER_TEMP/supabase-start.log" && exit 1)
       - run: pnpm db:reset
       - run: pnpm db:lint
       - run: pnpm db:test
@@ -110,7 +110,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Start local Supabase and apply seed
-        run: pnpm exec supabase start --exclude studio,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1 && pnpm db:reset
+        run: (pnpm exec supabase start --exclude studio,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1 || (cat "$RUNNER_TEMP/supabase-start.log" && exit 1)) && pnpm db:reset
       - name: Export local test JWT environment without logging keys
         run: node scripts/ci-supabase-env.mjs >> "$GITHUB_ENV"
       - run: pnpm test:int
@@ -172,7 +172,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - name: Start local Supabase and seed isolated shard database
-        run: pnpm exec supabase start --exclude studio,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1 && pnpm db:reset
+        run: (pnpm exec supabase start --exclude studio,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1 || (cat "$RUNNER_TEMP/supabase-start.log" && exit 1)) && pnpm db:reset
       - name: Export local test JWT environment without logging keys
         run: node scripts/ci-supabase-env.mjs >> "$GITHUB_ENV"
       - run: pnpm build
