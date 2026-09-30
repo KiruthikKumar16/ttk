@@ -42,8 +42,18 @@ function parseDate(dateString?: string): Date {
   const parts = clean.split(/\s+/)
   if (parts.length === 3) {
     const monthMap: Record<string, number> = {
-      jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+      jan: 0,
+      feb: 1,
+      mar: 2,
+      apr: 3,
+      may: 4,
+      jun: 5,
+      jul: 6,
+      aug: 7,
+      sep: 8,
+      oct: 9,
+      nov: 10,
+      dec: 11,
     }
     const mIdx = monthMap[parts[1].toLowerCase().slice(0, 3)]
     if (mIdx !== undefined) {
@@ -226,9 +236,7 @@ export function ReportsView({
         student.studentSource || (student as { leadSource?: string }).leadSource || '-',
       ]),
     ]
-    const csv = rows
-      .map((row) => row.map((value) => '"' + value.replaceAll('"', '""') + '"').join(','))
-      .join('\n')
+    const csv = rows.map((row) => row.map((value) => '"' + value.replaceAll('"', '""') + '"').join(',')).join('\n')
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
     const link = document.createElement('a')
     link.href = url
@@ -309,12 +317,7 @@ export function ReportsView({
             <span className="date-filter-label">To</span>
             <div className="date-input-wrap">
               <Calendar size={15} />
-              <input
-                id="rep-end-date"
-                type="date"
-                value={endDateStr}
-                onChange={(e) => setEndDateStr(e.target.value)}
-              />
+              <input id="rep-end-date" type="date" value={endDateStr} onChange={(e) => setEndDateStr(e.target.value)} />
             </div>
           </div>
           <Button variant="default" size="default" onClick={download} className="shrink-0">
@@ -622,9 +625,7 @@ export function ReportsView({
                   <div className="col-pillar-col" key={course} title={`${course}: ${count} students (${sharePct}%)`}>
                     <span className="col-pillar-count">{count}</span>
                     <div className="col-pillar-bar" style={{ height: `${heightPercent}%` }} />
-                    <span className="col-pillar-label">
-                      {course.replace(' Course', '').replace('ThoorigAI ', '')}
-                    </span>
+                    <span className="col-pillar-label">{course.replace(' Course', '').replace('ThoorigAI ', '')}</span>
                   </div>
                 )
               })}

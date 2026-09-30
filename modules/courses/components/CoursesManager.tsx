@@ -90,9 +90,10 @@ export function CoursesManager({
     setEditingCourse(null)
     setName('')
     setFee('')
-    const initialCat = selectedCategoryId && selectedCategoryId !== 'uncategorized'
-      ? categories.find((c) => c.id === selectedCategoryId)
-      : categories[0]
+    const initialCat =
+      selectedCategoryId && selectedCategoryId !== 'uncategorized'
+        ? categories.find((c) => c.id === selectedCategoryId)
+        : categories[0]
     if (initialCat) {
       setCategoryId(initialCat.id)
       setDuration(initialCat.duration)
@@ -302,9 +303,7 @@ export function CoursesManager({
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-xs px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : badgeBg
-                  }`}
+                  className={`text-xs px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-white/20 text-white' : badgeBg}`}
                 >
                   {cat.duration}
                 </span>
@@ -412,9 +411,7 @@ export function CoursesManager({
                         <div className="flex items-center gap-2.5">
                           <div
                             className={`mini-avatar shrink-0 ${
-                              isElite
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-indigo-100 text-indigo-700'
+                              isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
                             }`}
                           >
                             {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
@@ -586,9 +583,7 @@ export function CoursesManager({
                 {/* Course Category Selector */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Category Tier
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">Category Tier</label>
                     {canManageCategories && (
                       <Link
                         href="/settings/course-categories"
@@ -714,9 +709,7 @@ export function CoursesManager({
                         </option>
                       ))}
                     </select>
-                    <span className="text-[11px] text-gray-400 mt-0.5 block">
-                      Configured from category tiers
-                    </span>
+                    <span className="text-[11px] text-gray-400 mt-0.5 block">Configured from category tiers</span>
                   </div>
                 </div>
 

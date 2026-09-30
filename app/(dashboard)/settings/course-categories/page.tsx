@@ -19,10 +19,7 @@ export default async function CourseCategoriesSettingsPage() {
           </p>
         </div>
       </div>
-      <CourseCategoriesManager
-        initialCategories={categories}
-        canManage={can(profile.role, 'courses', 'manage')}
-      />
+      <CourseCategoriesManager initialCategories={categories} canManage={can(profile.role, 'courses', 'manage')} />
     </main>
   )
 }

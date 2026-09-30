@@ -6,10 +6,7 @@ import type { Student, Payment } from '@/lib/types'
 
 export async function getAllStudents(): Promise<Student[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .order('register_id', { ascending: true })
+  const { data, error } = await supabase.from('students').select('*').order('register_id', { ascending: true })
   if (error) throw error
   return (data ?? []).map(studentFromRow)
 }
@@ -83,10 +80,7 @@ export async function getStaffAcademicReportData(): Promise<AcademicReportData> 
       .select('id, title, max_score, assessment_date, course_id, courses(name)')
       .order('assessment_date', { ascending: false })
       .limit(100),
-    supabase
-      .from('assessment_results')
-      .select('id, assessment_id, student_id, score')
-      .limit(2000),
+    supabase.from('assessment_results').select('id, assessment_id, student_id, score').limit(2000),
   ])
 
   if (attError) throw attError

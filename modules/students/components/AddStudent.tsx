@@ -422,30 +422,28 @@ export function AddStudent({
                 onChange={(e) => handleCourseChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                {courses && courses.some((c) => c.categoryName) ? (
-                  Object.entries(
-                    courses.reduce<Record<string, Course[]>>((acc, c) => {
-                      const group = c.categoryName || 'Other Courses'
-                      if (!acc[group]) acc[group] = []
-                      acc[group].push(c)
-                      return acc
-                    }, {})
-                  ).map(([groupName, groupCourses]) => (
-                    <optgroup key={groupName} label={groupName}>
-                      {groupCourses.map((c) => (
-                        <option key={c.id || c.name} value={c.name}>
-                          {c.name} {c.duration ? `(${c.duration})` : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))
-                ) : (
-                  courseList.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))
-                )}
+                {courses && courses.some((c) => c.categoryName)
+                  ? Object.entries(
+                      courses.reduce<Record<string, Course[]>>((acc, c) => {
+                        const group = c.categoryName || 'Other Courses'
+                        if (!acc[group]) acc[group] = []
+                        acc[group].push(c)
+                        return acc
+                      }, {}),
+                    ).map(([groupName, groupCourses]) => (
+                      <optgroup key={groupName} label={groupName}>
+                        {groupCourses.map((c) => (
+                          <option key={c.id || c.name} value={c.name}>
+                            {c.name} {c.duration ? `(${c.duration})` : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))
+                  : courseList.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
               </select>
               {(() => {
                 const selectedObj = courses?.find((c) => c.name === course)
@@ -453,9 +451,7 @@ export function AddStudent({
                 return (
                   <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      {selectedObj.categoryName && (
-                        <CategoryBadge categoryName={selectedObj.categoryName} />
-                      )}
+                      {selectedObj.categoryName && <CategoryBadge categoryName={selectedObj.categoryName} />}
                       <span className="text-slate-600">
                         Duration: <strong className="text-slate-800">{selectedObj.duration}</strong>
                       </span>

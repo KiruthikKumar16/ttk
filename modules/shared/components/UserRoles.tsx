@@ -65,7 +65,7 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
       setSuccess(
         changedCount === 1
           ? 'User role updated successfully. The change was recorded in the audit log.'
-          : `${changedCount} user roles updated successfully. Changes were recorded in the audit log.`
+          : `${changedCount} user roles updated successfully. Changes were recorded in the audit log.`,
       )
       setTimeout(() => setSuccess(''), 5000)
     } catch (cause) {
@@ -91,7 +91,9 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-xl border border-slate-200/80 bg-white/90 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
+            />
             <span className="text-xs font-semibold text-slate-700">
               {hasChanges
                 ? `${changedCount} unsaved role ${changedCount === 1 ? 'change' : 'changes'}`
@@ -99,7 +101,8 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Role changes require an admin account. Your own role cannot be changed here, and at least one admin must remain.
+            Role changes require an admin account. Your own role cannot be changed here, and at least one admin must
+            remain.
           </p>
         </div>
 
@@ -153,14 +156,20 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
 
       {/* Notifications */}
       {error && (
-        <div role="alert" className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700"
+        >
           <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-600" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div role="status" className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+        <div
+          role="status"
+          className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800"
+        >
           <Check size={16} className="shrink-0 text-emerald-600" />
           <span>{success}</span>
         </div>
@@ -172,13 +181,22 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
           <caption className="sr-only">Users and assigned roles</caption>
           <thead className="bg-gray-50/80">
             <tr>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+              >
                 User
               </th>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+              >
                 Role
               </th>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+              >
                 Created
               </th>
             </tr>
@@ -189,7 +207,10 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
               const isSelf = user.id === currentUserId
 
               return (
-                <tr key={user.id} className={`hover:bg-gray-50/70 transition-colors ${isModified ? 'bg-amber-50/40' : ''}`}>
+                <tr
+                  key={user.id}
+                  className={`hover:bg-gray-50/70 transition-colors ${isModified ? 'bg-amber-50/40' : ''}`}
+                >
                   <th scope="row" className="px-6 py-4 whitespace-nowrap text-left font-medium">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-slate-900">{user.full_name || 'Unnamed user'}</span>
@@ -247,7 +268,8 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
       {hasChanges && (
         <div className="flex items-center justify-between p-3.5 rounded-xl border border-amber-200 bg-amber-50/70 text-xs shadow-xs animate-in fade-in">
           <span className="font-medium text-amber-900">
-            You have {changedCount} pending role {changedCount === 1 ? 'change' : 'changes'}. Click &quot;Save Changes&quot; to apply.
+            You have {changedCount} pending role {changedCount === 1 ? 'change' : 'changes'}. Click &quot;Save
+            Changes&quot; to apply.
           </span>
           <div className="flex items-center gap-2">
             <Button

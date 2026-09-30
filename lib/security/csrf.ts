@@ -30,9 +30,7 @@ export function validateMutationRequest(request: Request, contentTypes = ['appli
     const requestOrigin = new URL(request.url).origin
 
     const originMatches =
-      originString === appOrigin ||
-      originString === requestOrigin ||
-      KNOWN_ALLOWED_ORIGINS.has(originString)
+      originString === appOrigin || originString === requestOrigin || KNOWN_ALLOWED_ORIGINS.has(originString)
 
     const hostMatches =
       host === new URL(appOrigin).host ||
@@ -42,10 +40,7 @@ export function validateMutationRequest(request: Request, contentTypes = ['appli
       host === 'localhost:3000' ||
       host === '127.0.0.1:3000'
 
-    allowed =
-      originMatches &&
-      hostMatches &&
-      contentTypes.includes(contentType ?? '')
+    allowed = originMatches && hostMatches && contentTypes.includes(contentType ?? '')
   } catch {
     allowed = false
   }

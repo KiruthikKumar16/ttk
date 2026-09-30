@@ -91,9 +91,7 @@ export function MaterialsDirectory({
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-xs px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : badgeBg
-                  }`}
+                  className={`text-xs px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-white/20 text-white' : badgeBg}`}
                 >
                   {cat.duration} ({count})
                 </span>
@@ -148,9 +146,7 @@ export function MaterialsDirectory({
                       <BookOpen size={20} />
                     )}
                   </div>
-                  {course.categoryName && (
-                    <CategoryBadge categoryName={course.categoryName} />
-                  )}
+                  {course.categoryName && <CategoryBadge categoryName={course.categoryName} />}
                 </div>
 
                 <div className="mt-3.5">

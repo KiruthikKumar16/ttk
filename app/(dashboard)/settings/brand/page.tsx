@@ -8,11 +8,5 @@ export default async function BrandSettingsPage() {
   const profile = await getCurrentProfile()
   const settings = await getBrandSettings()
 
-  return (
-    <BrandSettingsClient
-      settings={settings}
-      editable={profile.role === 'admin'}
-    />
-  )
+  return <BrandSettingsClient settings={settings} editable={profile.role === 'admin'} />
 }
-

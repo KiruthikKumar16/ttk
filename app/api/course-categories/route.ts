@@ -19,13 +19,10 @@ const deleteCategoryQuerySchema = z.object({
   id: z.string().uuid(),
 })
 
-export const GET = withApi(
-  { roles: rolesFor('courses', 'read') },
-  async () => {
-    const categories = await listCourseCategories()
-    return apiResult(categories)
-  },
-)
+export const GET = withApi({ roles: rolesFor('courses', 'read') }, async () => {
+  const categories = await listCourseCategories()
+  return apiResult(categories)
+})
 
 export const POST = withApi(
   {

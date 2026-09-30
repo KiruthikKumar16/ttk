@@ -1,10 +1,6 @@
 import { requirePermission } from '@/lib/auth/current-profile'
 import { can } from '@/lib/auth/permissions'
-import {
-  getDashboardSummary,
-  getRecentPayments,
-  getStaffDashboardData,
-} from '@/modules/dashboard/service'
+import { getDashboardSummary, getRecentPayments, getStaffDashboardData } from '@/modules/dashboard/service'
 import { getAllStudents } from '@/modules/reports/service'
 import { DashboardMetrics } from '@/modules/dashboard/components/DashboardMetrics'
 import { StaffDashboardView } from '@/modules/dashboard/components/StaffDashboardView'
@@ -16,12 +12,7 @@ export default async function DashboardPage() {
   // If staff, serve the Academic & Classroom Operations Dashboard (no financial data fetched or leaked)
   if (profile.role === 'staff') {
     const staffData = await getStaffDashboardData()
-    return (
-      <StaffDashboardView
-        data={staffData}
-        canCreateStudent={can(profile.role, 'students', 'create')}
-      />
-    )
+    return <StaffDashboardView data={staffData} canCreateStudent={can(profile.role, 'students', 'create')} />
   }
 
   // Admin Executive Dashboard

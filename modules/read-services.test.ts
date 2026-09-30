@@ -13,11 +13,23 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => mocks.client }))
 vi.mock('@/lib/supabase/admin', () => ({ getSupabaseAdminClient: () => mocks.adminClient }))
 vi.mock('@/lib/auth/current-profile', () => ({ getCurrentProfile: mocks.getCurrentProfile }))
-vi.mock('next/cache', () => ({ unstable_cache: (callback: (...args: any[]) => any) => callback }))
+vi.mock('next/cache', () => ({
+  unstable_cache: (callback: (...args: any[]) => any) => callback,
+  revalidateTag: vi.fn(),
+}))
 vi.mock('@/lib/server-data', () => ({ listCertificates: mocks.listCertificates }))
 
 import { getCachedGstCalculationSettings, getGstSettings } from '@/modules/gst/service'
-import { getCachedCourseOptions, listCoursePage, getCourse, listCourseOptions } from '@/modules/courses/service'
+import {
+  getCachedCourseOptions,
+  listCoursePage,
+  getCourse,
+  listCourseOptions,
+  listCourseCategories,
+  createCourseCategory,
+  updateCourseCategory,
+  deleteCourseCategory,
+} from '@/modules/courses/service'
 import { listAttendancePage } from '@/modules/attendance/service'
 import { listAssessmentPage } from '@/modules/assessments/service'
 import { listAuditPage } from '@/modules/audit/service'
@@ -40,7 +52,19 @@ function makeClient() {
       const queue = mocks.results[table] ?? []
       current = queue.shift() ?? current
       const query: any = {}
-      for (const method of ['select', 'eq', 'ilike', 'or', 'order', 'range', 'limit'])
+      for (const method of [
+        'select',
+        'eq',
+        'ilike',
+        'or',
+        'order',
+        'range',
+        'limit',
+        'insert',
+        'update',
+        'delete',
+        'is',
+      ])
         query[method] = vi.fn(() => query)
       query.maybeSingle = vi.fn(async () => current)
       query.single = vi.fn(async () => current)
@@ -115,6 +139,58 @@ describe('read-only domain services', () => {
 
     mocks.getCurrentProfile.mockResolvedValueOnce({ role: null })
     await expect(getCachedCourseOptions()).rejects.toBeInstanceOf(ForbiddenError)
+  })
+
+  it('manages course categories with authorization checks', async () => {
+    setResults('course_categories', {
+      data: [
+        {
+          id: 'cat-1',
+          name: 'Tech',
+          duration: '3m',
+          created_at: '2026-01-01',
+          updated_at: '2026-01-02',
+          courses: [{ count: 2 }],
+        },
+      ],
+      error: null,
+    })
+    const categories = await listCourseCategories()
+    expect(categories).toHaveLength(1)
+    expect(categories[0].name).toBe('Tech')
+    expect(categories[0].courseCount).toBe(2)
+
+    setResults('course_categories', {
+      data: { id: 'cat-2', name: 'Design', duration: '6m', created_at: 'now', updated_at: 'now' },
+      error: null,
+    })
+    const created = await createCourseCategory({ name: 'Design', duration: '6m' })
+    expect(created.name).toBe('Design')
+
+    mocks.getCurrentProfile.mockResolvedValueOnce({ role: 'staff' })
+    await expect(createCourseCategory({ name: 'X', duration: '1m' })).rejects.toBeInstanceOf(ForbiddenError)
+
+    setResults('course_categories', {
+      data: { id: 'cat-2', name: 'Design Updated', duration: '8m', created_at: 'now', updated_at: 'now' },
+      error: null,
+    })
+    const updated = await updateCourseCategory('cat-2', { name: 'Design Updated' })
+    expect(updated.name).toBe('Design Updated')
+
+    mocks.getCurrentProfile.mockResolvedValueOnce({ role: 'staff' })
+    await expect(updateCourseCategory('cat-2', {})).rejects.toBeInstanceOf(ForbiddenError)
+
+    setResults('course_categories', { error: null })
+    await expect(deleteCourseCategory('cat-2')).resolves.toBeUndefined()
+
+    mocks.getCurrentProfile.mockResolvedValueOnce({ role: 'staff' })
+    await expect(deleteCourseCategory('cat-2')).rejects.toBeInstanceOf(ForbiddenError)
+
+    // Also test category filtering in listCoursePage
+    setResults('courses', { data: [], count: 0 })
+    await listCoursePage({ ...opts, categoryId: 'uncategorized' })
+    setResults('courses', { data: [], count: 0 })
+    await listCoursePage({ ...opts, categoryId: 'cat-1' })
   })
 
   it('maps attendance, assessment and audit rows and applies searches', async () => {

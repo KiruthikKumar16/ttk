@@ -13,10 +13,7 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
   const courseId = Array.isArray(params.courseId) ? params.courseId[0] : params.courseId
   const date = Array.isArray(params.date) ? params.date[0] : params.date
   const supabase = await createClient()
-  const [courseOptions, categories] = await Promise.all([
-    getCachedCourseOptions(),
-    listCourseCategories(),
-  ])
+  const [courseOptions, categories] = await Promise.all([getCachedCourseOptions(), listCourseCategories()])
   const courses = courseOptions.map((course) => ({
     id: course.id,
     name: course.name,
@@ -165,9 +162,7 @@ export default async function AttendancePage({ searchParams }: PageProps<'/atten
                     <td>{row.sessions}</td>
                     <td>{row.present_sessions}</td>
                     <td>
-                      <span className="font-medium text-slate-900">
-                        {Number(row.attendance_percent).toFixed(1)}%
-                      </span>
+                      <span className="font-medium text-slate-900">{Number(row.attendance_percent).toFixed(1)}%</span>
                     </td>
                   </tr>
                 )

@@ -59,12 +59,7 @@ export function StudentsView({
     return map
   }, [courses])
 
-  const applyFilters = (filters: {
-    search?: string
-    categoryId?: string
-    course?: string
-    page?: number
-  }) => {
+  const applyFilters = (filters: { search?: string; categoryId?: string; course?: string; page?: number }) => {
     const params = new URLSearchParams()
     const s = filters.search !== undefined ? filters.search.trim() : searchTerm.trim()
     const cat = filters.categoryId !== undefined ? filters.categoryId : categoryFilter
@@ -92,9 +87,7 @@ export function StudentsView({
     setCategoryFilter(newCatId)
     let newCourse = courseFilter
     if (newCatId) {
-      const selectedCourseObj = courses.find(
-        (c) => c.name.trim().toLowerCase() === courseFilter.trim().toLowerCase(),
-      )
+      const selectedCourseObj = courses.find((c) => c.name.trim().toLowerCase() === courseFilter.trim().toLowerCase())
       if (selectedCourseObj && selectedCourseObj.categoryId !== newCatId) {
         newCourse = ''
         setCourseFilter('')
@@ -107,9 +100,7 @@ export function StudentsView({
     setCourseFilter(newCourse)
     let newCat = categoryFilter
     if (newCourse && !newCat) {
-      const courseObj = courses.find(
-        (c) => c.name.trim().toLowerCase() === newCourse.trim().toLowerCase(),
-      )
+      const courseObj = courses.find((c) => c.name.trim().toLowerCase() === newCourse.trim().toLowerCase())
       if (courseObj?.categoryId) {
         newCat = courseObj.categoryId
         setCategoryFilter(newCat)
@@ -207,9 +198,7 @@ export function StudentsView({
                 onChange={(e) => handleCourseChange(e.target.value)}
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer truncate"
               >
-                <option value="">
-                  {categoryFilter ? 'All Courses in Category' : 'All Courses'}
-                </option>
+                <option value="">{categoryFilter ? 'All Courses in Category' : 'All Courses'}</option>
                 {filteredCourseOptions.map((c) => (
                   <option key={c.id} value={c.name}>
                     {c.name}
@@ -326,7 +315,11 @@ export function StudentsView({
         {/* Table summary & Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 bg-slate-50/40 text-xs text-slate-500">
           <div className="table-summary border-0 p-0">
-            Showing <strong>{fromIndex}-{toIndex}</strong> of <strong>{totalCount}</strong> students
+            Showing{' '}
+            <strong>
+              {fromIndex}-{toIndex}
+            </strong>{' '}
+            of <strong>{totalCount}</strong> students
           </div>
           <div className="flex items-center gap-2">
             <Button

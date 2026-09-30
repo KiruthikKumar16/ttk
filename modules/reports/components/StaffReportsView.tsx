@@ -86,9 +86,7 @@ export function StaffReportsView({
     const totalTests = filteredAssessments.length
     const totalSubmissions = filteredAssessments.reduce((sum, a) => sum + a.resultsCount, 0)
     const avgScore =
-      totalTests > 0
-        ? Math.round(filteredAssessments.reduce((sum, a) => sum + a.avgScore, 0) / totalTests)
-        : 0
+      totalTests > 0 ? Math.round(filteredAssessments.reduce((sum, a) => sum + a.avgScore, 0) / totalTests) : 0
     const totalPassed = filteredAssessments.reduce((sum, a) => sum + a.passCount, 0)
     const passRate = totalSubmissions > 0 ? Math.round((totalPassed / totalSubmissions) * 100) : 0
     return { totalTests, totalSubmissions, avgScore, passRate }
@@ -141,7 +139,16 @@ export function StaffReportsView({
 
   // CSV Export for Assessments
   const handleExportAssessmentsCSV = () => {
-    const headers = ['Assessment Title', 'Course', 'Date', 'Max Score', 'Avg Score', 'Graded Submissions', 'Passed', 'Failed']
+    const headers = [
+      'Assessment Title',
+      'Course',
+      'Date',
+      'Max Score',
+      'Avg Score',
+      'Graded Submissions',
+      'Passed',
+      'Failed',
+    ]
     const rows = filteredAssessments.map((a) => [
       `"${a.title.replace(/"/g, '""')}"`,
       `"${a.courseName.replace(/"/g, '""')}"`,
@@ -172,9 +179,7 @@ export function StaffReportsView({
               Staff Academic Reports
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-            Academic & Performance Analytics
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Academic & Performance Analytics</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Audit classroom attendance records, student evaluations, test pass rates, and learner retention.
           </p>
@@ -263,9 +268,7 @@ export function StaffReportsView({
             <span className="text-2xl font-bold text-slate-900">{students.length}</span>
             <span className="text-xs text-slate-500">enrolled total</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {students.length} active in course batches
-          </p>
+          <p className="text-[11px] text-slate-500 mt-1">{students.length} active in course batches</p>
         </div>
 
         <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
@@ -277,9 +280,7 @@ export function StaffReportsView({
             <span className="text-2xl font-bold text-slate-900">{assessmentStats.totalTests}</span>
             <span className="text-xs text-slate-500">conducted</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {assessmentStats.totalSubmissions} submissions evaluated
-          </p>
+          <p className="text-[11px] text-slate-500 mt-1">{assessmentStats.totalSubmissions} submissions evaluated</p>
         </div>
 
         <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
@@ -291,9 +292,7 @@ export function StaffReportsView({
             <span className="text-2xl font-bold text-slate-900">{assessmentStats.avgScore}%</span>
             <span className="text-xs text-slate-500">cohort average</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {assessmentStats.passRate}% student pass rate
-          </p>
+          <p className="text-[11px] text-slate-500 mt-1">{assessmentStats.passRate}% student pass rate</p>
         </div>
       </div>
 
@@ -410,8 +409,8 @@ export function StaffReportsView({
                           r.status === 'Present'
                             ? 'bg-emerald-100 text-emerald-800'
                             : r.status === 'Late'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-rose-100 text-rose-800'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-rose-100 text-rose-800'
                         }`}
                       >
                         {r.status}
@@ -424,7 +423,8 @@ export function StaffReportsView({
           </table>
           {filteredAttendance.length > 50 && (
             <div className="p-3 text-center text-xs text-slate-500 bg-slate-50 border-t border-slate-100">
-              Showing first 50 of {filteredAttendance.length} records. Click &quot;Export CSV&quot; for the complete file.
+              Showing first 50 of {filteredAttendance.length} records. Click &quot;Export CSV&quot; for the complete
+              file.
             </div>
           )}
         </div>
@@ -523,9 +523,7 @@ export function StaffReportsView({
                       {s.present} of {s.total} sessions
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">
-                        {s.rate}%
-                      </span>
+                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">{s.rate}%</span>
                     </td>
                   </tr>
                 ))

@@ -123,9 +123,7 @@ export async function listCoursePage(options: {
 }): Promise<{ data: Course[]; totalCount: number }> {
   const supabase = await createClient()
   const offset = (options.page - 1) * options.pageSize
-  let query = supabase
-    .from('courses')
-    .select('*, category:course_categories(id, name, duration)', { count: 'exact' })
+  let query = supabase.from('courses').select('*, category:course_categories(id, name, duration)', { count: 'exact' })
 
   if (options.search) {
     query = query.ilike('name', `%${options.search.replace(/[\\%_,()]/g, ' ').trim()}%`)

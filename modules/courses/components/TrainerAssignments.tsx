@@ -96,10 +96,7 @@ export function TrainerAssignments({
               ))}
             </select>
           </div>
-          <button
-            disabled={!courseId || !trainerId}
-            className="btn-primary min-h-10 px-4 py-2 text-sm font-medium"
-          >
+          <button disabled={!courseId || !trainerId} className="btn-primary min-h-10 px-4 py-2 text-sm font-medium">
             Assign trainer
           </button>
         </form>
@@ -122,13 +119,22 @@ export function TrainerAssignments({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Course
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Trainer
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Action
               </th>
             </tr>
@@ -143,10 +149,7 @@ export function TrainerAssignments({
                   {trainers.find((item) => item.id === row.trainerId)?.name ?? 'Trainer unavailable'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <button
-                    className="btn-secondary min-h-9 px-3 text-xs font-medium"
-                    onClick={() => setRemove(row)}
-                  >
+                  <button className="btn-secondary min-h-9 px-3 text-xs font-medium" onClick={() => setRemove(row)}>
                     Unassign
                   </button>
                 </td>

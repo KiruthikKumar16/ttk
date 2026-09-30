@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 
-test('staff JWT permits assigned role capabilities and blocks financial and course management data', async ({ playwright, baseURL }) => {
+test('staff JWT permits assigned role capabilities and blocks financial and course management data', async ({
+  playwright,
+  baseURL,
+}) => {
   const staff = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/staff.json' })
   try {
     const students = await staff.get('/api/students?page=1&pageSize=5')

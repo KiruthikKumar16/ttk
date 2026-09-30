@@ -100,9 +100,7 @@ export function StudentDetail({
           </h1>
           <div className="flex items-center gap-2 flex-wrap text-sm text-slate-600 mt-1">
             <span className="font-semibold text-slate-900">{student.course}</span>
-            {categoryName && (
-              <CategoryBadge categoryName={categoryName} duration={courseDuration} />
-            )}
+            {categoryName && <CategoryBadge categoryName={categoryName} duration={courseDuration} />}
             <span>·</span>
             <span>Batch started {student.batch}</span>
             <span>·</span>

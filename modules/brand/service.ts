@@ -6,11 +6,7 @@ import type { BrandInput } from './schema'
 
 export async function getBrandSettings(): Promise<BrandSettings> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('brand_settings')
-    .select('*')
-    .eq('id', 'default')
-    .maybeSingle()
+  const { data, error } = await supabase.from('brand_settings').select('*').eq('id', 'default').maybeSingle()
 
   if (error || !data) {
     return {

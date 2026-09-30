@@ -19,9 +19,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<'/invoice
     getCachedCourseOptions(),
   ])
 
-  const courseCategoryMap = new Map(
-    courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]),
-  )
+  const courseCategoryMap = new Map(courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]))
 
   return (
     <RecordList
@@ -68,10 +66,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<'/invoice
                 </Link>
               </td>
               <td>
-                <Link
-                  href={`/students/${payment.studentId}`}
-                  className="font-medium text-indigo-600 hover:underline"
-                >
+                <Link href={`/students/${payment.studentId}`} className="font-medium text-indigo-600 hover:underline">
                   {payment.student}
                 </Link>
               </td>

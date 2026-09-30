@@ -122,12 +122,8 @@ export function DashboardMetrics({
   })
 
   const tierPills = categories.map((cat) => {
-    const matchingCourseNames = courses
-      .filter((c) => c.categoryId === cat.id)
-      .map((c) => c.name.toLowerCase().trim())
-    const count = students.filter(
-      (s) => s.course && matchingCourseNames.includes(s.course.toLowerCase().trim())
-    ).length
+    const matchingCourseNames = courses.filter((c) => c.categoryId === cat.id).map((c) => c.name.toLowerCase().trim())
+    const count = students.filter((s) => s.course && matchingCourseNames.includes(s.course.toLowerCase().trim())).length
     return {
       ...cat,
       studentCount: count,

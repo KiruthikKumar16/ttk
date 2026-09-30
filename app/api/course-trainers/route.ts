@@ -11,7 +11,8 @@ export const POST = withApi({ roles: ['admin'], body: assignmentSchema }, async 
     .eq('id', body.trainerId)
     .maybeSingle()
   if (profileError) throw profileError
-  if (trainer?.role !== 'staff' && trainer?.role !== 'admin') return Response.json({ error: 'Choose an active staff account.' }, { status: 400 })
+  if (trainer?.role !== 'staff' && trainer?.role !== 'admin')
+    return Response.json({ error: 'Choose an active staff account.' }, { status: 400 })
   const { error } = await supabase!
     .from('course_trainers')
     .upsert(

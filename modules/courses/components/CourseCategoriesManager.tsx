@@ -3,18 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import {
-  Plus,
-  Clock,
-  Edit2,
-  Trash2,
-  AlertCircle,
-  X,
-  BookOpen,
-  ArrowRight,
-  Sparkles,
-  FolderOpen,
-} from 'lucide-react'
+import { Plus, Clock, Edit2, Trash2, AlertCircle, X, BookOpen, ArrowRight, Sparkles, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { CourseCategory } from '@/lib/types'
@@ -94,11 +83,7 @@ export function CourseCategoriesManager({
         }
         const updated = await res.json()
         setCategories((prev) =>
-          prev.map((c) =>
-            c.id === editingCategory.id
-              ? { ...c, name: updated.name, duration: updated.duration }
-              : c,
-          ),
+          prev.map((c) => (c.id === editingCategory.id ? { ...c, name: updated.name, duration: updated.duration } : c)),
         )
       } else {
         const res = await fetch('/api/course-categories', {
@@ -156,7 +141,8 @@ export function CourseCategoriesManager({
               Configured Categories ({categories.length})
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Organize courses by standard duration tiers. Selecting a category when creating a course will auto-fill its duration.
+              Organize courses by standard duration tiers. Selecting a category when creating a course will auto-fill
+              its duration.
             </p>
           </div>
           {canManage && (
@@ -188,14 +174,24 @@ export function CourseCategoriesManager({
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${iconBg}`}>
-                        {isInternship ? <FolderOpen size={18} /> : isElite ? <Sparkles size={18} /> : <BookOpen size={18} />}
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${iconBg}`}
+                      >
+                        {isInternship ? (
+                          <FolderOpen size={18} />
+                        ) : isElite ? (
+                          <Sparkles size={18} />
+                        ) : (
+                          <BookOpen size={18} />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 text-base">{cat.name}</h3>
                         <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
                           <Clock size={13} className="text-gray-400" />
-                          <span>Standard: <strong className="text-gray-700 font-medium">{cat.duration}</strong></span>
+                          <span>
+                            Standard: <strong className="text-gray-700 font-medium">{cat.duration}</strong>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -247,7 +243,8 @@ export function CourseCategoriesManager({
             <BookOpen size={36} className="mx-auto text-gray-400 mb-3" />
             <h3 className="text-base font-semibold text-gray-900">No course categories found</h3>
             <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-              Create categories such as Essential (6 weeks) and Elite (12 weeks) to organize your courses and quick-sort them in the course catalog.
+              Create categories such as Essential (6 weeks) and Elite (12 weeks) to organize your courses and quick-sort
+              them in the course catalog.
             </p>
             {canManage && (
               <Button onClick={openAddModal} className="mt-4">
@@ -272,11 +269,7 @@ export function CourseCategoriesManager({
                   Configure the category name and standard course duration.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
-              >
+              <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
                 <X size={18} />
               </button>
             </div>
@@ -335,7 +328,8 @@ export function CourseCategoriesManager({
               </div>
 
               <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-lg text-xs text-blue-800">
-                💡 When a staff or admin selects this category when adding or editing a course, the duration will automatically prefill to <strong>{duration || 'the duration set here'}</strong>.
+                💡 When a staff or admin selects this category when adding or editing a course, the duration will
+                automatically prefill to <strong>{duration || 'the duration set here'}</strong>.
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">

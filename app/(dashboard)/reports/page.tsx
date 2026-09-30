@@ -1,9 +1,5 @@
 import { requirePermission } from '@/lib/auth/current-profile'
-import {
-  getAllStudents,
-  getAllPayments,
-  getStaffAcademicReportData,
-} from '@/modules/reports/service'
+import { getAllStudents, getAllPayments, getStaffAcademicReportData } from '@/modules/reports/service'
 import { ReportsView } from '@/modules/reports/components/ReportsView'
 import { StaffReportsView } from '@/modules/reports/components/StaffReportsView'
 import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
@@ -38,12 +34,5 @@ export default async function ReportsPage() {
     getCachedCourseOptions(),
   ])
 
-  return (
-    <ReportsView
-      students={students}
-      payments={payments}
-      categories={categories}
-      courses={courseOptions}
-    />
-  )
+  return <ReportsView students={students} payments={payments} categories={categories} courses={courseOptions} />
 }

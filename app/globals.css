@@ -3606,10 +3606,22 @@ td strong {
   font-size: 11px;
   font-weight: 600;
 }
-.chart-badge-blue { background: #eff6ff; color: #2563eb; }
-.chart-badge-green { background: #ecfdf5; color: #059669; }
-.chart-badge-amber { background: #fffbeb; color: #d97706; }
-.chart-badge-purple { background: #f5f3ff; color: #7c3aed; }
+.chart-badge-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.chart-badge-green {
+  background: #ecfdf5;
+  color: #059669;
+}
+.chart-badge-amber {
+  background: #fffbeb;
+  color: #d97706;
+}
+.chart-badge-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
 
 /* ── Graph 1: Modern SVG Donut Chart ── */
 .donut-chart-container {
@@ -3736,7 +3748,9 @@ td strong {
   border-radius: 6px 6px 2px 2px;
   background: linear-gradient(180deg, #6366f1 0%, #3b82f6 100%);
   position: relative;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s;
   cursor: pointer;
 }
 .col-pillar-bar:hover {
@@ -3866,14 +3880,22 @@ td strong {
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-.status-card-paid .status-card-title { color: #15803d; }
-.status-card-pending .status-card-title { color: #b45309; }
+.status-card-paid .status-card-title {
+  color: #15803d;
+}
+.status-card-pending .status-card-title {
+  color: #b45309;
+}
 .status-card-num {
   font-size: var(--text-md, 16px);
   font-weight: 700;
 }
-.status-card-paid .status-card-num { color: #166534; }
-.status-card-pending .status-card-num { color: #92400e; }
+.status-card-paid .status-card-num {
+  color: #166534;
+}
+.status-card-pending .status-card-num {
+  color: #92400e;
+}
 
 /* ── Graph 5: Gender Demographics Ratio Graph ── */
 .demographics-wrap {
@@ -3886,7 +3908,7 @@ td strong {
   display: flex;
   overflow: hidden;
   margin-bottom: 12px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 .demographics-segment-female {
   background: linear-gradient(90deg, #ec4899, #f43f5e);
@@ -3922,8 +3944,14 @@ td strong {
   place-items: center;
   flex-shrink: 0;
 }
-.demo-female-box { background: #fdf2f8; color: #db2777; }
-.demo-male-box { background: #eff6ff; color: #2563eb; }
+.demo-female-box {
+  background: #fdf2f8;
+  color: #db2777;
+}
+.demo-male-box {
+  background: #eff6ff;
+  color: #2563eb;
+}
 
 /* ── Graph 6: Cashflow Timeline Trend ── */
 .timeline-chart-wrap {
@@ -3967,10 +3995,22 @@ td strong {
   display: grid;
   place-items: center;
 }
-.stat-icon.icon-amber { color: var(--amber, #d97706); background: var(--amber-bg, #fffbeb); }
-.stat-icon.icon-green { color: var(--green, #10b981); background: var(--green-bg, #ecfdf5); }
-.stat-icon.icon-blue  { color: var(--primary, #6366f1); background: #eff6ff; }
-.stat-icon.icon-navy  { color: var(--navy, #1e293b); background: #f1f5f9; }
+.stat-icon.icon-amber {
+  color: var(--amber, #d97706);
+  background: var(--amber-bg, #fffbeb);
+}
+.stat-icon.icon-green {
+  color: var(--green, #10b981);
+  background: var(--green-bg, #ecfdf5);
+}
+.stat-icon.icon-blue {
+  color: var(--primary, #6366f1);
+  background: #eff6ff;
+}
+.stat-icon.icon-navy {
+  color: var(--navy, #1e293b);
+  background: #f1f5f9;
+}
 
 /* ── Date filter group ── */
 .date-filter-group {
@@ -3990,18 +4030,18 @@ td strong {
   align-items: center;
   gap: 8px;
   background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-lg, 10px);
   padding: 8px 12px;
   color: var(--muted, #64748b);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
   transition: all 0.2s;
 }
 .date-input-wrap:focus-within {
   border-color: var(--primary, #6366f1);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
-.date-input-wrap input[type="date"] {
+.date-input-wrap input[type='date'] {
   border: 0;
   outline: 0;
   background: transparent;

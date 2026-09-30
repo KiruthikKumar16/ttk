@@ -14,8 +14,16 @@ export function LoadingSpinner() {
 
   return (
     isFetching > 0 && (
-      <div className={cn('fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200')}>
-        <div className={cn('flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/10 animate-spin')}>
+      <div
+        className={cn(
+          'fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200',
+        )}
+      >
+        <div
+          className={cn(
+            'flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/10 animate-spin',
+          )}
+        >
           <Loader2 className={cn('h-6 w-6 text-primary')} />
         </div>
       </div>

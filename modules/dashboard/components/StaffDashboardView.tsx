@@ -52,9 +52,7 @@ export function StaffDashboardView({
             </span>
             <span className="text-xs text-muted-foreground">{todayFormatted}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-            Academic Operations Dashboard
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Academic Operations Dashboard</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Monitor daily attendance, grade assessments, track student engagement, and distribute course materials.
           </p>
@@ -117,7 +115,9 @@ export function StaffDashboardView({
         {/* Metric 2: Today's Attendance */}
         <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-sm transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Today&apos;s Attendance</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Today&apos;s Attendance
+            </span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <CalendarDays size={18} />
             </div>
@@ -185,7 +185,10 @@ export function StaffDashboardView({
                 <CheckCircle2 size={18} className="text-emerald-600" />
                 <h2 className="text-sm font-semibold text-slate-900">Today&apos;s Attendance Summary</h2>
               </div>
-              <Link href="/attendance" className="text-xs font-medium text-indigo-600 hover:underline flex items-center gap-1">
+              <Link
+                href="/attendance"
+                className="text-xs font-medium text-indigo-600 hover:underline flex items-center gap-1"
+              >
                 Open Attendance Sheet <ArrowRight size={13} />
               </Link>
             </div>
@@ -247,7 +250,10 @@ export function StaffDashboardView({
             ) : (
               <div className="divide-y divide-slate-100">
                 {recentAssessments.map((a) => (
-                  <div key={a.id} className="p-3.5 hover:bg-slate-50/60 transition-colors flex items-center justify-between gap-3">
+                  <div
+                    key={a.id}
+                    className="p-3.5 hover:bg-slate-50/60 transition-colors flex items-center justify-between gap-3"
+                  >
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-slate-900 truncate">{a.title}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">

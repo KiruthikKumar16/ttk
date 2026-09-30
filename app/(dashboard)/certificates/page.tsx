@@ -19,9 +19,7 @@ export default async function CertificatesPage({ searchParams }: PageProps<'/cer
     listCourseCategories(),
   ])
 
-  const courseCategoryMap = new Map(
-    courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]),
-  )
+  const courseCategoryMap = new Map(courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]))
 
   return (
     <RecordList

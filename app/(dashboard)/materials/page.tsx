@@ -12,7 +12,9 @@ export default async function MaterialsPage() {
     listCourseCategories(),
     supabase
       .from('courses')
-      .select('id, name, duration, category_id, category:course_categories(id, name, duration), course_materials(count)')
+      .select(
+        'id, name, duration, category_id, category:course_categories(id, name, duration), course_materials(count)',
+      )
       .order('name')
       .limit(200),
   ])
@@ -25,9 +27,8 @@ export default async function MaterialsPage() {
     duration: String(c.duration),
     categoryId: c.category_id ? String(c.category_id) : null,
     categoryName: c.category?.name ? String(c.category.name) : null,
-    materialsCount: Array.isArray(c.course_materials) && c.course_materials[0]
-      ? Number(c.course_materials[0].count)
-      : 0,
+    materialsCount:
+      Array.isArray(c.course_materials) && c.course_materials[0] ? Number(c.course_materials[0].count) : 0,
   }))
 
   return (

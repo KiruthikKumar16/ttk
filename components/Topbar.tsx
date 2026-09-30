@@ -3,18 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  ChevronRight,
-  FileCheck2,
-  FileText,
-  LogOut,
-  Menu,
-  Receipt,
-  Search,
-  UserRound,
-  Users,
-  X,
-} from 'lucide-react'
+import { ChevronRight, FileCheck2, FileText, LogOut, Menu, Receipt, Search, UserRound, Users, X } from 'lucide-react'
 import type { Payment, Role, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 
@@ -25,13 +14,7 @@ type BreadcrumbSegment = {
   bold?: boolean
 }
 
-export function Topbar({
-  onMenu,
-  role,
-}: {
-  onMenu: () => void
-  role: Role
-}) {
+export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -106,8 +89,7 @@ export function Topbar({
     }
   }, [])
 
-  const invoicesFor = (student: Student) =>
-    payments.filter((p) => p.studentId === student.registerId)
+  const invoicesFor = (student: Student) => payments.filter((p) => p.studentId === student.registerId)
 
   const choose = (action: () => void) => {
     action()
@@ -202,7 +184,11 @@ export function Topbar({
         return [...base, { label: 'Settings', href: '/settings/users' }, { label: 'Users and roles', bold: true }]
       }
       if (parts[1] === 'trainers') {
-        return [...base, { label: 'Settings', href: '/settings/trainers' }, { label: 'Trainer assignments', bold: true }]
+        return [
+          ...base,
+          { label: 'Settings', href: '/settings/trainers' },
+          { label: 'Trainer assignments', bold: true },
+        ]
       }
       if (parts[1] === 'brand') {
         return [...base, { label: 'Settings', href: '/settings/brand' }, { label: 'Brand information', bold: true }]
@@ -231,12 +217,7 @@ export function Topbar({
 
   return (
     <header className="topbar">
-      <button
-        type="button"
-        onClick={onMenu}
-        className="btn-ghost p-1.5"
-        aria-label="Toggle navigation"
-      >
+      <button type="button" onClick={onMenu} className="btn-ghost p-1.5" aria-label="Toggle navigation">
         <Menu size={20} />
       </button>
 
@@ -250,10 +231,7 @@ export function Topbar({
                 </span>
               )}
               {seg.href ? (
-                <Link
-                  href={seg.href}
-                  className={'breadcrumb-link' + (seg.bold ? ' breadcrumb-current' : '')}
-                >
+                <Link href={seg.href} className={'breadcrumb-link' + (seg.bold ? ' breadcrumb-current' : '')}>
                   {seg.icon && <span className="breadcrumb-icon mr-1">{seg.icon}</span>}
                   <span>{seg.label}</span>
                 </Link>
@@ -339,14 +317,9 @@ export function Topbar({
                         <button
                           type="button"
                           disabled={!eligible}
-                          title={
-                            eligible
-                              ? 'Generate certificate'
-                              : `Balance remaining: ${money(outstanding)}`
-                          }
+                          title={eligible ? 'Generate certificate' : `Balance remaining: ${money(outstanding)}`}
                           onClick={() =>
-                            eligible &&
-                            choose(() => router.push(`/students/${student.registerId}/certificate`))
+                            eligible && choose(() => router.push(`/students/${student.registerId}/certificate`))
                           }
                         >
                           <FileCheck2 size={14} />
@@ -368,9 +341,7 @@ export function Topbar({
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    choose(() =>
-                                      router.push(`/invoices/${encodeURIComponent(payment.invoice)}`),
-                                    )
+                                    choose(() => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`))
                                   }
                                 >
                                   <span>{payment.invoice}</span>
