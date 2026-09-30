@@ -14,6 +14,7 @@ import {
   Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 import type { Student, Course, CourseCategory } from '@/lib/types'
 import type { AcademicReportData } from '@/modules/reports/service'
 
@@ -175,11 +176,11 @@ export function StaffReportsView({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reports</h1>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
               Staff Academic Reports
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Academic & Performance Analytics</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Audit classroom attendance records, student evaluations, test pass rates, and learner retention.
           </p>
@@ -240,6 +241,13 @@ export function StaffReportsView({
               YTD
             </button>
           </div>
+          <Link
+            href={`/api/reports/export?startDate=${startDateStr}&endDate=${endDateStr}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+          >
+            <Download size={13} />
+            Download CSV
+          </Link>
         </div>
       </div>
 

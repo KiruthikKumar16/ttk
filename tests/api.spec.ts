@@ -7,54 +7,66 @@ test('public health endpoint returns an OK service status', async ({ request }) 
   expect(await response.json()).toMatchObject({ ok: true })
 })
 
-test('authenticated staff can read paginated students and payments', async ({ request, baseURL }) => {
+test('authenticated staff can read paginated students', async ({ request, baseURL }) => {
   const students = await request.get('/api/students?page=1&pageSize=25')
   expect(students.status()).toBe(200)
   const studentBody = await students.json()
   expect(Array.isArray(studentBody.data)).toBe(true)
   expect(studentBody.meta).toMatchObject({ page: 1, pageSize: 25 })
-
-  const payments = await request.get('/api/payments?page=1&pageSize=25')
-  expect(payments.status()).toBe(200)
-  expect(Array.isArray((await payments.json()).data)).toBe(true)
   expect(new URL(baseURL!).origin).toBe('http://127.0.0.1:3001')
 })
 
-test('invoice download returns a valid PDF and missing invoices return 404', async ({ request }) => {
-  const payments = await request.get('/api/payments?page=1&pageSize=25')
-  expect(payments.status()).toBe(200)
-  const rows = (await payments.json()).data as Array<{ invoice: string; student: string }>
-  expect(rows.length).toBeGreaterThan(0)
-
-  const invoiceResponse = await request.get(`/api/invoices/${encodeURIComponent(rows[0].invoice)}/download`)
-  const pdfBytes = await invoiceResponse.body()
-  expect(
-    invoiceResponse.status(),
-    invoiceResponse.status() === 200 ? '' : Buffer.from(pdfBytes).toString('utf8').slice(0, 250),
-  ).toBe(200)
-  expect(invoiceResponse.headers()['content-type']).toContain('application/pdf')
-  const pdf = await getDocument({ data: new Uint8Array(pdfBytes) }).promise
-  expect(pdf.numPages).toBeGreaterThan(0)
-  const text: string[] = []
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-    const page = await pdf.getPage(pageNumber)
-    const content = await page.getTextContent()
-    text.push(...content.items.flatMap((item) => ('str' in item ? [item.str] : [])))
+test('authenticated admin can read paginated payments', async ({ playwright, baseURL }) => {
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
+  try {
+    const payments = await admin.get('/api/payments?page=1&pageSize=25')
+    expect(payments.status()).toBe(200)
+    expect(Array.isArray((await payments.json()).data)).toBe(true)
+  } finally {
+    await admin.dispose()
   }
-  const invoiceText = text.join(' ')
-  const pageSize = await pdf.getPage(1).then((page) => page.getViewport({ scale: 1 }))
-  expect(pageSize.width).toBeCloseTo(595, 0)
-  expect(pageSize.height).toBeCloseTo(842, 0)
-  expect(invoiceText).toContain(rows[0].invoice)
-  expect(invoiceText).toContain(rows[0].student)
-  const gst = await request.get('/api/gst')
-  expect(gst.status()).toBe(200)
-  const gstin = (await gst.json()).data.gstin as string | null
-  expect(invoiceText).toContain(gstin ?? 'GSTIN not configured')
-  expect(invoiceText).toContain('₹')
+})
 
-  const missing = await request.get('/api/invoices/NO-SUCH-INVOICE-TEST/download')
-  expect(missing.status()).toBe(404)
+test('invoice download returns a valid PDF and missing invoices return 404', async ({ playwright, baseURL }) => {
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
+  try {
+    const payments = await admin.get('/api/payments?page=1&pageSize=25')
+    expect(payments.status()).toBe(200)
+    const rows = (await payments.json()).data as Array<{ invoice: string; student: string }>
+    expect(rows.length).toBeGreaterThan(0)
+
+    const invoiceResponse = await admin.get(`/api/invoices/${encodeURIComponent(rows[0].invoice)}/download`)
+    const pdfBytes = await invoiceResponse.body()
+    expect(
+      invoiceResponse.status(),
+      invoiceResponse.status() === 200 ? '' : Buffer.from(pdfBytes).toString('utf8').slice(0, 250),
+    ).toBe(200)
+    expect(invoiceResponse.headers()['content-type']).toContain('application/pdf')
+    const pdf = await getDocument({ data: new Uint8Array(pdfBytes) }).promise
+    expect(pdf.numPages).toBeGreaterThan(0)
+    const text: string[] = []
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber)
+      const content = await page.getTextContent()
+      text.push(...content.items.flatMap((item) => ('str' in item ? [item.str] : [])))
+    }
+    const invoiceText = text.join(' ')
+    const pageSize = await pdf.getPage(1).then((page) => page.getViewport({ scale: 1 }))
+    expect(pageSize.width).toBeCloseTo(595, 0)
+    expect(pageSize.height).toBeCloseTo(842, 0)
+    expect(invoiceText).toContain(rows[0].invoice)
+    expect(invoiceText).toContain(rows[0].student)
+    const gst = await admin.get('/api/gst')
+    expect(gst.status()).toBe(200)
+    const gstin = (await gst.json()).data.gstin as string | null
+    expect(invoiceText).toContain(gstin ?? 'GSTIN not configured')
+    expect(invoiceText).toContain('₹')
+
+    const missing = await admin.get('/api/invoices/NO-SUCH-INVOICE-TEST/download')
+    expect(missing.status()).toBe(404)
+  } finally {
+    await admin.dispose()
+  }
 })
 
 test('unauthenticated request is denied for protected student data', async ({ playwright, baseURL }) => {
