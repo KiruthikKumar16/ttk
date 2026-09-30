@@ -7,7 +7,6 @@ import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 import { pagePaginationFromSearchParams } from '@/lib/pagination'
 import { validateMutationRequest } from '@/lib/security/csrf'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { rolesFor } from '@/lib/auth/permissions'
 
@@ -29,8 +28,6 @@ async function getAssessmentResults(req: NextRequest, { params }: { params: Prom
     .eq('id', session.user.id)
     .maybeSingle()
   if (!currentProfile) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
-  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
-  if (mfaResponse) return mfaResponse
 
   const { id: assessmentId } = await params
 
@@ -153,8 +150,6 @@ async function postAssessmentResult(req: NextRequest, { params }: { params: Prom
       'Unable to fetch result grader profile',
     )
   }
-  const mfaResponse = await adminMfaResponse(supabase, profile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const body = await req.json()

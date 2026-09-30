@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { Course } from '@/lib/types'
+import type { Course, CourseCategory } from '@/lib/types'
 import { CoursesManager } from '@/modules/courses/components/CoursesManager'
 
 async function apiError(response: Response) {
@@ -12,6 +12,8 @@ async function apiError(response: Response) {
 
 export function CoursesManagerClient({
   courses,
+  categories = [],
+  selectedCategoryId,
   gstRate,
   search,
   page,
@@ -20,10 +22,13 @@ export function CoursesManagerClient({
   canCreate,
   canUpdate,
   canDelete,
+  canManageCategories = false,
   sort,
   direction,
 }: {
   courses: Course[]
+  categories?: CourseCategory[]
+  selectedCategoryId?: string
   gstRate: number
   search: string
   page: number
@@ -32,14 +37,17 @@ export function CoursesManagerClient({
   canCreate: boolean
   canUpdate: boolean
   canDelete: boolean
+  canManageCategories?: boolean
   sort: string
   direction: 'asc' | 'desc'
 }) {
   const router = useRouter()
   return (
     <CoursesManager
-      key={`${search}:${page}:${pageSize}:${sort}:${direction}`}
+      key={`${search}:${page}:${pageSize}:${sort}:${direction}:${selectedCategoryId || ''}`}
       courses={courses}
+      categories={categories}
+      selectedCategoryId={selectedCategoryId}
       gstRate={gstRate}
       search={search}
       page={page}
@@ -48,6 +56,7 @@ export function CoursesManagerClient({
       canCreate={canCreate}
       canUpdate={canUpdate}
       canDelete={canDelete}
+      canManageCategories={canManageCategories}
       sort={sort}
       direction={direction}
       onSaveCourse={async (course) => {

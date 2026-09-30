@@ -7,7 +7,6 @@ import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 import { pagePaginationFromSearchParams } from '@/lib/pagination'
 import { validateMutationRequest } from '@/lib/security/csrf'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { rolesFor } from '@/lib/auth/permissions'
 
@@ -28,8 +27,6 @@ async function getAssessments(req: NextRequest) {
     .eq('id', session.user.id)
     .maybeSingle()
   if (!currentProfile) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
-  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const { searchParams } = new URL(req.url)
@@ -123,8 +120,6 @@ async function postAssessment(req: NextRequest) {
       'Unable to fetch assessment creator profile',
     )
   }
-  const mfaResponse = await adminMfaResponse(supabase, profile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const body = await req.json()

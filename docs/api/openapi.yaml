@@ -280,6 +280,11 @@ paths:
       summary: Change a user role (admin with MFA)
       responses:
         '200': { description: Role changed and audit entry written }
+    post:
+      operationId: inviteOrAddUser
+      summary: Invite or create a user with an assigned role (admin with MFA)
+      responses:
+        '200': { description: User invited or created and role assigned }
   /api/audit:
     get:
       operationId: listAuditLog

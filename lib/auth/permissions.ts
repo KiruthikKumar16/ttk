@@ -43,6 +43,7 @@ export const permissions: Record<Role, PermissionMap> = {
     materials: ['read', 'create', 'update', 'delete'],
     reports: ['read'],
   },
+  pending: {},
 }
 
 export function can(role: Role | null | undefined, resource: Resource, action: Action): boolean {

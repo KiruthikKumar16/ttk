@@ -8,7 +8,7 @@ interface TableProps {
 export function Table({ className = '', children }: TableProps) {
   return (
     <table className={`min-w-full divide-y divide-gray-200 ${className}`}>
-      <tbody>{children}</tbody>
+      {children}
     </table>
   )
 }

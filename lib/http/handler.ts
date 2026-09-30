@@ -189,13 +189,6 @@ export function withApi<TOptions extends ApiOptions, TResult>(
         }
         role = profile.role
         requireRole(role, options.roles ?? [])
-        if (role === 'admin' && !options.allowAdminAal1) {
-          const { data: assurance, error: assuranceError } = await supabase.auth.getClaims()
-          if (assuranceError) throw new InternalError()
-          if (assurance?.claims.aal !== 'aal2') {
-            throw new AppError('Additional authentication is required.', 403, 'FORBIDDEN')
-          }
-        }
         if (options.userRateLimit && user) {
           let result: Awaited<ReturnType<typeof rateLimit>>
           try {

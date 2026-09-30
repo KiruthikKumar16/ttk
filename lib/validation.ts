@@ -40,12 +40,18 @@ export const paymentSchema = z.object({
   gstInclusive: z.boolean().optional(),
 })
 
+export const courseCategorySchema = z.object({
+  name: z.string().min(1, { message: 'Category name is required' }).max(100),
+  duration: z.string().min(1, { message: 'Duration is required' }).max(50),
+})
+
 export const courseSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
   fee: z.number().nonnegative({ message: 'Fee must be a non-negative number' }),
-  duration: z.string().default('3 Months'),
+  duration: z.string().default('6 weeks'),
   description: z.string().default(''),
   gstInclusive: z.boolean().default(false),
+  categoryId: z.union([z.string().uuid(), z.string(), z.null()]).optional(),
 })
 
 export const certificateSchema = z.object({

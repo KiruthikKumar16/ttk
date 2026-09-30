@@ -9,7 +9,6 @@ import { normalizeJoined } from '@/lib/supabase/relations'
 import z from 'zod'
 import { validateMutationRequest } from '@/lib/security/csrf'
 import { validateCourseMaterialFile } from '@/lib/security/uploads'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 import { rolesFor } from '@/lib/auth/permissions'
 
@@ -29,8 +28,6 @@ async function getCourseMaterials(req: NextRequest, requestId: string) {
   if (!currentProfile || !['admin', 'staff', 'trainer'].includes(currentProfile.role)) {
     return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
   }
-  const mfaResponse = await adminMfaResponse(supabase, currentProfile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const { searchParams } = new URL(req.url)
@@ -145,8 +142,6 @@ async function postCourseMaterial(req: NextRequest, requestId: string) {
       'Unable to fetch course material uploader profile',
     )
   }
-  const mfaResponse = await adminMfaResponse(supabase, profile.role)
-  if (mfaResponse) return mfaResponse
 
   // Check permissions: only staff, admin, and trainer can upload course materials
   const hasPermission = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'trainer'

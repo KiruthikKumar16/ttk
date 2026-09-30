@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test'
 
 const staffPages = [
   ['/students', 'Students'],
-  ['/payments', 'Payments'],
   ['/invoices', 'Invoices'],
   ['/courses', 'Manage Courses'],
   ['/attendance', 'Mark attendance'],

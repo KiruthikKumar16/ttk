@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { brand, brandCssVariables } from '@/lib/brand'
 import './globals.css'
 import { QueryProvider } from '@/lib/query/QueryProvider'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 const outfit = localFont({
   src: '../public/fonts/outfit-latin-variable.woff2',
@@ -66,7 +67,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style nonce={nonce}>{`:root{${brandVariables}}`}</style>
       </head>
       <body className="antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <LoadingSpinner />
+        </QueryProvider>
         <Analytics />
         <SpeedInsights />
       </body>

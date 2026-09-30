@@ -45,7 +45,9 @@ describe('Supabase clients', () => {
     const browserPromise = import('./browser')
     return browserPromise.then(({ supabaseBrowser }) => {
       expect(supabaseBrowser).toBeDefined()
-      expect(mocks.createBrowserClient).toHaveBeenCalledWith('https://project.supabase.co', 'publishable')
+      expect(mocks.createBrowserClient).toHaveBeenCalledWith('https://project.supabase.co', 'publishable', {
+        auth: { detectSessionInUrl: false },
+      })
       mocks.getServerEnv.mockReturnValue({ SUPABASE_SERVICE_ROLE_KEY: 'secret-test-only' })
       mocks.createAdminClient.mockReturnValue({ from: vi.fn() })
       expect(getSupabaseAdminClient()).toBeDefined()

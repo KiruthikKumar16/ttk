@@ -19,12 +19,9 @@ const lines = [
   '',
   '> Generated from `lib/auth/permissions.ts` by `pnpm docs:permissions`. Do not edit this table by hand.',
   '',
-  '| Resource | Admin | Staff | Trainer |',
-  '| --- | --- | --- | --- |',
-  ...resources.map(
-    (resource) =>
-      `| ${resource} | ${cell('admin', resource)} | ${cell('staff', resource)} | ${cell('trainer', resource)} |`,
-  ),
+  `| Resource | ${roles.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join(' | ')} |`,
+  `| --- | ${roles.map(() => '---').join(' | ')} |`,
+  ...resources.map((resource) => `| ${resource} | ${roles.map((role) => cell(role, resource)).join(' | ')} |`),
   '',
 ]
 const expected = await prettier.format(lines.join('\n'), { parser: 'markdown' })

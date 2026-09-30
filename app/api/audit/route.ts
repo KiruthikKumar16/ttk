@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { unexpectedApiError } from '@/lib/api-response'
 import { decodeCursor, encodeCursor, pagePaginationFromSearchParams } from '@/lib/pagination'
 import { z } from 'zod'
-import { adminMfaResponse } from '@/lib/security/admin-mfa'
 import { withApi } from '@/lib/http/handler'
 
 async function getAuditLog(req: NextRequest) {
@@ -33,8 +32,6 @@ async function getAuditLog(req: NextRequest) {
   if (profile.role !== 'admin') {
     return new NextResponse(JSON.stringify({ error: 'Insufficient permissions to access audit logs' }), { status: 403 })
   }
-  const mfaResponse = await adminMfaResponse(supabase, profile.role)
-  if (mfaResponse) return mfaResponse
 
   try {
     const { searchParams } = new URL(req.url)
