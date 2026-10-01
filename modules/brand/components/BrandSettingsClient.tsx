@@ -45,9 +45,30 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
     setSuccess(false)
   }
 
-  const handleCopy = (key: string, text: string) => {
+  const handleCopy = async (key: string, text: string) => {
     if (!text) return
-    navigator.clipboard.writeText(text)
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        throw new Error('Clipboard API unavailable')
+      }
+    } catch {
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        textArea.style.opacity = '0'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      } catch {
+        // Ignore fallback failure silently
+      }
+    }
     setCopiedKey(key)
     setTimeout(() => setCopiedKey(null), 2000)
   }

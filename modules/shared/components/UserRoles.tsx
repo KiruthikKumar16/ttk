@@ -226,8 +226,29 @@ export function UserRoles({
     }
   }
 
-  const copyToClipboard = (text: string, id: string, type: 'code' | 'link') => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text: string, id: string, type: 'code' | 'link') => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        throw new Error('Clipboard API unavailable')
+      }
+    } catch {
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        textArea.style.opacity = '0'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      } catch {
+        // Ignore fallback failure silently
+      }
+    }
     if (type === 'code') {
       setCopiedCodeId(id)
       setTimeout(() => setCopiedCodeId(null), 2500)
