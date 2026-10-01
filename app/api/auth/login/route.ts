@@ -41,6 +41,21 @@ async function postLogin(request: Request, requestId: string) {
         },
       )
     }
+    if (authData?.user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).maybeSingle()
+
+      if (profile?.role === 'pending') {
+        await supabase.auth.signOut()
+        return NextResponse.json(
+          {
+            error: 'Your account is pending administrator approval. Please contact your academy administrator.',
+            code: 'ACCOUNT_PENDING_APPROVAL',
+          },
+          { status: 403, headers: { 'x-request-id': requestId } },
+        )
+      }
+    }
+
     return NextResponse.json({ data: { signedIn: true } }, { headers: { 'x-request-id': requestId } })
   } catch (err: any) {
     console.error('[Login Catch Error]:', err?.message || err)

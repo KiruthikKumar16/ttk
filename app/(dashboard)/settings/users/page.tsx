@@ -5,7 +5,8 @@ import type { Role } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-export default async function UsersSettingsPage() {
+export default async function UsersSettingsPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
+  const params = await searchParams
   const profile = await requirePermission('users', 'manage')
   const supabase = await createClient()
   const { data: users, error } = await supabase
@@ -32,6 +33,7 @@ export default async function UsersSettingsPage() {
           created_at: user.created_at,
         }))}
         currentUserId={profile.id}
+        initialFilter={params?.filter}
       />
     </main>
   )

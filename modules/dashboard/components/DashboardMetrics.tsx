@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import {
   ArrowDownRight,
+  ArrowRight,
   CircleDollarSign,
   Clock,
   GraduationCap,
   ShieldCheck,
   TrendingUp,
+  UserCheck,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -21,6 +23,7 @@ export function DashboardMetrics({
   recentPayments = [],
   categories = [],
   courses = [],
+  pendingUsers = [],
   canCreateStudent = false,
 }: {
   summary: DashboardSummary
@@ -28,6 +31,7 @@ export function DashboardMetrics({
   recentPayments?: Payment[]
   categories?: CourseCategory[]
   courses?: Course[]
+  pendingUsers?: Array<{ id: string; fullName: string; createdAt?: string }>
   canCreateStudent?: boolean
 }) {
   const revenue = paiseToRupees(summary.revenuePaise)
@@ -224,6 +228,41 @@ export function DashboardMetrics({
           </Link>
         )}
       </div>
+
+      {pendingUsers.length > 0 && (
+        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/90 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-amber-100 text-amber-800 shrink-0">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm">
+                  {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending Approval
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold">
+                  Action Required
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 mt-0.5">
+                {pendingUsers
+                  .map((u) => u.fullName)
+                  .slice(0, 3)
+                  .join(', ')}
+                {pendingUsers.length > 3 ? ` and ${pendingUsers.length - 3} more` : ''} registered and waiting for
+                academy portal access.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/settings/users?filter=pending"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-800 hover:bg-amber-900 text-white text-xs font-semibold shrink-0 transition-colors shadow-xs"
+          >
+            Review & Approve Users <ArrowRight size={13} />
+          </Link>
+        </div>
+      )}
+
       <div className="reports-stats-grid">
         {metrics.map(({ label, value, sub, Icon, iconClass }) => (
           <div className="stat-card" key={label}>

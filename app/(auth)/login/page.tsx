@@ -6,10 +6,14 @@ import Image from 'next/image'
 import { brand } from '@/lib/brand'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 
+import Link from 'next/link'
+import { Clock } from 'lucide-react'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isPendingApproval, setIsPendingApproval] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const handledAuthRedirect = useRef(false)
@@ -50,6 +54,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setIsPendingApproval(false)
     setLoading(true)
 
     try {
@@ -60,6 +65,10 @@ export default function LoginPage() {
       })
       if (!response.ok) {
         const body = await response.json().catch(() => null)
+        if (response.status === 403 && body?.code === 'ACCOUNT_PENDING_APPROVAL') {
+          setIsPendingApproval(true)
+          return
+        }
         throw new Error(body?.error || 'Unable to sign in. Please try again.')
       }
 
@@ -119,6 +128,22 @@ export default function LoginPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
+          {isPendingApproval && (
+            <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5 text-amber-800">
+                <Clock size={15} /> Account Awaiting Approval
+              </div>
+              <p className="text-[11px] text-amber-700">
+                Your staff registration has been received and is waiting for administrator authorization.
+              </p>
+              <Link
+                href="/pending-approval"
+                className="inline-block text-[11px] text-indigo-600 font-semibold hover:underline mt-1"
+              >
+                View status & instructions &rarr;
+              </Link>
+            </div>
+          )}
           {error && (
             <p className="login-error" role="alert">
               {error}
@@ -133,7 +158,12 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="login-help">Don't have an account? Please contact an administrator.</p>
+        <p className="login-help">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
+            Request Staff Access &rarr;
+          </Link>
+        </p>
       </section>
     </main>
   )

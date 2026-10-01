@@ -6,6 +6,8 @@ import { DashboardMetrics } from '@/modules/dashboard/components/DashboardMetric
 import { StaffDashboardView } from '@/modules/dashboard/components/StaffDashboardView'
 import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
 
+import { createClient } from '@/lib/supabase/server'
+
 export default async function DashboardPage() {
   const profile = await requirePermission('reports', 'read')
 
@@ -16,13 +18,21 @@ export default async function DashboardPage() {
   }
 
   // Admin Executive Dashboard
-  const [summary, payments, students, categories, courses] = await Promise.all([
+  const supabase = await createClient()
+  const [summary, payments, students, categories, courses, pendingUsersRes] = await Promise.all([
     getDashboardSummary(),
     getRecentPayments(),
     getAllStudents(),
     listCourseCategories().catch(() => []),
     getCachedCourseOptions().catch(() => []),
+    supabase.from('profiles').select('id, full_name, created_at').eq('role', 'pending'),
   ])
+
+  const pendingUsers = (pendingUsersRes.data ?? []).map((u) => ({
+    id: String(u.id),
+    fullName: u.full_name ? String(u.full_name) : 'New User',
+    createdAt: u.created_at ? String(u.created_at) : undefined,
+  }))
 
   return (
     <DashboardMetrics
@@ -31,6 +41,7 @@ export default async function DashboardPage() {
       recentPayments={payments.data}
       categories={categories}
       courses={courses}
+      pendingUsers={pendingUsers}
       canCreateStudent={can(profile.role, 'students', 'create')}
     />
   )

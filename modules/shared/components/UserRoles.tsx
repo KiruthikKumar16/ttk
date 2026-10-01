@@ -3,17 +3,30 @@
 import { useState } from 'react'
 import type { Role } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Save, RotateCcw, Check, AlertCircle, Search } from 'lucide-react'
+import { Save, RotateCcw, Check, AlertCircle, Search, UserCheck, Clock, Shield, Users } from 'lucide-react'
 
 type UserProfile = { id: string; full_name: string | null; role: Role; created_at: string | null }
+type FilterTab = 'all' | 'pending' | 'staff' | 'admin'
 
-export function UserRoles({ users, currentUserId }: { users: UserProfile[]; currentUserId: string }) {
+export function UserRoles({
+  users,
+  currentUserId,
+  initialFilter,
+}: {
+  users: UserProfile[]
+  currentUserId: string
+  initialFilter?: string
+}) {
   const [initialRows, setInitialRows] = useState<UserProfile[]>(users)
   const [rows, setRows] = useState<UserProfile[]>(users)
   const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState<FilterTab>(
+    initialFilter && ['pending', 'staff', 'admin'].includes(initialFilter) ? (initialFilter as FilterTab) : 'all',
+  )
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
 
   // Track pending changes: map of userId -> modified role
   const pendingChanges = rows.reduce<Record<string, Role>>((acc, row) => {
@@ -37,6 +50,37 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
     setRows(initialRows)
     setError('')
     setSuccess('')
+  }
+
+  const handleQuickApprove = async (userId: string, targetRole: Role = 'staff') => {
+    setApprovingId(userId)
+    setError('')
+    setSuccess('')
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: targetRole }),
+      })
+      const result = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(result?.error?.message ?? result?.error ?? `Failed to approve user ${userId}.`)
+      }
+
+      setRows((current) => current.map((row) => (row.id === userId ? { ...row, role: targetRole } : row)))
+      setInitialRows((current) => current.map((row) => (row.id === userId ? { ...row, role: targetRole } : row)))
+
+      const targetUser = rows.find((r) => r.id === userId)
+      setSuccess(
+        `Approved ${targetUser?.full_name || 'user'} as ${targetRole.toUpperCase()}. Access has been activated.`,
+      )
+      setTimeout(() => setSuccess(''), 6000)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Approval failed. Please try again.')
+    } finally {
+      setApprovingId(null)
+    }
   }
 
   const handleSave = async () => {
@@ -75,7 +119,18 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
     }
   }
 
+  // Count tallies by role based on latest row states
+  const counts = {
+    all: rows.length,
+    pending: rows.filter((r) => r.role === 'pending').length,
+    staff: rows.filter((r) => r.role === 'staff').length,
+    admin: rows.filter((r) => r.role === 'admin').length,
+  }
+
   const filteredRows = rows.filter((u) => {
+    if (activeTab !== 'all' && u.role !== activeTab) {
+      return false
+    }
     if (!search.trim()) return true
     const q = search.toLowerCase()
     return (
@@ -87,6 +142,93 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
 
   return (
     <section className="space-y-4">
+      {/* Role Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('all')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'all'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Users size={14} />
+          All Users
+          <span
+            className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              activeTab === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            {counts.all}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('pending')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'pending'
+              ? 'bg-amber-500 text-white shadow-xs'
+              : counts.pending > 0
+                ? 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Clock size={14} className={counts.pending > 0 && activeTab !== 'pending' ? 'text-amber-600' : ''} />
+          Pending Approval
+          {counts.pending > 0 && (
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === 'pending' ? 'bg-amber-700 text-white' : 'bg-amber-500 text-white animate-pulse'
+              }`}
+            >
+              {counts.pending}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('staff')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'staff'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <UserCheck size={14} />
+          Staff
+          <span
+            className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              activeTab === 'staff' ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            {counts.staff}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('admin')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'admin'
+              ? 'bg-purple-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Shield size={14} />
+          Admins
+          <span
+            className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              activeTab === 'admin' ? 'bg-purple-700 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            {counts.admin}
+          </span>
+        </button>
+      </div>
+
       {/* Top Controls: Instructions, Search, and Save Button */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-xl border border-slate-200/80 bg-white/90 shadow-xs">
         <div className="space-y-1">
@@ -125,7 +267,7 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
                 variant="ghost"
                 size="sm"
                 onClick={handleDiscard}
-                disabled={saving}
+                disabled={saving || approvingId !== null}
                 className="text-xs text-slate-600 hover:text-slate-900"
               >
                 <RotateCcw size={13} className="mr-1" />
@@ -138,7 +280,7 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
               variant="default"
               size="sm"
               onClick={handleSave}
-              disabled={!hasChanges || saving}
+              disabled={!hasChanges || saving || approvingId !== null}
               className="text-xs font-semibold min-w-[110px] shadow-xs"
             >
               {saving ? (
@@ -199,17 +341,27 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
               >
                 Created
               </th>
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
+              >
+                Quick Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {filteredRows.map((user) => {
               const isModified = pendingChanges[user.id] !== undefined
               const isSelf = user.id === currentUserId
+              const isPending = user.role === 'pending'
+              const isApproving = approvingId === user.id
 
               return (
                 <tr
                   key={user.id}
-                  className={`hover:bg-gray-50/70 transition-colors ${isModified ? 'bg-amber-50/40' : ''}`}
+                  className={`hover:bg-gray-50/70 transition-colors ${
+                    isPending ? 'bg-amber-50/20' : isModified ? 'bg-amber-50/40' : ''
+                  }`}
                 >
                   <th scope="row" className="px-6 py-4 whitespace-nowrap text-left font-medium">
                     <div className="flex items-center gap-2">
@@ -217,6 +369,12 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
                       {isSelf && (
                         <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
                           You
+                        </span>
+                      )}
+                      {isPending && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
+                          <Clock size={10} className="text-amber-600" />
+                          Awaiting Approval
                         </span>
                       )}
                       {isModified && (
@@ -234,12 +392,14 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
                     <select
                       id={`role-${user.id}`}
                       className={`border rounded-lg shadow-2xs px-2.5 py-1 text-sm font-medium transition-colors ${
-                        isModified
-                          ? 'border-amber-400 bg-amber-50/60 text-amber-900 focus:ring-amber-500/20'
-                          : 'border-gray-300 bg-white text-slate-800 focus:ring-indigo-500/20'
+                        isPending
+                          ? 'border-amber-300 bg-amber-50/50 text-amber-900 font-semibold'
+                          : isModified
+                            ? 'border-amber-400 bg-amber-50/60 text-amber-900 focus:ring-amber-500/20'
+                            : 'border-gray-300 bg-white text-slate-800 focus:ring-indigo-500/20'
                       }`}
                       value={user.role}
-                      disabled={saving || isSelf}
+                      disabled={saving || approvingId !== null || isSelf}
                       onChange={(event) => handleRoleSelect(user.id, event.target.value as Role)}
                     >
                       <option value="admin">Admin</option>
@@ -250,13 +410,48 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
                   <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-mono">
                     {user.created_at ? new Date(user.created_at).toLocaleDateString('en-IN') : '—'}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    {isPending ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={saving || isApproving}
+                        onClick={() => handleQuickApprove(user.id, 'staff')}
+                        className="text-xs font-semibold border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:border-amber-400 shadow-2xs"
+                      >
+                        {isApproving ? (
+                          'Approving...'
+                        ) : (
+                          <>
+                            <UserCheck size={14} className="mr-1.5 text-amber-700" />
+                            Approve as Staff
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
                 </tr>
               )
             })}
             {filteredRows.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-sm text-gray-500">
-                  {rows.length === 0 ? 'No users found.' : 'No users match your search.'}
+                <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-500">
+                  {activeTab === 'pending' ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <Check size={20} />
+                      </div>
+                      <p className="font-medium text-slate-800">No pending approvals</p>
+                      <p className="text-xs text-slate-500">All registered users have been approved or reviewed.</p>
+                    </div>
+                  ) : rows.length === 0 ? (
+                    'No users found.'
+                  ) : (
+                    'No users match your search and filter criteria.'
+                  )}
                 </td>
               </tr>
             )}
@@ -277,7 +472,7 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
               variant="ghost"
               size="sm"
               onClick={handleDiscard}
-              disabled={saving}
+              disabled={saving || approvingId !== null}
               className="text-xs text-amber-900 hover:bg-amber-100"
             >
               Discard
@@ -287,7 +482,7 @@ export function UserRoles({ users, currentUserId }: { users: UserProfile[]; curr
               variant="default"
               size="sm"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || approvingId !== null}
               className="text-xs font-semibold shadow-xs"
             >
               {saving ? 'Saving...' : 'Save Changes'}

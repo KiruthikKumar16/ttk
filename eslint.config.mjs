@@ -47,6 +47,7 @@ export default [
       'app/api/invoices/**/download/route.ts',
       'app/api/ready/route.ts',
       'app/api/admin/users/route.ts',
+      'app/api/auth/signup/route.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', adminDataRestriction],
