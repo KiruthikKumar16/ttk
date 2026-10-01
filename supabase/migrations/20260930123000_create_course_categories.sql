@@ -40,6 +40,10 @@ CREATE POLICY "Admins can manage course categories"
     )
   );
 
+GRANT SELECT ON public.course_categories TO authenticated, anon;
+GRANT INSERT, UPDATE, DELETE ON public.course_categories TO authenticated;
+GRANT ALL ON public.course_categories TO service_role;
+
 -- Add category_id to courses table
 DO $$
 BEGIN

@@ -251,6 +251,8 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
           <div className={'top-search' + (open ? ' is-open' : '')}>
             <Search size={16} />
             <input
+              role="combobox"
+              aria-autocomplete="list"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)
@@ -263,7 +265,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
               placeholder="Search student name…"
               aria-label="Search students"
               aria-expanded={open}
-              aria-controls="student-search-results"
+              aria-controls={open && query.trim() ? 'student-search-results' : undefined}
             />
             {query && (
               <button

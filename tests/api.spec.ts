@@ -89,7 +89,8 @@ test('authenticated student creation rejects invalid input without inserting a r
   expect(response.status()).toBe(400)
 })
 
-test('staff can create a student, pay the balance, issue a certificate, and verify it anonymously', async ({
+test('staff can create a student and admin can pay the balance, issue a certificate, and verify it anonymously', async ({
+  playwright,
   request,
   baseURL,
   browser,
@@ -116,74 +117,95 @@ test('staff can create a student, pay the balance, issue a certificate, and veri
   expect(createdBody.data.payment.invoice).toBeTruthy()
   const registerId = createdBody.data.data.registerId as number
 
-  const completion = await request.post('/api/payments', {
-    headers: { ...headers, 'Idempotency-Key': `e2e-${crypto.randomUUID()}` },
-    data: { studentId: registerId, amount: 750, method: 'UPI', date: '2026-09-29', gstRate: 18 },
-  })
-  expect(completion.status()).toBe(201)
-  expect((await completion.json()).data).toMatchObject({ studentId: registerId, amount: 750 })
-  const lookup = await request.get(`/api/students?page=1&pageSize=5&search=${encodeURIComponent(name)}`)
-  expect(lookup.status()).toBe(200)
-  const matching = (await lookup.json()).data as Array<{ registerId: number; status: string; paid: number }>
-  expect(matching).toContainEqual(expect.objectContaining({ registerId, status: 'Fully Paid', paid: 1000 }))
-
-  const certificateId = `E2E-CERT-${suffix}`
-  const issued = await request.post('/api/certificates', {
-    headers,
-    data: {
-      certificateId,
-      studentRegisterId: registerId,
-      courseName: 'Professional Course',
-      studentName: name,
-      issueDate: '2026-09-29',
-      skills: ['Web Dev'],
-    },
-  })
-  expect(issued.status()).toBe(201)
-  const certificates = await request.get('/api/certificates?page=1&pageSize=100')
-  expect(certificates.status()).toBe(200)
-  const records = (await certificates.json()).data as Array<{ certificateId: string; verificationCode?: string }>
-  const certificate = records.find((record) => record.certificateId === certificateId)
-  expect(certificate?.verificationCode).toBeTruthy()
-
-  const publicContext = await browser.newContext()
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
   try {
-    const publicPage = await publicContext.newPage()
-    await publicPage.goto(`${baseURL}/verify/${certificate!.verificationCode}`)
-    await expect(publicPage.getByRole('heading', { name: 'Certificate Verified' })).toBeVisible()
-    await expect(publicPage.getByText('Valid', { exact: true })).toBeVisible()
-    const verification = await publicPage.request.get(`/api/verify/${certificate!.verificationCode}`)
-    const verificationBody = await verification.json()
-    expect(verificationBody.data).toMatchObject({ status: 'Valid', course_name: 'Professional Course' })
-    expect(verificationBody.data.student_name).toMatch(new RegExp(`^${name[0]}`))
+    const completion = await admin.post('/api/payments', {
+      headers: { ...headers, 'Idempotency-Key': `e2e-${crypto.randomUUID()}` },
+      data: { studentId: registerId, amount: 750, method: 'UPI', date: '2026-09-29', gstRate: 18 },
+    })
+    expect(completion.status()).toBe(201)
+    expect((await completion.json()).data).toMatchObject({ studentId: registerId, amount: 750 })
+    const lookup = await request.get(`/api/students?page=1&pageSize=5&search=${encodeURIComponent(name)}`)
+    expect(lookup.status()).toBe(200)
+    const matching = (await lookup.json()).data as Array<{ registerId: number; status: string; paid: number }>
+    expect(matching).toContainEqual(expect.objectContaining({ registerId, status: 'Fully Paid', paid: 1000 }))
+
+    const certificateId = `E2E-CERT-${suffix}`
+    const issued = await admin.post('/api/certificates', {
+      headers,
+      data: {
+        certificateId,
+        studentRegisterId: registerId,
+        courseName: 'Professional Course',
+        studentName: name,
+        issueDate: '2026-09-29',
+        skills: ['Web Dev'],
+      },
+    })
+    expect(issued.status()).toBe(201)
+    const certificates = await admin.get('/api/certificates?page=1&pageSize=100')
+    expect(certificates.status()).toBe(200)
+    const records = (await certificates.json()).data as Array<{ certificateId: string; verificationCode?: string }>
+    const certificate = records.find((record) => record.certificateId === certificateId)
+    expect(certificate?.verificationCode).toBeTruthy()
+
+    const publicContext = await browser.newContext()
+    try {
+      const publicPage = await publicContext.newPage()
+      await publicPage.goto(`${baseURL}/verify/${certificate!.verificationCode}`)
+      await expect(publicPage.getByRole('heading', { name: 'Certificate Verified' })).toBeVisible()
+      await expect(publicPage.getByText('Valid', { exact: true })).toBeVisible()
+      const verification = await publicPage.request.get(`/api/verify/${certificate!.verificationCode}`)
+      const verificationBody = await verification.json()
+      expect(verificationBody.data).toMatchObject({ status: 'Valid', course_name: 'Professional Course' })
+      expect(verificationBody.data.student_name).toMatch(new RegExp(`^${name[0]}`))
+    } finally {
+      await publicContext.close()
+    }
   } finally {
-    await publicContext.close()
+    await admin.dispose()
   }
 })
 
 test('certificate issuance is rejected server-side while course fees remain outstanding', async ({
+  playwright,
+  baseURL,
+}) => {
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
+  try {
+    const response = await admin.post('/api/certificates', {
+      headers: { origin: baseURL!, 'content-type': 'application/json' },
+      data: {
+        certificateId: `E2E-PENDING-${Date.now()}`,
+        studentRegisterId: 1047,
+        courseName: 'ThoorigAI Course - Internship',
+        studentName: 'Arjun Prakash',
+        issueDate: '2026-09-29',
+        skills: [],
+      },
+    })
+    expect(response.status()).toBe(409)
+    expect((await response.json()).error).toContain('Clear the outstanding course fees')
+  } finally {
+    await admin.dispose()
+  }
+})
+
+test('staff uploads, downloads by signed URL, and deletes course material', async ({
+  playwright,
   request,
   baseURL,
 }) => {
-  const response = await request.post('/api/certificates', {
-    headers: { origin: baseURL!, 'content-type': 'application/json' },
-    data: {
-      certificateId: `E2E-PENDING-${Date.now()}`,
-      studentRegisterId: 1047,
-      courseName: 'ThoorigAI Course - Internship',
-      studentName: 'Arjun Prakash',
-      issueDate: '2026-09-29',
-      skills: [],
-    },
-  })
-  expect(response.status()).toBe(409)
-  expect((await response.json()).error).toContain('Clear the outstanding course fees')
-})
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
+  let courseId: string
+  try {
+    const courses = await admin.get('/api/courses?page=1&pageSize=5')
+    expect(courses.status()).toBe(200)
+    courseId = ((await courses.json()).data as Array<{ id: string }>)[0].id
+  } finally {
+    await admin.dispose()
+  }
 
-test('staff uploads, downloads by signed URL, and deletes course material', async ({ request, baseURL }) => {
-  const courses = await request.get('/api/courses?page=1&pageSize=5')
-  expect(courses.status()).toBe(200)
-  const courseId = ((await courses.json()).data as Array<{ id: string }>)[0].id
   const title = `E2E material ${crypto.randomUUID()}`
   let materialId: string | undefined
   try {
@@ -214,14 +236,22 @@ test('staff uploads, downloads by signed URL, and deletes course material', asyn
 })
 
 test('staff creates an assessment, edits and deletes a result, and exports a date-range report', async ({
+  playwright,
   request,
   baseURL,
 }) => {
-  const courses = await request.get('/api/courses?page=1&pageSize=20')
-  expect(courses.status()).toBe(200)
-  const course = ((await courses.json()).data as Array<{ id: string; name: string }>).find(
-    (item) => item.name === 'Professional Course',
-  )!
+  const admin = await playwright.request.newContext({ baseURL, storageState: 'tests/.auth/admin.json' })
+  let course: { id: string; name: string }
+  try {
+    const courses = await admin.get('/api/courses?page=1&pageSize=20')
+    expect(courses.status()).toBe(200)
+    course = ((await courses.json()).data as Array<{ id: string; name: string }>).find(
+      (item) => item.name === 'Professional Course',
+    )!
+  } finally {
+    await admin.dispose()
+  }
+
   const students = await request.get(
     `/api/students?page=1&pageSize=25&search=${encodeURIComponent('Kavya Srinivasan')}`,
   )
