@@ -1,10 +1,8 @@
-import Link from 'next/link'
 import { requirePermission } from '@/lib/auth/current-profile'
 import { listCertificatePage } from '@/modules/certificates/service'
 import { parseListQuery } from '@/modules/shared/list-query'
-import { RecordList } from '@/modules/shared/components/RecordList'
 import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
-import { CertificateTableRow } from '@/modules/certificates/components/CertificateTableRow'
+import { CertificatesManagerClient } from '@/modules/certificates/components/CertificatesManagerClient'
 
 export default async function CertificatesPage({ searchParams }: PageProps<'/certificates'>) {
   await requirePermission('certificates', 'read')
@@ -19,54 +17,26 @@ export default async function CertificatesPage({ searchParams }: PageProps<'/cer
     listCourseCategories(),
   ])
 
-  const courseCategoryMap = new Map(courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]))
+  const courseCategoryObject: Record<string, string> = {}
+  for (const c of courseOptions) {
+    if (c.categoryName) {
+      courseCategoryObject[c.name.trim().toLowerCase()] = c.categoryName
+    }
+  }
 
   return (
-    <RecordList
-      title="Certificates"
-      description="Issued completion certificates and verification links categorized by curriculum tier."
-      basePath="/certificates"
+    <CertificatesManagerClient
+      certificates={result.data}
+      totalCount={result.totalCount}
       page={query.page}
       pageSize={query.pageSize}
-      totalCount={result.totalCount}
       search={query.search}
-      sort={query.sort}
-      direction={query.direction}
-      sortOptions={[
-        { label: 'Issue date', value: 'issue_date' },
-        { label: 'Student name', value: 'student_name' },
-        { label: 'Certificate ID', value: 'certificate_id' },
-      ]}
-    >
-      <thead>
-        <tr>
-          <th>Certificate</th>
-          <th>Student</th>
-          <th>Course</th>
-          <th>Category</th>
-          <th>Issue date</th>
-          <th>Verify</th>
-          <th className="text-right">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {result.data.map((certificate) => {
-          const catName = courseCategoryMap.get(certificate.course_name.trim().toLowerCase())
-
-          return (
-            <CertificateTableRow
-              key={certificate.id}
-              certificate={certificate}
-              categoryName={catName}
-            />
-          )
-        })}
-        {result.data.length === 0 && (
-          <tr>
-            <td colSpan={7}>No certificates match this search.</td>
-          </tr>
-        )}
-      </tbody>
-    </RecordList>
+      sort={query.sort || 'issue_date'}
+      direction={query.direction || 'desc'}
+      categoryId={categoryId}
+      course={course}
+      courseCategoryMap={courseCategoryObject}
+      categories={categories}
+    />
   )
 }
