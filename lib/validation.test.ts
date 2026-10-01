@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attendanceSchema, paymentSchema, studentSchema } from './validation'
+import { attendanceSchema, paymentSchema, studentSchema, passwordSchema } from './validation'
 
 describe('validation schemas', () => {
   it('accepts valid student and payment payloads and rejects invalid boundaries', () => {
@@ -14,5 +14,24 @@ describe('validation schemas', () => {
     expect(attendanceSchema.safeParse({ ...base, status: 'Excused' }).success).toBe(true)
     expect(attendanceSchema.safeParse({ ...base, status: 'Tardy' }).success).toBe(false)
     expect(attendanceSchema.safeParse({ ...base, sessionDate: '31/03/2026', status: 'Present' }).success).toBe(false)
+  })
+
+  it('enforces simple and secure password requirements', () => {
+    // Valid passwords (8+ chars, at least 1 letter, at least 1 number)
+    expect(passwordSchema.safeParse('Secret123').success).toBe(true)
+    expect(passwordSchema.safeParse('Thoorigai2026!').success).toBe(true)
+    expect(passwordSchema.safeParse('adminPass1').success).toBe(true)
+
+    // Invalid: under 8 characters
+    expect(passwordSchema.safeParse('Pass1').success).toBe(false)
+
+    // Invalid: no numbers
+    expect(passwordSchema.safeParse('PasswordOnly').success).toBe(false)
+
+    // Invalid: no letters
+    expect(passwordSchema.safeParse('1234567890').success).toBe(false)
+
+    // Invalid: excessively long (> 128 chars)
+    expect(passwordSchema.safeParse('A1' + 'x'.repeat(128)).success).toBe(false)
   })
 })

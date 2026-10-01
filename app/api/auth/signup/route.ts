@@ -5,11 +5,12 @@ import { rateLimit } from '@/lib/security/rate-limit'
 import { withApi } from '@/lib/http/handler'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import { passwordSchema } from '@/lib/validation'
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().trim().email('Please enter a valid email address').max(254),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(1024),
+  password: passwordSchema,
   passcode: z.string().trim().optional(),
 })
 
