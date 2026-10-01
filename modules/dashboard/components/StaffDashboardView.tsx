@@ -263,7 +263,7 @@ export function StaffDashboardView({
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-semibold text-slate-900 truncate">{s.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">#{s.registerId}</span>
+                      <span className="text-[10px] text-slate-500 font-mono">#{s.registerId}</span>
                     </div>
                     <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.course}</p>
                     {s.phone && (
@@ -280,7 +280,7 @@ export function StaffDashboardView({
                     <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">
                       {s.rate}%
                     </span>
-                    <span className="block text-[10px] text-slate-400 mt-0.5">
+                    <span className="block text-[10px] text-slate-500 mt-0.5">
                       {s.presentSessions}/{s.totalSessions} days
                     </span>
                   </div>
@@ -352,7 +352,7 @@ export function StaffDashboardView({
                 <BookOpen size={15} className="text-indigo-600" />
                 Daily Faculty Checklist
               </h3>
-              <span className="text-[11px] font-medium text-slate-400">Classroom SOP</span>
+              <span className="text-[11px] font-medium text-slate-600">Classroom SOP</span>
             </div>
             <ul className="mt-4 space-y-3 text-xs text-slate-600">
               <li className="flex items-start gap-2.5">
@@ -385,7 +385,7 @@ export function StaffDashboardView({
             View courses &rarr;
           </Link>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="Course mix" tabIndex={0}>
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
               <tr>
@@ -415,7 +415,7 @@ export function StaffDashboardView({
               ))}
               {categoryMix.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-400">
+                  <td colSpan={4} className="py-6 text-center text-slate-500">
                     No course categories configured.
                   </td>
                 </tr>

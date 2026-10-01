@@ -34,3 +34,4 @@ coverage/
 tests/.auth/
 tsconfig.tsbuildinfo
 blob-report/
+docs/screenshots/responsive/

@@ -460,7 +460,12 @@ export function UserRoles({
             </Button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full">
+          <div
+            className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full"
+            role="region"
+            aria-label="One-time invite codes"
+            tabIndex={0}
+          >
             <table className="min-w-[640px] w-full divide-y divide-gray-200">
               <thead className="bg-gray-50/80">
                 <tr>
@@ -701,7 +706,12 @@ export function UserRoles({
           </div>
 
           {/* Table wrapper with card styling */}
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full">
+          <div
+            className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full"
+            role="region"
+            aria-label="Users and roles"
+            tabIndex={0}
+          >
             <table className="min-w-[640px] w-full divide-y divide-gray-200">
               <caption className="sr-only">Users and assigned roles</caption>
               <thead className="bg-gray-50/80">

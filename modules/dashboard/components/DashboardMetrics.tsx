@@ -282,7 +282,7 @@ export function DashboardMetrics({
           <h2>Course mix</h2>
           <Link href="/courses">View courses</Link>
         </div>
-        <div className="data-wrap">
+        <div className="data-wrap" role="region" aria-label="Course mix" tabIndex={0}>
           <table>
             <thead>
               <tr>
@@ -300,7 +300,7 @@ export function DashboardMetrics({
                     {row.courseNames.length > 0 ? (
                       <span className="text-[11px] text-slate-500 block mt-0.5">{row.courseNames.join(' • ')}</span>
                     ) : (
-                      <span className="text-[11px] text-slate-400 italic block mt-0.5">No active courses</span>
+                      <span className="text-[11px] text-slate-500 italic block mt-0.5">No active courses</span>
                     )}
                   </td>
                   <td>
@@ -324,7 +324,7 @@ export function DashboardMetrics({
           <h2>Recent payments</h2>
           <Link href="/invoices">View all</Link>
         </div>
-        <div className="data-wrap">
+        <div className="data-wrap" role="region" aria-label="Recent payments" tabIndex={0}>
           <table>
             <thead>
               <tr>

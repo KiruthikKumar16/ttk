@@ -133,16 +133,18 @@ export function Sidebar({
             {!collapsed && <span className="flex-1 text-left">Course categories</span>}
           </Link>
         )}
-        <Link
-          href="/settings/brand"
-          onClick={onNavigate}
-          aria-current={pathname.startsWith('/settings/brand') ? 'page' : undefined}
-          className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
-          title="Brand information"
-        >
-          <Building2 size={18} className="mr-2" />
-          {!collapsed && <span className="flex-1 text-left">Brand information</span>}
-        </Link>
+        {role === 'admin' && (
+          <Link
+            href="/settings/brand"
+            onClick={onNavigate}
+            aria-current={pathname.startsWith('/settings/brand') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
+            title="Brand information"
+          >
+            <Building2 size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Brand information</span>}
+          </Link>
+        )}
         <div className="account">
           <div className="avatar">{role.slice(0, 1).toUpperCase()}</div>
           {!collapsed && (
