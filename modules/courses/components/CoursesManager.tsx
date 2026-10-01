@@ -5,17 +5,18 @@ import {
   ArrowUpRight,
   BookOpen,
   Clock,
-  Edit,
   AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
   Trash2,
   Plus,
   Search,
   X,
   Layers,
   Sparkles,
+  ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Course, CourseCategory } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { calculateGstForRupees } from '@/lib/money'
@@ -71,10 +72,12 @@ export function CoursesManager({
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
-  // Confirmation dialog state
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [confirmCourseId, setConfirmCourseId] = useState<string | null>(null)
-  const [confirmCourseName, setConfirmCourseName] = useState<string | null>(null)
+  // Security confirmation dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteConfirmCourse, setDeleteConfirmCourse] = useState<Course | null>(null)
+  const [deleteInputName, setDeleteInputName] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const handleCategorySelect = (selectedId: string) => {
     setCategoryId(selectedId)
@@ -157,28 +160,43 @@ export function CoursesManager({
     }
   }
 
-  const openConfirmDelete = (id: string, courseName: string) => {
-    setConfirmCourseId(id)
-    setConfirmCourseName(courseName)
-    setConfirmOpen(true)
+  const openSecurityDeleteModal = (course: Course) => {
+    setDeleteConfirmCourse(course)
+    setDeleteInputName('')
+    setDeleteError('')
+    setDeleteConfirmOpen(true)
   }
+
+  const closeSecurityDeleteModal = () => {
+    setDeleteConfirmOpen(false)
+    setDeleteConfirmCourse(null)
+    setDeleteInputName('')
+    setDeleteError('')
+    setDeleting(false)
+  }
+
+  const isDeleteNameMatched =
+    Boolean(deleteConfirmCourse?.name) &&
+    deleteInputName.trim().toLowerCase() === (deleteConfirmCourse?.name || '').trim().toLowerCase()
 
   const handleConfirmDelete = async () => {
-    if (confirmCourseId) {
-      await onDeleteCourse(confirmCourseId)
+    if (!deleteConfirmCourse) return
+    if (!isDeleteNameMatched) {
+      setDeleteError('The course name you entered does not match.')
+      return
     }
-    setConfirmOpen(false)
-    setConfirmCourseId(null)
-    setConfirmCourseName(null)
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await onDeleteCourse(deleteConfirmCourse.id)
+      closeSecurityDeleteModal()
+      closeModal()
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete course. Please check if active dependencies prevent removal.')
+    } finally {
+      setDeleting(false)
+    }
   }
-
-  const handleCancelDelete = () => {
-    setConfirmOpen(false)
-    setConfirmCourseId(null)
-    setConfirmCourseName(null)
-  }
-
-  const handleSelectCourse = (course: Course) => router.push(`/courses/${encodeURIComponent(course.id)}/materials`)
 
   const filteredCourses = useMemo(() => {
     return courses.filter(
@@ -373,23 +391,20 @@ export function CoursesManager({
           <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
             <thead>
               <tr>
-                <th style={{ width: '25%' }}>Course</th>
+                <th style={{ width: '28%' }}>Course</th>
                 <th style={{ width: '15%' }}>Category</th>
                 <th style={{ width: '12%' }}>Duration</th>
                 <th style={{ width: '13%' }}>Tax Mode</th>
-                <th style={{ width: '18%' }}>Description</th>
+                <th style={{ width: '20%' }}>Description</th>
                 <th className="align-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
                   Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
-                </th>
-                <th className="align-right" style={{ width: '10%', whiteSpace: 'nowrap' }}>
-                  Actions
                 </th>
               </tr>
             </thead>
             <tbody>
               {filteredCourses.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-500">
+                  <td colSpan={6} className="text-center py-10 text-gray-500">
                     <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
                     <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
                     <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
@@ -406,7 +421,12 @@ export function CoursesManager({
                   const isEssential = c.categoryName?.toLowerCase().includes('essential')
 
                   return (
-                    <tr key={c.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleSelectCourse(c)}>
+                    <tr
+                      key={c.id}
+                      className="cursor-pointer hover:bg-slate-50/90 transition-colors group"
+                      onClick={() => openEditModal(c)}
+                      title="Click to view & edit course details"
+                    >
                       <td>
                         <div className="flex items-center gap-2.5">
                           <div
@@ -417,8 +437,10 @@ export function CoursesManager({
                             {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
                           </div>
                           <div className="min-w-0">
-                            <strong className="block font-semibold text-gray-900 leading-snug">{c.name}</strong>
-                            <small className="block text-gray-600 font-mono text-xs">{c.id}</small>
+                            <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                              {c.name}
+                            </strong>
+                            <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
                           </div>
                         </div>
                       </td>
@@ -467,34 +489,6 @@ export function CoursesManager({
                             )}
                           </div>
                         )}
-                      </td>
-                      <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
-                        <div className="flex justify-end items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          {canUpdate && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="btn-ghost text-xs px-2.5 py-1"
-                              onClick={() => openEditModal(c)}
-                              title="Edit Course"
-                            >
-                              <Edit size={13} className="mr-1" />
-                              Edit
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="btn-ghost text-xs px-2.5 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => openConfirmDelete(c.id, c.name)}
-                              title="Delete Course"
-                            >
-                              <Trash2 size={13} className="mr-1" />
-                              Delete
-                            </Button>
-                          )}
-                        </div>
                       </td>
                     </tr>
                   )
@@ -546,16 +540,36 @@ export function CoursesManager({
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {editingCourse ? 'Edit Course' : 'Add New Course'}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {editingCourse ? 'Edit Course' : 'Add New Course'}
+                    </h2>
+                    {editingCourse?.categoryName && (
+                      <CategoryBadge categoryName={editingCourse.categoryName} />
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Configure curriculum tuition fee, GST pricing mode, duration tier, and details.
+                    {editingCourse
+                      ? `Modify curriculum pricing, duration tier, and course settings for ${editingCourse.name}.`
+                      : 'Configure curriculum tuition fee, GST pricing mode, duration tier, and details.'}
                   </p>
                 </div>
-                <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {editingCourse && (
+                    <Link
+                      href={`/courses/${encodeURIComponent(editingCourse.id)}/materials`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                      title="Manage course materials and syllabus"
+                    >
+                      <BookOpen size={13} />
+                      Materials
+                      <ArrowUpRight size={12} />
+                    </Link>
+                  )}
+                  <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
               {formError && (
@@ -759,29 +773,138 @@ export function CoursesManager({
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                  <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
-                  </Button>
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                  <div>
+                    {editingCourse && canDelete && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => openSecurityDeleteModal(editingCourse)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 text-xs px-3 py-1.5"
+                        disabled={submitting}
+                      >
+                        <Trash2 size={14} className="mr-1.5" />
+                        Delete Course
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={submitting}>
+                      {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* Delete Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={confirmOpen}
-          title={`Delete Course "${confirmCourseName}"?`}
-          description="Are you sure you want to permanently delete this course? This action cannot be undone."
-          confirmText="Delete Course"
-          destructive
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
+        {/* Security Deletion Modal with Course Name Confirmation */}
+        {deleteConfirmOpen && deleteConfirmCourse && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-60 animate-in fade-in duration-150">
+            <div className="bg-white rounded-xl shadow-2xl border border-red-100 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
+              <div className="bg-red-50/70 border-b border-red-100 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <ShieldAlert size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900">Delete Course</h3>
+                    <span className="text-[11px] font-bold tracking-wider uppercase text-red-600">
+                      Destructive & Cascading Action
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeSecurityDeleteModal}
+                  disabled={deleting}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs space-y-2 text-amber-900">
+                  <div className="flex items-center gap-2 font-semibold text-amber-800">
+                    <AlertTriangle size={15} className="shrink-0 text-amber-600" />
+                    <span>Important Data Archival & Impact Warning</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    Deleting <strong className="text-gray-900 font-semibold">{deleteConfirmCourse.name}</strong> will also cascade:
+                  </p>
+                  <ul className="list-disc pl-4 space-y-1 text-amber-800/90 leading-normal">
+                    <li>Disassociates or removes all linked <strong>course materials</strong> and uploaded files.</li>
+                    <li>Unlinks <strong>attendance records</strong>, session progress, and trainer allocations.</li>
+                    <li>Removes linked <strong>assessment tests</strong> and student performance evaluations.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    To confirm deletion, please type the course name:
+                  </label>
+                  <div className="mb-2 p-2 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs font-semibold text-gray-800 select-all text-center">
+                    {deleteConfirmCourse.name}
+                  </div>
+                  <input
+                    type="text"
+                    value={deleteInputName}
+                    onChange={(e) => {
+                      setDeleteInputName(e.target.value)
+                      if (deleteError) setDeleteError('')
+                    }}
+                    placeholder="Type the exact course name here"
+                    disabled={deleting}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+                    autoFocus
+                  />
+                  <div className="mt-1.5 flex items-center justify-between text-xs">
+                    {deleteInputName.trim().length === 0 ? (
+                      <span className="text-gray-400">Course name required to proceed</span>
+                    ) : isDeleteNameMatched ? (
+                      <span className="text-emerald-600 font-medium flex items-center gap-1">
+                        <CheckCircle2 size={13} /> Name matched. You may proceed.
+                      </span>
+                    ) : (
+                      <span className="text-amber-600">Course name does not match yet</span>
+                    )}
+                  </div>
+                </div>
+
+                {deleteError && (
+                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+                    <AlertCircle size={15} className="shrink-0" />
+                    <span>{deleteError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeSecurityDeleteModal}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleConfirmDelete}
+                    disabled={!isDeleteNameMatched || deleting}
+                    className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleting ? 'Deleting & Archiving...' : 'Permanently Delete Course'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </>
   )
