@@ -5,7 +5,7 @@ import { parseListQuery } from '@/modules/shared/list-query'
 import { RecordList } from '@/modules/shared/components/RecordList'
 import { money } from '@/lib/formatters'
 import { getCachedCourseOptions } from '@/modules/courses/service'
-import { CategoryBadge } from '@/components/CategoryBadge'
+import { InvoiceTableRow } from '@/modules/payments/components/InvoiceTableRow'
 
 export default async function InvoicesPage({ searchParams }: PageProps<'/invoices'>) {
   const params = await searchParams
@@ -19,7 +19,12 @@ export default async function InvoicesPage({ searchParams }: PageProps<'/invoice
     getCachedCourseOptions(),
   ])
 
-  const courseCategoryMap = new Map(courseOptions.map((c) => [c.name.trim().toLowerCase(), c.categoryName]))
+  const courseCategoryObject: Record<string, string> = {}
+  for (const c of courseOptions) {
+    if (c.categoryName) {
+      courseCategoryObject[c.name.trim().toLowerCase()] = c.categoryName
+    }
+  }
 
   return (
     <RecordList
@@ -51,43 +56,13 @@ export default async function InvoicesPage({ searchParams }: PageProps<'/invoice
         </tr>
       </thead>
       <tbody>
-        {result.data.map((payment) => {
-          const courseName = payment.course || '—'
-          const catName = payment.course ? courseCategoryMap.get(payment.course.trim().toLowerCase()) : null
-
-          return (
-            <tr key={payment.id}>
-              <td>
-                <Link
-                  href={`/invoices/${encodeURIComponent(payment.invoice)}`}
-                  className="font-mono font-medium text-slate-900 hover:text-indigo-600 hover:underline"
-                >
-                  {payment.invoice}
-                </Link>
-              </td>
-              <td>
-                <Link href={`/students/${payment.studentId}`} className="font-medium text-indigo-600 hover:underline">
-                  {payment.student}
-                </Link>
-              </td>
-              <td className="text-slate-800 font-medium">{courseName}</td>
-              <td>
-                {catName ? (
-                  <CategoryBadge categoryName={catName} />
-                ) : (
-                  <span className="text-xs text-slate-400 italic">Unassigned</span>
-                )}
-              </td>
-              <td className="text-slate-600">{payment.date}</td>
-              <td>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-700">
-                  {payment.method}
-                </span>
-              </td>
-              <td className="align-right font-bold text-slate-900">{money(payment.amount)}</td>
-            </tr>
-          )
-        })}
+        {result.data.map((payment) => (
+          <InvoiceTableRow
+            key={payment.id}
+            payment={payment}
+            courseCategoryMap={courseCategoryObject}
+          />
+        ))}
         {result.data.length === 0 && (
           <tr>
             <td colSpan={7}>No invoices match this search.</td>

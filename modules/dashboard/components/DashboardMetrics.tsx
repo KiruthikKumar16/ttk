@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowDownRight,
@@ -15,7 +19,8 @@ import { money } from '@/lib/formatters'
 import { paiseToRupees } from '@/lib/money'
 import type { Course, CourseCategory, Payment, Student } from '@/lib/types'
 import type { DashboardSummary } from '@/modules/dashboard/types'
-import { CategoryBadge, getCategoryBadgeStyle } from '@/components/CategoryBadge'
+import { CategoryBadge } from '@/components/CategoryBadge'
+import { getTimeBasedGreeting } from '@/lib/greeting'
 
 export function DashboardMetrics({
   summary,
@@ -34,6 +39,13 @@ export function DashboardMetrics({
   pendingUsers?: Array<{ id: string; fullName: string; createdAt?: string }>
   canCreateStudent?: boolean
 }) {
+  const router = useRouter()
+  const [greetingData, setGreetingData] = useState(() => getTimeBasedGreeting())
+
+  useEffect(() => {
+    setGreetingData(getTimeBasedGreeting())
+  }, [])
+
   const revenue = paiseToRupees(summary.revenuePaise)
   const outstanding = paiseToRupees(summary.outstandingPaise)
   const totalFees = students.length > 0 ? students.reduce((s, x) => s + x.total, 0) : revenue + outstanding
@@ -45,15 +57,6 @@ export function DashboardMetrics({
       : Math.max(0, studentCount - eligibleCount)
   const collectionRate = totalFees > 0 ? Math.round((revenue / totalFees) * 100) : 0
   const avgFee = studentCount > 0 ? Math.round(totalFees / studentCount) : 0
-
-  const todayStr = new Date()
-    .toLocaleDateString('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-    .toUpperCase()
 
   const metrics = [
     // Row 1: Financial Performance
@@ -187,40 +190,13 @@ export function DashboardMetrics({
     }
   })
 
-  const tierPills = categoryMix.map((tier) => ({
-    ...tier,
-    studentCount: tier.studentCount,
-  }))
-
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">{todayStr}</p>
-          <h1>Good morning</h1>
-          <p className="subcopy">Here&rsquo;s what&rsquo;s happening across ThoorigAI Infotech.</p>
-          {tierPills.length > 0 && (
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-[11px]">
-                Curriculum Tiers:
-              </span>
-              {tierPills.map((tier) => (
-                <Link
-                  key={tier.id}
-                  href={`/students?categoryId=${encodeURIComponent(tier.id)}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors shadow-xs ${
-                    getCategoryBadgeStyle(tier.name).pill
-                  }`}
-                >
-                  <span className="font-semibold">{tier.name}</span>
-                  <span className="text-[11px] opacity-75">({tier.duration})</span>
-                  <span className="px-1.5 py-0.2 rounded-full bg-white/80 font-bold text-[10px] ml-0.5">
-                    {tier.studentCount}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+          <p className="eyebrow">{greetingData.formattedDate}</p>
+          <h1>{greetingData.greeting}</h1>
+          <p className="subcopy">{greetingData.subcopy}</p>
         </div>
         {canCreateStudent && (
           <Link href="/students/new" className="btn-primary">
@@ -297,11 +273,6 @@ export function DashboardMetrics({
                 <tr key={row.id}>
                   <td>
                     <span className="font-semibold text-slate-900 block">{row.name}</span>
-                    {row.courseNames.length > 0 ? (
-                      <span className="text-[11px] text-slate-500 block mt-0.5">{row.courseNames.join(' • ')}</span>
-                    ) : (
-                      <span className="text-[11px] text-slate-500 italic block mt-0.5">No active courses</span>
-                    )}
                   </td>
                   <td>
                     <CategoryBadge categoryName={row.name} />
@@ -336,13 +307,32 @@ export function DashboardMetrics({
             </thead>
             <tbody>
               {recentPayments.map((payment) => (
-                <tr key={payment.id}>
+                <tr
+                  key={payment.id}
+                  onClick={() => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)
+                    }
+                  }}
+                  tabIndex={0}
+                  role="link"
+                  className="cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-100"
+                  title={`Open invoice ${payment.invoice}`}
+                >
                   <td>
-                    <Link href={`/invoices/${encodeURIComponent(payment.invoice)}`}>{payment.invoice}</Link>
+                    <Link
+                      href={`/invoices/${encodeURIComponent(payment.invoice)}`}
+                      className="font-medium text-indigo-600 hover:text-indigo-800"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {payment.invoice}
+                    </Link>
                   </td>
                   <td>{payment.student}</td>
                   <td>{payment.date}</td>
-                  <td className="align-right">{payment.amount.toLocaleString('en-IN')}</td>
+                  <td className="align-right font-medium">{payment.amount.toLocaleString('en-IN')}</td>
                 </tr>
               ))}
               {recentPayments.length === 0 && (

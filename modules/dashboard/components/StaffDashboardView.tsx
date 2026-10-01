@@ -1,5 +1,5 @@
 'use client'
-
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Users,
@@ -17,6 +17,7 @@ import {
 import type { StaffDashboardData } from '@/modules/dashboard/service'
 import { Button } from '@/components/ui/button'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { getTimeBasedGreeting } from '@/lib/greeting'
 
 export function StaffDashboardView({
   data,
@@ -25,6 +26,12 @@ export function StaffDashboardView({
   data: StaffDashboardData
   canCreateStudent?: boolean
 }) {
+  const [greetingData, setGreetingData] = useState(() => getTimeBasedGreeting())
+
+  useEffect(() => {
+    setGreetingData(getTimeBasedGreeting())
+  }, [])
+
   const {
     totalStudents,
     activeStudents,
@@ -36,13 +43,6 @@ export function StaffDashboardView({
     categoryMix = [],
   } = data
 
-  const todayFormatted = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
   return (
     <div className="space-y-6">
       {/* Header with Greeting & Date */}
@@ -52,11 +52,11 @@ export function StaffDashboardView({
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
               Staff Portal
             </span>
-            <span className="text-xs text-muted-foreground">{todayFormatted}</span>
+            <span className="text-xs text-muted-foreground font-medium">{greetingData.formattedDate}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Good morning</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">{greetingData.greeting}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Monitor daily attendance, grade assessments, track student engagement, and distribute course materials.
+            {greetingData.subcopy}
           </p>
         </div>
 
@@ -400,11 +400,6 @@ export function StaffDashboardView({
                 <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-5">
                     <span className="font-semibold text-slate-900 text-sm block">{row.name}</span>
-                    {row.courseNames.length > 0 ? (
-                      <span className="text-[11px] text-slate-500 block mt-0.5">{row.courseNames.join(' • ')}</span>
-                    ) : (
-                      <span className="text-[11px] text-slate-400 italic block mt-0.5">No active courses</span>
-                    )}
                   </td>
                   <td className="py-3.5 px-4">
                     <CategoryBadge categoryName={row.name} />

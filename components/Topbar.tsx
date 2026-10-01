@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ChevronRight, FileCheck2, FileText, LogOut, Menu, Receipt, Search, UserRound, Users, X } from 'lucide-react'
 import type { Payment, Role, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
+import { NotificationPanel } from '@/components/NotificationPanel'
 
 type BreadcrumbSegment = {
   label: string
@@ -364,9 +365,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
           )}
         </div>
 
-        <div className="top-avatar" title={`${role} account`}>
-          {roleInitials}
-        </div>
+        <NotificationPanel role={role} />
 
         <button
           type="button"
