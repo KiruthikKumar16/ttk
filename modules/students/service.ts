@@ -1,6 +1,7 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { listStudents, listPayments, studentFromRow } from '@/lib/server-data'
+import { normalizeJoined } from '@/lib/supabase/relations'
 import type { Role } from '@/lib/types'
 import { can } from '@/lib/auth/permissions'
 import { ForbiddenError, ValidationError } from '@/lib/http/errors'
@@ -92,4 +93,53 @@ export async function getStudentDetail(registerId: number) {
     listPayments(supabase, { page: 1, pageSize: 100, studentId: registerId }),
   ])
   return { student: studentResult, payments: paymentResult.data }
+}
+
+export async function getStudentAcademicHistory(registerId: number) {
+  authorizeStudent((await getCurrentProfile()).role, 'read')
+  const supabase = await createClient()
+  const { data: studentRow, error } = await supabase
+    .from('students')
+    .select('id')
+    .eq('register_id', registerId)
+    .maybeSingle()
+
+  if (error || !studentRow?.id) {
+    return { attendance: [], assessments: [] }
+  }
+
+  const [attendanceRes, assessmentRes] = await Promise.all([
+    supabase
+      .from('attendance')
+      .select('id,session_date,status')
+      .eq('student_id', studentRow.id)
+      .order('session_date', { ascending: false })
+      .limit(30),
+    supabase
+      .from('assessment_results')
+      .select('id,score,remarks,graded_at,assessments(title,max_score,assessment_date)')
+      .eq('student_id', studentRow.id)
+      .order('graded_at', { ascending: false })
+      .limit(30),
+  ])
+
+  return {
+    attendance: (attendanceRes.data ?? []).map((a: any) => ({
+      id: String(a.id),
+      sessionDate: String(a.session_date),
+      status: a.status as 'Present' | 'Absent' | 'Late' | 'Excused',
+    })),
+    assessments: (assessmentRes.data ?? []).map((r: any) => {
+      const assessment = normalizeJoined(r.assessments)
+      return {
+        id: String(r.id),
+        score: Number(r.score),
+        remarks: r.remarks ? String(r.remarks) : null,
+        gradedAt: r.graded_at ? String(r.graded_at) : null,
+        title: assessment?.title ? String(assessment.title) : 'Assessment',
+        maxScore: Number(assessment?.max_score ?? 100),
+        date: assessment?.assessment_date ? String(assessment.assessment_date) : '',
+      }
+    }),
+  }
 }

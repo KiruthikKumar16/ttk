@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, AlertCircle } from 'lucide-react'
-import type { Course, Student } from '@/lib/types'
+import type { Course, Student, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { calculateGstForRupees, rupeesToPaise } from '@/lib/money'
 import { CategoryBadge } from '@/components/CategoryBadge'
@@ -47,11 +47,13 @@ export function AddStudent({
   onClose,
   onSave,
   gstRate = 18,
+  role = 'admin',
 }: {
   courses?: Course[]
   onClose: () => void
   onSave: (s: any) => void
   gstRate?: number
+  role?: Role
 }) {
   const courseList = courses && courses.length > 0 ? courses.map((c) => c.name) : DEFAULT_COURSE_OPTIONS
   const initialCourse = courseList[0]
@@ -102,21 +104,25 @@ export function AddStudent({
       setError('Please enter a valid 10-digit mobile number.')
       return
     }
-    const totalNum = Number(total)
-    const paidNum = Number(paid || 0)
-    if (isNaN(totalNum) || totalNum <= 0) {
-      setError('Please specify valid base course tuition fees.')
-      return
-    }
-    if (!Number.isFinite(paidNum) || paidNum < 0) {
-      setError('Initial payment cannot exceed base course tuition fees.')
-      return
-    }
-    const totalPaise = rupeesToPaise(totalNum)
-    const paidPaise = rupeesToPaise(paidNum)
-    if (paidPaise > totalPaise) {
-      setError('Initial payment cannot exceed base course tuition fees.')
-      return
+    const isStaff = role === 'staff'
+    const totalNum = isStaff ? Number(total) || selectedCourseObj?.fee || 0 : Number(total)
+    const paidNum = isStaff ? 0 : Number(paid || 0)
+
+    if (!isStaff) {
+      if (isNaN(totalNum) || totalNum <= 0) {
+        setError('Please specify valid base course tuition fees.')
+        return
+      }
+      if (!Number.isFinite(paidNum) || paidNum < 0) {
+        setError('Initial payment cannot exceed base course tuition fees.')
+        return
+      }
+      const totalPaise = rupeesToPaise(totalNum)
+      const paidPaise = rupeesToPaise(paidNum)
+      if (paidPaise > totalPaise) {
+        setError('Initial payment cannot exceed base course tuition fees.')
+        return
+      }
     }
 
     onSave({
@@ -343,7 +349,7 @@ export function AddStudent({
           </div>
 
           {/* Row 4: City, Area / Street, Student Source */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`grid grid-cols-1 ${role === 'staff' ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
             <div>
               <label htmlFor="student-city" className="block text-xs font-semibold text-gray-700 mb-1">
                 City
@@ -376,23 +382,25 @@ export function AddStudent({
               />
             </div>
 
-            <div>
-              <label htmlFor="student-source" className="block text-xs font-semibold text-gray-700 mb-1">
-                Student Source <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="student-source"
-                value={studentSource}
-                onChange={(e) => setStudentSource(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                {STUDENT_SOURCES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {role !== 'staff' && (
+              <div>
+                <label htmlFor="student-source" className="block text-xs font-semibold text-gray-700 mb-1">
+                  Student Source <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="student-source"
+                  value={studentSource}
+                  onChange={(e) => setStudentSource(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  {STUDENT_SOURCES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Row 5: Counselor Comments / Remarks */}
@@ -456,9 +464,11 @@ export function AddStudent({
                         Duration: <strong className="text-slate-800">{selectedObj.duration}</strong>
                       </span>
                     </div>
-                    <div className="text-slate-600">
-                      Standard Fee: <strong className="text-slate-900">{money(selectedObj.fee)}</strong>
-                    </div>
+                    {role !== 'staff' && (
+                      <div className="text-slate-600">
+                        Standard Fee: <strong className="text-slate-900">{money(selectedObj.fee)}</strong>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -503,94 +513,98 @@ export function AddStudent({
             </div>
           </div>
 
-          {/* Row 8: Tuition Fee & Initial Payment */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor="student-total" className="block text-xs font-semibold text-gray-700">
-                  Tuition Fee (₹) <span className="text-red-500">*</span>
-                </label>
-                {selectedCourseObj && (
-                  <span
-                    className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                      isGstInclusive
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
-                  >
-                    {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
-                  </span>
-                )}
-              </div>
-              <input
-                id="student-total"
-                type="number"
-                min="0"
-                required
-                placeholder="e.g. 42000"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
-              <span className="text-[11px] text-gray-400 mt-0.5 block">
-                {isGstInclusive ? 'All-inclusive course tuition fee' : 'Base fee (exclusive of GST)'}
-              </span>
-            </div>
-
-            <div>
-              <label htmlFor="student-paid" className="block text-xs font-semibold text-gray-700 mb-1">
-                Initial Payment (₹)
-              </label>
-              <input
-                id="student-paid"
-                type="number"
-                min="0"
-                placeholder="e.g. 20000"
-                value={paid}
-                onChange={(e) => setPaid(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
-              <span className="text-[11px] text-gray-400 mt-0.5 block">Generates invoice immediately</span>
-            </div>
-          </div>
-
-          {/* Fee Breakdown Preview */}
-          {enteredTotal > 0 && (
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
-              <div className="font-semibold text-gray-900 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  Fee Summary
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      isGstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
-                  </span>
-                </span>
-                <span className="text-slate-500 font-normal">
-                  {gstRate > 0 ? `GST @ ${gstRate}% (${gstRate / 2}% CGST + ${gstRate / 2}% SGST)` : 'GST Disabled'}
-                </span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Base Course Fee (Taxable):</span>
-                <span className="font-medium text-gray-900">{money(baseFeeNum)}</span>
-              </div>
-              {gstRate > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>{isGstInclusive ? `Included GST (${gstRate}%):` : `Applicable GST (${gstRate}%):`}</span>
-                  <span className="font-medium text-gray-900">
-                    {isGstInclusive ? money(gstAmount) : `+${money(gstAmount)}`}
+          {/* Row 8: Tuition Fee & Initial Payment (Admin Only) */}
+          {role !== 'staff' && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="student-total" className="block text-xs font-semibold text-gray-700">
+                      Tuition Fee (₹) <span className="text-red-500">*</span>
+                    </label>
+                    {selectedCourseObj && (
+                      <span
+                        className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                          isGstInclusive
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    id="student-total"
+                    type="number"
+                    min="0"
+                    required
+                    placeholder="e.g. 42000"
+                    value={total}
+                    onChange={(e) => setTotal(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                  <span className="text-[11px] text-gray-400 mt-0.5 block">
+                    {isGstInclusive ? 'All-inclusive course tuition fee' : 'Base fee (exclusive of GST)'}
                   </span>
                 </div>
-              )}
-              <div className="flex justify-between pt-1.5 border-t border-slate-200 text-sm font-bold text-gray-900">
-                <span>Total Payable:</span>
-                <span className={isGstInclusive ? 'text-emerald-700 font-bold' : 'text-blue-600 font-bold'}>
-                  {money(grandTotal)}
-                </span>
+
+                <div>
+                  <label htmlFor="student-paid" className="block text-xs font-semibold text-gray-700 mb-1">
+                    Initial Payment (₹)
+                  </label>
+                  <input
+                    id="student-paid"
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 20000"
+                    value={paid}
+                    onChange={(e) => setPaid(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                  <span className="text-[11px] text-gray-400 mt-0.5 block">Generates invoice immediately</span>
+                </div>
               </div>
-            </div>
+
+              {/* Fee Breakdown Preview */}
+              {enteredTotal > 0 && (
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
+                  <div className="font-semibold text-gray-900 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      Fee Summary
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          isGstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {isGstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
+                      </span>
+                    </span>
+                    <span className="text-slate-500 font-normal">
+                      {gstRate > 0 ? `GST @ ${gstRate}% (${gstRate / 2}% CGST + ${gstRate / 2}% SGST)` : 'GST Disabled'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Base Course Fee (Taxable):</span>
+                    <span className="font-medium text-gray-900">{money(baseFeeNum)}</span>
+                  </div>
+                  {gstRate > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>{isGstInclusive ? `Included GST (${gstRate}%):` : `Applicable GST (${gstRate}%):`}</span>
+                      <span className="font-medium text-gray-900">
+                        {isGstInclusive ? money(gstAmount) : `+${money(gstAmount)}`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-1.5 border-t border-slate-200 text-sm font-bold text-gray-900">
+                    <span>Total Payable:</span>
+                    <span className={isGstInclusive ? 'text-emerald-700 font-bold' : 'text-blue-600 font-bold'}>
+                      {money(grandTotal)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Action Buttons */}

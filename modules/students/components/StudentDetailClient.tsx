@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { Course, Payment, Student } from '@/lib/types'
+import type { Course, Payment, Student, Role } from '@/lib/types'
 import type { Receipt } from '@/lib/types'
 import { StudentDetail } from '@/modules/students/components/StudentDetail'
 import { useRef } from 'react'
@@ -13,12 +13,26 @@ export function StudentDetailClient({
   courses,
   gstRate,
   canRecordPayment,
+  role = 'admin',
+  attendance = [],
+  assessments = [],
 }: {
   student: Student
   payments: Payment[]
   courses: Course[]
   gstRate: number
   canRecordPayment: boolean
+  role?: Role
+  attendance?: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Late' | 'Excused' }[]
+  assessments?: {
+    id: string
+    title: string
+    date: string
+    score: number
+    maxScore: number
+    remarks?: string | null
+    gradedAt?: string | null
+  }[]
 }) {
   const router = useRouter()
   const recordPayment = useRecordPaymentMutation(student.registerId)
@@ -30,6 +44,9 @@ export function StudentDetailClient({
       courses={courses}
       gstRate={gstRate}
       canRecordPayment={canRecordPayment}
+      role={role}
+      attendance={attendance}
+      assessments={assessments}
       onBack={() => router.back()}
       onCertificate={() => router.push(`/students/${student.registerId}/certificate`)}
       onInvoice={(payment) => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)}

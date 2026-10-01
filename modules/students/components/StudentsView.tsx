@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, Search, ChevronLeft, ChevronRight, X, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Student, Course, CourseCategory } from '@/lib/types'
+import type { Student, Course, CourseCategory, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { CategoryBadge } from '@/components/CategoryBadge'
@@ -21,6 +21,7 @@ export function StudentsView({
   pageSize,
   search: initialSearch = '',
   canCreate = true,
+  role = 'admin',
 }: {
   students: Student[]
   categories?: CourseCategory[]
@@ -32,6 +33,7 @@ export function StudentsView({
   pageSize: number
   search?: string
   canCreate?: boolean
+  role?: Role
 }) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState(initialSearch)
@@ -121,14 +123,19 @@ export function StudentsView({
   }
 
   const hasActiveFilters = Boolean(searchTerm || categoryFilter || courseFilter)
+  const isStaff = role === 'staff'
 
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">ACADEMY RECORDS</p>
+          <p className="eyebrow">{isStaff ? 'ACADEMY ROSTER' : 'ACADEMY RECORDS'}</p>
           <h1>Students</h1>
-          <p className="subcopy">Manage enrollment, fees, and student records.</p>
+          <p className="subcopy">
+            {isStaff
+              ? 'Active student roster, batch schedules, contact records, and academic progress.'
+              : 'Manage enrollment, fees, and student records.'}
+          </p>
         </div>
         {canCreate && (
           <Link href="/students/new" className="btn-primary flex items-center gap-2">
@@ -229,20 +236,124 @@ export function StudentsView({
         <div className="data-wrap">
           <table>
             <thead>
-              <tr>
-                <th>Register ID</th>
-                <th>Student</th>
-                <th>Course</th>
-                <th>Batch start</th>
-                <th className="align-right">Total fees</th>
-                <th className="align-right">Balance</th>
-                <th>Source</th>
-                <th>Status</th>
-              </tr>
+              {isStaff ? (
+                <tr>
+                  <th>Register ID</th>
+                  <th>Student</th>
+                  <th>Course & Curriculum</th>
+                  <th>Batch start</th>
+                  <th>Contact & Location</th>
+                  <th>Specialization</th>
+                  <th>Status</th>
+                  <th className="align-right">Action</th>
+                </tr>
+              ) : (
+                <tr>
+                  <th>Register ID</th>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Batch start</th>
+                  <th className="align-right">Total fees</th>
+                  <th className="align-right">Balance</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                </tr>
+              )}
             </thead>
             <tbody>
               {students.map((s) => {
                 const categoryName = courseCategoryMap.get(s.course.trim().toLowerCase())
+
+                if (isStaff) {
+                  return (
+                    <tr
+                      key={s.registerId}
+                      className="clickable-row hover:bg-slate-50/80 transition-colors"
+                      onClick={() => router.push(`/students/${s.registerId}`)}
+                    >
+                      <td className="mono font-mono font-medium text-slate-500">
+                        <Link
+                          href={`/students/${s.registerId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:text-indigo-600 hover:underline"
+                        >
+                          TAI-{s.registerId}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={`/students/${s.registerId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="student-cell flex items-center gap-2.5"
+                        >
+                          <div className="mini-avatar">
+                            {s.name
+                              .split(' ')
+                              .map((x) => x[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase() || 'ST'}
+                          </div>
+                          <div>
+                            <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
+                              {s.name}
+                            </strong>
+                            <small className="block text-xs text-slate-500">{s.phone}</small>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="text-sm text-slate-700">
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="font-medium text-slate-900 leading-snug">{s.course}</span>
+                          {categoryName && <CategoryBadge categoryName={categoryName} />}
+                        </div>
+                      </td>
+                      <td className="text-sm text-slate-600 font-mono">{s.batch}</td>
+                      <td className="text-xs text-slate-600">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="truncate max-w-[170px] text-slate-700 font-medium">{s.email || '—'}</span>
+                          <span className="text-slate-400">
+                            {[s.area, s.city, s.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-wrap gap-1 max-w-[190px]">
+                          {s.knowledgeTags && s.knowledgeTags.length > 0 ? (
+                            s.knowledgeTags.slice(0, 2).map((t) => (
+                              <span
+                                key={t}
+                                className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
+                              >
+                                {t}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                          {s.knowledgeTags && s.knowledgeTags.length > 2 && (
+                            <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-slate-100 text-slate-600">
+                              +{s.knowledgeTags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <Status status={s.status} />
+                      </td>
+                      <td className="align-right">
+                        <Link
+                          href={`/students/${s.registerId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                        >
+                          <span>Profile</span>
+                          <ChevronRight size={13} />
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                }
 
                 return (
                   <tr

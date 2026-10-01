@@ -38,6 +38,7 @@ export default async function StudentsPage({ searchParams }: PageProps<'/student
       pageSize={query.pageSize}
       search={query.search}
       canCreate={profile.role === 'admin' || profile.role === 'staff'}
+      role={profile.role}
     />
   )
 }

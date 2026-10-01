@@ -16,7 +16,10 @@ vi.mock('@/lib/supabase/server', () => ({
       const query = {
         select: () => query,
         eq: () => query,
+        order: () => query,
+        limit: () => query,
         maybeSingle: async () => ({ data: mocks.rows[table] ?? null, error: null }),
+        then: (onfulfilled: any) => Promise.resolve({ data: mocks.rows[table] ?? [], error: null }).then(onfulfilled),
       }
       return query
     },
@@ -30,7 +33,7 @@ vi.mock('@/lib/server-data', () => ({
 vi.mock('./repository', () => ({ createStudentWithPaymentAtomic: mocks.createStudentWithPaymentAtomic }))
 vi.mock('@/lib/auth/current-profile', () => ({ getCurrentProfile: mocks.getCurrentProfile }))
 
-import { createStudent, getStudentDetail, listStudentPage } from './service'
+import { createStudent, getStudentAcademicHistory, getStudentDetail, listStudentPage } from './service'
 
 const input = {
   name: 'Asha',
@@ -122,5 +125,36 @@ describe('student service', () => {
       student: { registerId: 8, name: 'Asha', paid: 0 },
       payments: [{ id: 'p1' }],
     })
+  })
+
+  it('returns academic history for a student or empty arrays if student missing', async () => {
+    mocks.rows.students = { id: 'uuid-1', register_id: 8 }
+    mocks.rows.attendance = [{ id: 'att-1', session_date: '2026-09-20', status: 'Present' }]
+    mocks.rows.assessment_results = [
+      {
+        id: 'res-1',
+        score: 85,
+        remarks: 'Good job',
+        graded_at: '2026-09-21',
+        assessments: { title: 'JS Test', max_score: 100, assessment_date: '2026-09-21' },
+      },
+    ]
+    const history = await getStudentAcademicHistory(8)
+    expect(history.attendance).toEqual([{ id: 'att-1', sessionDate: '2026-09-20', status: 'Present' }])
+    expect(history.assessments).toEqual([
+      {
+        id: 'res-1',
+        title: 'JS Test',
+        date: '2026-09-21',
+        score: 85,
+        maxScore: 100,
+        remarks: 'Good job',
+        gradedAt: '2026-09-21',
+      },
+    ])
+
+    mocks.rows.students = null
+    const emptyHistory = await getStudentAcademicHistory(99)
+    expect(emptyHistory).toEqual({ attendance: [], assessments: [] })
   })
 })
