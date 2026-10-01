@@ -63,7 +63,11 @@ export function StudentDetailClient({
         }
         paymentKey.current = null
         router.refresh()
-        return result.data as Receipt
+        const receipt = result.data as Receipt
+        if (receipt?.invoice) {
+          router.push(`/invoices/${encodeURIComponent(receipt.invoice)}`)
+        }
+        return receipt
       }}
     />
   )

@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { X, AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { X, AlertCircle, Settings } from 'lucide-react'
 import type { Course, Student, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { calculateGstForRupees, rupeesToPaise } from '@/lib/money'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { DEFAULT_SKILL_TAGS, type SkillTag } from '@/modules/skills/types'
+import { SkillTagsManager } from '@/modules/skills/components/SkillTagsManager'
 
 const DEFAULT_COURSE_OPTIONS = [
   'Professional Course',
@@ -28,19 +30,6 @@ const STUDENT_SOURCES = [
 ]
 
 const CITIES = ['Tuticorin', 'Tirunelveli', 'Madurai', 'Chennai', 'Coimbatore', 'Trichy', 'Salem', 'Nagercoil', 'Other']
-
-const AVAILABLE_TAGS = [
-  'Python',
-  'Web Dev',
-  'React',
-  'AI/ML',
-  'Full Stack',
-  'UI/UX',
-  'Internship',
-  'College Student',
-  'Job Seeker',
-  'Beginner',
-]
 
 export function AddStudent({
   courses,
@@ -80,7 +69,22 @@ export function AddStudent({
   const [area, setArea] = useState('')
   const [studentSource, setStudentSource] = useState('Walk-in')
   const [comments, setComments] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>(['Web Dev'])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [availableSkills, setAvailableSkills] = useState<string[]>(DEFAULT_SKILL_TAGS)
+  const [allSkillObjects, setAllSkillObjects] = useState<SkillTag[]>([])
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/skills')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setAllSkillObjects(json.data)
+          setAvailableSkills(json.data.map((s: any) => String(s.name)))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handleCourseChange = (selectedCourseName: string) => {
     setCourse(selectedCourseName)
@@ -491,26 +495,56 @@ export function AddStudent({
 
           {/* Row 7: Student Knowledge Tags */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Knowledge / Skill Tags</label>
-            <div className="flex flex-wrap gap-1.5">
-              {AVAILABLE_TAGS.map((tag) => {
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-semibold text-gray-700">Knowledge / Skill Tags</label>
+              {role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => setSkillsModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  <Settings size={12} />
+                  Configure Skills (CRUD)
+                </button>
+              )}
+            </div>
+
+            {/* Split neatly into 2 lines with even count per line */}
+            {(() => {
+              const half = Math.max(1, Math.ceil(availableSkills.length / 2))
+              const line1 = availableSkills.slice(0, half)
+              const line2 = availableSkills.slice(half)
+
+              const renderTag = (tag: string) => {
                 const active = selectedTags.includes(tag)
                 return (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => toggleTag(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-md transition-colors border ${
+                    className={`flex-1 min-w-[70px] text-xs px-2.5 py-1.5 rounded-lg transition-all border text-center flex items-center justify-center font-medium ${
                       active
-                        ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-2xs font-semibold'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                     }`}
                   >
-                    {tag} {active && '✓'}
+                    <span className="truncate">{tag}</span>
+                    {active && <span className="ml-1 text-white font-bold">✓</span>}
                   </button>
                 )
-              })}
-            </div>
+              }
+
+              return (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                    {line1.map(renderTag)}
+                  </div>
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                    {line2.map(renderTag)}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Row 8: Tuition Fee & Initial Payment (Admin Only) */}
@@ -625,6 +659,18 @@ export function AddStudent({
           </div>
         </form>
       </div>
+
+      {skillsModalOpen && (
+        <SkillTagsManager
+          isModal
+          initialSkills={allSkillObjects}
+          onClose={() => setSkillsModalOpen(false)}
+          onSkillsChange={(updated) => {
+            setAllSkillObjects(updated)
+            setAvailableSkills(updated.map((s) => s.name))
+          }}
+        />
+      )}
     </div>
   )
 }

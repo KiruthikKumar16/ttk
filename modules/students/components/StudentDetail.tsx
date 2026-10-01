@@ -79,12 +79,21 @@ export function StudentDetail({
     if (!value || value <= 0) return setError('Enter a payment amount greater than zero.')
     // We assume onPayment returns a Promise that resolves to a Receipt or a string error
     const result = await onPayment(value, method)
-    if (rupeesToPaise(value) > rupeesToPaise(balance))
-      return setError('Payment cannot exceed the remaining balance of ' + money(balance) + '.')
     if (typeof result === 'string') return setError(result)
     setReceipt(result)
     setAmount('')
     setError('')
+    if (result?.invoice && onInvoice) {
+      onInvoice({
+        id: result.id,
+        student: result.student,
+        method: result.method,
+        date: result.date,
+        amount: result.amount,
+        invoice: result.invoice,
+        studentId: result.studentId,
+      })
+    }
   }
   const matchedCourse = courses?.find(
     (c) => c.name.toLowerCase().trim() === (student.course || '').toLowerCase().trim(),

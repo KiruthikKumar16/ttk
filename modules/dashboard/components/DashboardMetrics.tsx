@@ -4,11 +4,16 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
+  AlertTriangle,
   ArrowDownRight,
   ArrowRight,
+  CalendarDays,
+  CheckCircle2,
   CircleDollarSign,
+  ClipboardCheck,
   Clock,
   GraduationCap,
+  Phone,
   ShieldCheck,
   TrendingUp,
   UserCheck,
@@ -19,6 +24,7 @@ import { money } from '@/lib/formatters'
 import { paiseToRupees } from '@/lib/money'
 import type { Course, CourseCategory, Payment, Student } from '@/lib/types'
 import type { DashboardSummary } from '@/modules/dashboard/types'
+import type { StaffDashboardData } from '@/modules/dashboard/service'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { getTimeBasedGreeting } from '@/lib/greeting'
 
@@ -29,6 +35,7 @@ export function DashboardMetrics({
   categories = [],
   courses = [],
   pendingUsers = [],
+  academicData = null,
   canCreateStudent = false,
 }: {
   summary: DashboardSummary
@@ -37,6 +44,7 @@ export function DashboardMetrics({
   categories?: CourseCategory[]
   courses?: Course[]
   pendingUsers?: Array<{ id: string; fullName: string; createdAt?: string }>
+  academicData?: StaffDashboardData | null
   canCreateStudent?: boolean
 }) {
   const router = useRouter()
@@ -253,6 +261,182 @@ export function DashboardMetrics({
           </div>
         ))}
       </div>
+
+      {/* Attendance Summary & Watchlist */}
+      {academicData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
+          {/* Today's Attendance Progress Box */}
+          <div className="p-5 rounded-xl border border-slate-200/80 bg-white shadow-2xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-emerald-600" />
+                  <h2 className="text-sm font-semibold text-slate-900">Today&apos;s Attendance Summary</h2>
+                </div>
+                <Link
+                  href="/attendance"
+                  className="text-xs font-medium text-indigo-600 hover:underline flex items-center gap-1"
+                >
+                  Attendance Registry <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-lg bg-emerald-50/60 border border-emerald-100">
+                  <p className="text-xs font-medium text-emerald-800">Present / Late</p>
+                  <p className="text-2xl font-bold text-emerald-900 mt-1">{academicData.todayAttendance.present}</p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">Students in session</p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-rose-50/60 border border-rose-100">
+                  <p className="text-xs font-medium text-rose-800">Absent</p>
+                  <p className="text-2xl font-bold text-rose-900 mt-1">{academicData.todayAttendance.absent}</p>
+                  <p className="text-[11px] text-rose-700 mt-0.5">Marked absent today</p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/70">
+                  <p className="text-xs font-medium text-slate-700">Total Marked</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{academicData.todayAttendance.totalMarked}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Records logged today</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance Progress Bar */}
+            <div className="mt-5 pt-3.5 border-t border-slate-100">
+              <div className="flex justify-between text-xs text-slate-600 mb-1.5 font-medium">
+                <span>Classroom Attendance Health</span>
+                <span className="font-bold text-slate-900">{academicData.todayAttendance.rate}% Present</span>
+              </div>
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(0, academicData.todayAttendance.rate))}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Low Attendance Watchlist Card */}
+          <div className="p-5 rounded-xl border border-amber-200 bg-amber-50/40 shadow-2xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-amber-200/80">
+                <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
+                  <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                  <span>Attendance Watchlist (&lt; 75%)</span>
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                  {academicData.lowAttendanceStudents.length} Students
+                </span>
+              </div>
+
+              <p className="text-xs text-amber-800 mt-2 mb-3">
+                Learners below 75% attendance criteria requiring academy follow-up.
+              </p>
+            </div>
+
+            {academicData.lowAttendanceStudents.length === 0 ? (
+              <div className="py-7 px-4 text-center text-xs text-emerald-800 bg-white/70 rounded-lg border border-emerald-100 flex-1 flex flex-col items-center justify-center">
+                <CheckCircle2 size={22} className="mx-auto mb-1.5 text-emerald-600" />
+                <span>All active students meet the 75% attendance threshold!</span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {academicData.lowAttendanceStudents.map((s) => (
+                  <div
+                    key={s.id}
+                    className="p-2.5 rounded-lg bg-white border border-amber-200/70 shadow-2xs flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/students/${s.registerId}`}
+                          className="text-xs font-semibold text-slate-900 hover:text-indigo-600 truncate"
+                        >
+                          {s.name}
+                        </Link>
+                        <span className="text-[10px] text-slate-500 font-mono">#{s.registerId}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.course}</p>
+                      {s.phone && (
+                        <a
+                          href={`tel:${s.phone}`}
+                          className="inline-flex items-center gap-1 text-[10px] text-indigo-600 font-medium mt-1 hover:underline"
+                        >
+                          <Phone size={10} />
+                          {s.phone}
+                        </a>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">
+                        {s.rate}%
+                      </span>
+                      <span className="block text-[10px] text-slate-500 mt-0.5">
+                        {s.presentSessions}/{s.totalSessions} days
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Assessments Section */}
+      {academicData && (
+        <section className="panel mb-6">
+          <div className="panel-header">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck size={18} className="text-indigo-600" />
+              <h2>Recent Assessments</h2>
+            </div>
+            <Link href="/assessments">View assessments ({academicData.assessmentCount})</Link>
+          </div>
+          <div className="data-wrap" role="region" aria-label="Recent assessments" tabIndex={0}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Assessment Title</th>
+                  <th>Course</th>
+                  <th>Date</th>
+                  <th className="align-right">Max Score</th>
+                  <th className="align-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {academicData.recentAssessments.map((a) => (
+                  <tr key={a.id}>
+                    <td>
+                      <span className="font-semibold text-slate-900 block">{a.title}</span>
+                    </td>
+                    <td>
+                      <span className="text-xs font-medium text-slate-700">{a.courseName}</span>
+                    </td>
+                    <td className="text-xs text-slate-600">{a.assessmentDate}</td>
+                    <td className="align-right font-bold text-slate-900">{a.maxScore} marks</td>
+                    <td className="align-right">
+                      <Link
+                        href={`/assessments`}
+                        className="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                      >
+                        Grade / Review &rarr;
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+                {academicData.recentAssessments.length === 0 && (
+                  <tr>
+                    <td colSpan={5}>No assessments conducted yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <section className="panel">
         <div className="panel-header">
           <h2>Course mix</h2>

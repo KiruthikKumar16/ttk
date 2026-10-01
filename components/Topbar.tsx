@@ -25,10 +25,11 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
 
   const [students, setStudents] = useState<Student[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
+  const [resolvedStudentNames, setResolvedStudentNames] = useState<Record<string, string>>({})
   const dataLoadedRef = useRef(false)
   const [loadingSearch, setLoadingSearch] = useState(false)
 
-  // Lazy-load students & payments on first focus of the search bar
+  // Load students & payments on mount and on search bar focus
   const loadSearchData = async () => {
     if (dataLoadedRef.current) return
     dataLoadedRef.current = true
@@ -52,6 +53,30 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
       setLoadingSearch(false)
     }
   }
+
+  useEffect(() => {
+    loadSearchData()
+  }, [])
+
+  useEffect(() => {
+    const parts = (pathname || '').split('/').filter(Boolean)
+    if (parts[0] === 'students' && parts[1] && parts[1] !== 'new') {
+      const studentId = parts[1]
+      const existing = students.find((s) => String(s.registerId) === studentId)?.name || resolvedStudentNames[studentId]
+      if (!existing) {
+        fetch(`/api/students?search=${encodeURIComponent(studentId)}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((resData) => {
+            const list = (resData?.data || []) as Student[]
+            const match = list.find((s) => String(s.registerId) === studentId) || list[0]
+            if (match?.name) {
+              setResolvedStudentNames((prev) => ({ ...prev, [studentId]: match.name }))
+            }
+          })
+          .catch(() => {})
+      }
+    }
+  }, [pathname, students, resolvedStudentNames])
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -117,7 +142,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
       }
       const studentId = parts[1]
       const studentObj = students.find((s) => String(s.registerId) === studentId)
-      const studentLabel = studentObj?.name || `Student #${studentId}`
+      const studentLabel = studentObj?.name || resolvedStudentNames[studentId] || `Student #${studentId}`
 
       if (parts[2] === 'certificate') {
         return [

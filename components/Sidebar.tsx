@@ -17,6 +17,7 @@ import {
   FolderOpen,
   Building2,
   Layers,
+  Tags,
 } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { can, type Resource } from '@/lib/auth/permissions'
@@ -131,6 +132,18 @@ export function Sidebar({
           >
             <Layers size={18} className="mr-2" />
             {!collapsed && <span className="flex-1 text-left">Course categories</span>}
+          </Link>
+        )}
+        {role === 'admin' && (
+          <Link
+            href="/settings/skills"
+            onClick={onNavigate}
+            aria-current={pathname.startsWith('/settings/skills') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/skills') ? ' active' : ''}`}
+            title="Skill tags"
+          >
+            <Tags size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">Skill tags</span>}
           </Link>
         )}
         {role === 'admin' && (

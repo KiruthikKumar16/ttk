@@ -19,13 +19,14 @@ export default async function DashboardPage() {
 
   // Admin Executive Dashboard
   const supabase = await createClient()
-  const [summary, payments, students, categories, courses, pendingUsersRes] = await Promise.all([
+  const [summary, payments, students, categories, courses, pendingUsersRes, academicData] = await Promise.all([
     getDashboardSummary(),
     getRecentPayments(),
     getAllStudents(),
     listCourseCategories().catch(() => []),
     getCachedCourseOptions().catch(() => []),
     supabase.from('profiles').select('id, full_name, created_at').eq('role', 'pending'),
+    getStaffDashboardData().catch(() => null),
   ])
 
   const pendingUsers = (pendingUsersRes.data ?? []).map((u) => ({
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
       categories={categories}
       courses={courses}
       pendingUsers={pendingUsers}
+      academicData={academicData}
       canCreateStudent={can(profile.role, 'students', 'create')}
     />
   )
