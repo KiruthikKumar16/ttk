@@ -12,6 +12,7 @@ import { generateVerificationCode } from '@/lib/utils'
 import { idempotencyKeySchema, type RecordPaymentInput } from './schema'
 import { recordPaymentAtomic } from './repository'
 import { getCurrentProfile } from '@/lib/auth/current-profile'
+import { createNotification } from '@/modules/notifications/service'
 
 function authorizePayment(role: Role, action: 'read' | 'create') {
   if (!can(role, 'payments', action)) throw new ForbiddenError()
@@ -77,7 +78,7 @@ export async function createPayment(input: RecordPaymentInput, idempotencyKey: s
       sgstPaise: rupeesToPaise(input.sgst ?? 0),
       verificationCode: generateVerificationCode(10),
     })
-    return {
+    const paymentRecord = {
       id: String(result.payment.id),
       student: String(result.student.name),
       method: String(result.payment.method),
@@ -97,6 +98,21 @@ export async function createPayment(input: RecordPaymentInput, idempotencyKey: s
       gstRate: Number(result.payment.gst_rate ?? 0),
       verification_code: result.verification_code,
     }
+
+    void createNotification(
+      {
+        recipientRole: 'admin',
+        title: 'Fee Payment Received',
+        message: `Invoice ${String(result.payment.invoice)} recorded for ₹${(Number(result.payment.amount) / 100).toLocaleString('en-IN')} (${String(result.student.name)}).`,
+        type: 'info',
+        link: `/invoices/${encodeURIComponent(String(result.payment.invoice))}`,
+        entityType: 'payment',
+        entityId: String(result.payment.id),
+      },
+      client,
+    )
+
+    return paymentRecord
   } catch (error) {
     paymentRpcError(error)
   }

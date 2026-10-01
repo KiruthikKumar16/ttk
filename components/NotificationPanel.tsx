@@ -49,24 +49,16 @@ export function NotificationPanel({ role }: { role: Role }) {
         if (res.ok) {
           const data = await res.json()
           if (isMounted) {
-            setNotifications(Array.isArray(data) ? data : data.data || [])
+            const list: AppNotification[] = Array.isArray(data) ? data : data.data || []
+            setNotifications(list)
+            const dbReadIds = list.filter((n) => n.isRead).map((n) => n.id)
+            if (dbReadIds.length > 0) {
+              setReadIds((prev) => Array.from(new Set([...prev, ...dbReadIds])))
+            }
           }
         }
       } catch {
-        // Fallback default notifications if offline
-        if (isMounted) {
-          setNotifications([
-            {
-              id: 'fallback-welcome',
-              title: 'Academy Portal Active',
-              message: 'Operational tracking, invoices, and attendance ready.',
-              type: 'info',
-              link: '/',
-              timestamp: 'Now',
-              urgent: false,
-            },
-          ])
-        }
+        // Silently handle offline
       } finally {
         if (isMounted) setLoading(false)
       }
@@ -103,44 +95,62 @@ export function NotificationPanel({ role }: { role: Role }) {
     }
   }, [isOpen])
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
     setReadIds((prev) => {
-      if (prev.includes(id)) return prev
-      const next = [...prev, id]
+      const next = prev.includes(id) ? prev : [...prev, id]
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // Ignore
-      }
+      } catch {}
       return next
     })
+
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+    } catch {
+      // Ignored: local state already updated
+    }
   }
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     const allIds = notifications.map((n) => n.id)
     setReadIds(allIds)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allIds))
+    } catch {}
+
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      })
     } catch {
-      // Ignore
+      // Ignored
     }
   }
 
   const handleNotificationClick = (n: AppNotification) => {
-    markAsRead(n.id)
+    void markAsRead(n.id)
     setIsOpen(false)
     if (n.link) {
       router.push(n.link)
     }
   }
 
-  const unreadCount = notifications.filter((n) => !readIds.includes(n.id)).length
+  const isNotificationRead = (n: AppNotification) => Boolean(n.isRead || readIds.includes(n.id))
+  const unreadCount = notifications.filter((n) => !isNotificationRead(n)).length
   const displayedNotifications =
     filter === 'unread'
-      ? notifications.filter((n) => !readIds.includes(n.id))
+      ? notifications.filter((n) => !isNotificationRead(n))
       : notifications
 
-  const hasUrgentUnread = notifications.some((n) => n.urgent && !readIds.includes(n.id))
+  const hasUrgentUnread = notifications.some((n) => n.urgent && !isNotificationRead(n))
 
   const getIcon = (type: AppNotification['type']) => {
     switch (type) {

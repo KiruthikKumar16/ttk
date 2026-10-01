@@ -10,6 +10,7 @@ import { generateVerificationCode } from '@/lib/utils'
 import { createStudentWithPaymentAtomic } from './repository'
 import type { CreateStudentInput } from './schema'
 import { getCurrentProfile } from '@/lib/auth/current-profile'
+import { createNotification } from '@/modules/notifications/service'
 
 function authorizeStudent(role: Role, action: 'read' | 'create') {
   if (!can(role, 'students', action)) throw new ForbiddenError()
@@ -79,6 +80,20 @@ export async function createStudent(input: CreateStudentInput) {
         verification_code: rpcResult.initial_payment?.verification_code,
       }
     : null
+
+  void createNotification(
+    {
+      recipientRole: 'all',
+      title: 'New Student Enrolled',
+      message: `${student.name} enrolled in ${student.course} (TAI-${student.registerId}).`,
+      type: 'success',
+      link: `/students/${student.registerId}`,
+      entityType: 'student',
+      entityId: String(student.id),
+    },
+    client,
+  )
+
   return { message: 'Student created successfully', data: student, payment }
 }
 

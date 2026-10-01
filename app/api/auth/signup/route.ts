@@ -6,6 +6,7 @@ import { withApi } from '@/lib/http/handler'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 import { passwordSchema } from '@/lib/validation'
+import { createNotification } from '@/modules/notifications/service'
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
@@ -122,6 +123,19 @@ async function postSignup(request: Request, requestId: string) {
             used_at: new Date().toISOString(),
           })
           .eq('id', validInviteId)
+      }
+
+      if (assignedRole === 'pending') {
+        void createNotification({
+          recipientRole: 'admin',
+          title: 'Access Request Pending',
+          message: `${fullName} registered and requested academy portal access.`,
+          type: 'alert',
+          link: '/settings/users?filter=pending',
+          urgent: true,
+          entityType: 'user',
+          entityId: authData.user.id,
+        })
       }
     }
 
