@@ -4,7 +4,7 @@ import { listCertificatePage } from '@/modules/certificates/service'
 import { parseListQuery } from '@/modules/shared/list-query'
 import { RecordList } from '@/modules/shared/components/RecordList'
 import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
-import { CategoryBadge } from '@/components/CategoryBadge'
+import { CertificateTableRow } from '@/modules/certificates/components/CertificateTableRow'
 
 export default async function CertificatesPage({ searchParams }: PageProps<'/certificates'>) {
   await requirePermission('certificates', 'read')
@@ -46,6 +46,7 @@ export default async function CertificatesPage({ searchParams }: PageProps<'/cer
           <th>Category</th>
           <th>Issue date</th>
           <th>Verify</th>
+          <th className="text-right">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -53,46 +54,16 @@ export default async function CertificatesPage({ searchParams }: PageProps<'/cer
           const catName = courseCategoryMap.get(certificate.course_name.trim().toLowerCase())
 
           return (
-            <tr key={certificate.id}>
-              <td>
-                <span className="font-mono font-medium text-slate-800">{certificate.certificate_id}</span>
-              </td>
-              <td>
-                <Link
-                  href={`/students/${certificate.student_register_id}`}
-                  className="font-medium text-indigo-600 hover:underline"
-                >
-                  {certificate.student_name}
-                </Link>
-              </td>
-              <td className="font-medium text-slate-800">{certificate.course_name}</td>
-              <td>
-                {catName ? (
-                  <CategoryBadge categoryName={catName} />
-                ) : (
-                  <span className="text-xs text-slate-400 italic">Unassigned</span>
-                )}
-              </td>
-              <td className="text-slate-600">{certificate.issue_date}</td>
-              <td>
-                {certificate.verification_code ? (
-                  <Link
-                    href={`/verify/${certificate.verification_code}`}
-                    target="_blank"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Verify ↗
-                  </Link>
-                ) : (
-                  '—'
-                )}
-              </td>
-            </tr>
+            <CertificateTableRow
+              key={certificate.id}
+              certificate={certificate}
+              categoryName={catName}
+            />
           )
         })}
         {result.data.length === 0 && (
           <tr>
-            <td colSpan={6}>No certificates match this search.</td>
+            <td colSpan={7}>No certificates match this search.</td>
           </tr>
         )}
       </tbody>
