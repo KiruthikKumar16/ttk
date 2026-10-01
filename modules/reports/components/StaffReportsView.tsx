@@ -191,6 +191,8 @@ export function StaffReportsView({
           <div className="flex items-center gap-1.5 text-xs text-slate-600">
             <Calendar size={14} className="text-slate-400" />
             <input
+              id="staff-rep-start-date"
+              aria-label="Start date"
               type="date"
               value={startDateStr}
               onChange={(e) => setStartDateStr(e.target.value)}
@@ -198,6 +200,8 @@ export function StaffReportsView({
             />
             <span>to</span>
             <input
+              id="staff-rep-end-date"
+              aria-label="End date"
               type="date"
               value={endDateStr}
               onChange={(e) => setEndDateStr(e.target.value)}
@@ -345,6 +349,7 @@ export function StaffReportsView({
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
+              aria-label="Search student or test"
               placeholder="Search student or test..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

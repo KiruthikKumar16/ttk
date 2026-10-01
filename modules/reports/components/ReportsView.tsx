@@ -304,20 +304,31 @@ export function ReportsView({
         </div>
         <div className="flex items-center gap-3 flex-wrap shrink-0">
           <div className="date-filter-group">
-            <span className="date-filter-label">From</span>
+            <label htmlFor="rep-start-date" className="date-filter-label">
+              From
+            </label>
             <div className="date-input-wrap">
               <Calendar size={15} />
               <input
                 id="rep-start-date"
+                aria-label="Start date"
                 type="date"
                 value={startDateStr}
                 onChange={(e) => setStartDateStr(e.target.value)}
               />
             </div>
-            <span className="date-filter-label">To</span>
+            <label htmlFor="rep-end-date" className="date-filter-label">
+              To
+            </label>
             <div className="date-input-wrap">
               <Calendar size={15} />
-              <input id="rep-end-date" type="date" value={endDateStr} onChange={(e) => setEndDateStr(e.target.value)} />
+              <input
+                id="rep-end-date"
+                aria-label="End date"
+                type="date"
+                value={endDateStr}
+                onChange={(e) => setEndDateStr(e.target.value)}
+              />
             </div>
           </div>
           <Button variant="default" size="default" onClick={download} className="shrink-0">

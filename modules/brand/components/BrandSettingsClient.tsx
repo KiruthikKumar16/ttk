@@ -145,7 +145,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                       <p className="text-xs text-slate-500">Public trade name, acronyms, and branding slogans</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
                     Identity
                   </span>
                 </div>
@@ -175,7 +175,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-600">
                         Primary academy title in navigation, portals, and headers
                       </p>
                     </div>
@@ -203,7 +203,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-600">
                         Compact wordmark or acronym for mobile views & badges
                       </p>
                     </div>
@@ -232,7 +232,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white font-medium"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-600">
                       Formal company name printed on tax receipts, audit records, and certificates
                     </p>
                   </div>
@@ -259,7 +259,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-600">
                       Printed underneath academy logo on invoices, diplomas, and official letters
                     </p>
                   </div>
@@ -281,7 +281,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                       <p className="text-xs text-slate-500">Invoice number generation & billing contact channels</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
                     Billing
                   </span>
                 </div>
@@ -313,7 +313,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         />
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[11px] text-slate-400">Sample:</span>
+                        <span className="text-[11px] text-slate-600 font-medium">Sample:</span>
                         <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">
                           {sampleInvoiceNum}
                         </code>
@@ -343,7 +343,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-400">Printed on student receipts for billing queries</p>
+                      <p className="text-[11px] text-slate-600">Printed on student receipts for billing queries</p>
                     </div>
                   </div>
                 </div>
@@ -363,7 +363,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                       </p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
                     Portals
                   </span>
                 </div>
@@ -522,13 +522,13 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
 
               <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                     Legal Registered Entity
                   </span>
                   <span className="text-sm font-semibold text-slate-900 mt-0.5 block">{formData.legalName}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                     Tagline / Mission
                   </span>
                   <span className="text-sm text-slate-600 mt-0.5 block">{formData.tagline || 'Not configured'}</span>
@@ -540,7 +540,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
             <div className="panel overflow-hidden border border-slate-200 shadow-sm bg-white/90 p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                     Invoice Prefix
                   </span>
                   <span className="text-sm font-mono font-bold text-indigo-700 mt-1 block">
@@ -550,7 +550,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
 
                 <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                       Support Email
                     </span>
                     <button
@@ -574,7 +574,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
 
               <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                     Official Website
                   </span>
                   <a
@@ -592,7 +592,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
 
               <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                     Public Verification Endpoint
                   </span>
                   <a
