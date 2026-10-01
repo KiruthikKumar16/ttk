@@ -50,12 +50,18 @@ export function StudentDetailClient({
       onBack={() => router.back()}
       onCertificate={() => router.push(`/students/${student.registerId}/certificate`)}
       onInvoice={(payment) => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)}
-      onPayment={async (amount, method): Promise<Receipt | string> => {
+      onPayment={async (amount, method, paymentType): Promise<Receipt | string> => {
         paymentKey.current ??= crypto.randomUUID()
         let result
         try {
           result = await recordPayment.mutateAsync({
-            body: { studentId: student.registerId, amount, method, date: new Date().toISOString().slice(0, 10) },
+            body: {
+              studentId: student.registerId,
+              amount,
+              method,
+              paymentType,
+              date: new Date().toISOString().slice(0, 10),
+            },
             idempotencyKey: paymentKey.current,
           })
         } catch (error) {

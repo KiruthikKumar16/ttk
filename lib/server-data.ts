@@ -55,8 +55,25 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
     studentId: Number(row.student_register_id ?? row.student_id),
     course: (row.students as any)?.course ? String((row.students as any).course) : undefined,
     verification_code: row.verification_code ? String(row.verification_code) : undefined,
+    paymentType: row.payment_type ? String(row.payment_type) : undefined,
+    instanceNumber:
+      row.instance_number !== undefined && row.instance_number !== null
+        ? Number(row.instance_number)
+        : undefined,
+    instance:
+      row.instance_number !== undefined && row.instance_number !== null
+        ? Number(row.instance_number)
+        : undefined,
   }
-  if (cgst > 0 || sgst > 0 || row.transaction_id !== undefined || row.custom_note !== undefined || gstRate > 0) {
+  if (
+    cgst > 0 ||
+    sgst > 0 ||
+    row.transaction_id !== undefined ||
+    row.custom_note !== undefined ||
+    row.payment_type !== undefined ||
+    row.instance_number !== undefined ||
+    gstRate > 0
+  ) {
     return {
       ...base,
       cgst,
@@ -64,6 +81,15 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
       gstRate: gstRate > 0 ? gstRate : undefined,
       transactionId: row.transaction_id ? String(row.transaction_id) : undefined,
       customNote: row.custom_note ? String(row.custom_note) : undefined,
+      paymentType: row.payment_type ? String(row.payment_type) : undefined,
+      instanceNumber:
+        row.instance_number !== undefined && row.instance_number !== null
+          ? Number(row.instance_number)
+          : undefined,
+      instance:
+        row.instance_number !== undefined && row.instance_number !== null
+          ? Number(row.instance_number)
+          : undefined,
     }
   }
   return base
@@ -144,7 +170,7 @@ export async function listPayments(
   let query = supabaseClient.from('payments').select(
     `
       id, student_id, student_register_id, method, amount, invoice, payment_date,
-      transaction_id, custom_note, gst_rate, cgst, sgst,
+      transaction_id, custom_note, payment_type, instance_number, gst_rate, cgst, sgst,
       students!payments_student_id_fkey ( id, name, course )
     `,
     options.keyset ? undefined : { count: 'exact' },

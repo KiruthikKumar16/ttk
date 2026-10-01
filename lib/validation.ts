@@ -38,6 +38,8 @@ export const paymentSchema = z.object({
     .optional(),
   transactionId: z.union([z.string(), z.null()]).optional(),
   customNote: z.union([z.string(), z.null()]).optional(),
+  paymentType: z.union([z.string(), z.null()]).optional(),
+  instanceNumber: z.union([z.number(), z.null()]).optional(),
   invoice: z.union([z.string(), z.null()]).optional(),
   id: z.union([z.string(), z.null()]).optional(),
   gstRate: z.number().int().nonnegative().default(18),

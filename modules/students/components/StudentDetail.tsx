@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import type { Course, Payment, Receipt, Student, Role } from '@/lib/types'
+import { PAYMENT_TYPES } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { CategoryBadge, getCategoryBadgeStyle } from '@/components/CategoryBadge'
@@ -42,7 +43,7 @@ export function StudentDetail({
   student: Student
   payments: Payment[]
   onBack: () => void
-  onPayment: (amount: number, method: string) => Promise<Receipt | string>
+  onPayment: (amount: number, method: string, paymentType?: string) => Promise<Receipt | string>
   onCertificate: () => void
   onInvoice?: (p: Payment) => void
   gstRate?: number
@@ -73,6 +74,15 @@ export function StudentDetail({
 
   const balance = differenceRupees(student.total, student.paid)
   const history = payments.filter((p) => p.studentId === student.registerId)
+  const defaultPaymentType =
+    history.length === 0
+      ? '1st Part Fees Payment'
+      : history.length === 1
+        ? '2nd Part Fees Payment'
+        : history.length === 2
+          ? '3rd Part Fees Payment'
+          : `${history.length + 1}th Part Fees Payment`
+  const [paymentType, setPaymentType] = useState<string>(defaultPaymentType)
 
   const handleInitiatePayment = () => {
     setError('')
@@ -101,7 +111,7 @@ export function StudentDetail({
     setIsSubmitting(true)
     setError('')
     try {
-      const result = await onPayment(value, method)
+      const result = await onPayment(value, method, paymentType)
       if (typeof result === 'string') {
         setError(result)
         setIsSubmitting(false)
@@ -474,6 +484,20 @@ export function StudentDetail({
                       </div>
                     </div>
                   )}
+
+                  <label className="col-span-full">
+                    Payment Type (Instance)
+                    <select
+                      value={paymentType}
+                      onChange={(e) => setPaymentType(e.target.value)}
+                    >
+                      {PAYMENT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
                   <label>
                     Amount (₹)
@@ -922,6 +946,12 @@ export function StudentDetail({
                 <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                   <span className="text-slate-500">Course</span>
                   <span className="font-medium text-slate-800">{student.course}</span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                  <span className="text-slate-500">Payment Type (Instance)</span>
+                  <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80">
+                    {paymentType}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                   <span className="text-slate-500">Payment Amount</span>

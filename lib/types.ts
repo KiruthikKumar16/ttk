@@ -76,6 +76,17 @@ export type Student = {
   updatedAt?: string
 }
 
+export const PAYMENT_TYPES = [
+  '1st Part Fees Payment',
+  '2nd Part Fees Payment',
+  '3rd Part Fees Payment',
+  '4th Part Fees Payment',
+  'Full Course Fees Payment',
+  'Registration Fees',
+] as const
+
+export type PaymentType = (typeof PAYMENT_TYPES)[number] | (string & {})
+
 export type PaymentMethod = 'Cash' | 'UPI' | 'Online Transfer' | 'Cheque' | 'Card' | (string & {})
 
 export type Payment = {
@@ -100,6 +111,11 @@ export type Payment = {
   transactionId?: string
   /** Optional custom note shown on invoice */
   customNote?: string
+  /** Payment type / Installment milestone */
+  paymentType?: string
+  /** Sequence instance number for student payments (1, 2, 3...) */
+  instanceNumber?: number
+  instance?: number | string
   /** GST percent applied (from gst_settings at time of payment) */
   gstRate?: number
   /** CGST in rupees at the API/UI boundary; the database stores integer paise. */
