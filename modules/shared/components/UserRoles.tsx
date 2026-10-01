@@ -287,7 +287,7 @@ export function UserRoles({
     <section className="space-y-4">
       {/* Role Filter Tabs & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/80 pb-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-nowrap overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:pb-0 items-center gap-1.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
@@ -460,8 +460,8 @@ export function UserRoles({
             </Button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full">
+            <table className="min-w-[640px] w-full divide-y divide-gray-200">
               <thead className="bg-gray-50/80">
                 <tr>
                   <th
@@ -701,8 +701,8 @@ export function UserRoles({
           </div>
 
           {/* Table wrapper with card styling */}
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full">
+            <table className="min-w-[640px] w-full divide-y divide-gray-200">
               <caption className="sr-only">Users and assigned roles</caption>
               <thead className="bg-gray-50/80">
                 <tr>
@@ -880,8 +880,8 @@ export function UserRoles({
 
       {/* MODAL: GENERATE INVITE CODE */}
       {showGenerateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 relative">
             <button
               type="button"
               onClick={() => {

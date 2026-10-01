@@ -221,7 +221,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
         <Menu size={20} />
       </button>
 
-      <nav className="breadcrumb-nav" aria-label="Breadcrumb">
+      <nav className="breadcrumb-nav hidden md:flex" aria-label="Breadcrumb">
         <ol className="breadcrumb">
           {segments.map((seg, i) => (
             <li key={i} className="breadcrumb-item">

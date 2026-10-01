@@ -35,11 +35,19 @@ const nav: { label: string; href: string; Icon: typeof LayoutDashboard; resource
   { label: 'Audit Log', href: '/audit-log', Icon: List, resource: 'audit' },
 ]
 
-export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: boolean }) {
+export function Sidebar({
+  role,
+  collapsed = false,
+  onNavigate,
+}: {
+  role: Role
+  collapsed?: boolean
+  onNavigate?: () => void
+}) {
   const pathname = usePathname()
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}`}>
-      <Link href="/" className="brand" aria-label={`${brand.displayName} dashboard`}>
+      <Link href="/" className="brand" aria-label={`${brand.displayName} dashboard`} onClick={onNavigate}>
         <div className="brand-mark">
           <Image src={brand.logoPath} alt="" width={72} height={72} sizes="72px" className="brand-mark-img" />
         </div>
@@ -64,6 +72,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
               <Link
                 key={href}
                 href={href}
+                onClick={onNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={`nav-item${active ? ' active' : ''}`}
                 title={label}
@@ -79,6 +88,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
         {can(role, 'gst', 'read') && (
           <Link
             href="/settings/gst"
+            onClick={onNavigate}
             aria-current={pathname.startsWith('/settings/gst') ? 'page' : undefined}
             className={`nav-item${pathname.startsWith('/settings/gst') ? ' active' : ''}`}
             title="GST Settings"
@@ -90,6 +100,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
         {can(role, 'users', 'manage') && (
           <Link
             href="/settings/users"
+            onClick={onNavigate}
             aria-current={pathname.startsWith('/settings/users') ? 'page' : undefined}
             className={`nav-item${pathname.startsWith('/settings/users') ? ' active' : ''}`}
             title="Users and roles"
@@ -101,6 +112,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
         {can(role, 'courses', 'manage') && (
           <Link
             href="/settings/trainers"
+            onClick={onNavigate}
             aria-current={pathname.startsWith('/settings/trainers') ? 'page' : undefined}
             className={`nav-item${pathname.startsWith('/settings/trainers') ? ' active' : ''}`}
             title="Instructor assignments"
@@ -112,6 +124,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
         {can(role, 'courses', 'manage') && (
           <Link
             href="/settings/course-categories"
+            onClick={onNavigate}
             aria-current={pathname.startsWith('/settings/course-categories') ? 'page' : undefined}
             className={`nav-item${pathname.startsWith('/settings/course-categories') ? ' active' : ''}`}
             title="Course categories"
@@ -122,6 +135,7 @@ export function Sidebar({ role, collapsed = false }: { role: Role; collapsed?: b
         )}
         <Link
           href="/settings/brand"
+          onClick={onNavigate}
           aria-current={pathname.startsWith('/settings/brand') ? 'page' : undefined}
           className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
           title="Brand information"

@@ -115,6 +115,7 @@ p {
    ═══════════════════════════════════════ */
 .app-shell {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   overflow: hidden;
 }
@@ -331,6 +332,7 @@ nav {
   flex-direction: column;
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -3384,10 +3386,13 @@ td strong {
   .sidebar-mobile.open {
     display: block;
   }
-  .sidebar-mobile .sidebar {
-    display: flex;
+  .sidebar-mobile .sidebar,
+  .mobile-drawer .sidebar {
+    display: flex !important;
     height: 100%;
-    box-shadow: 8px 0 20px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    box-shadow: none;
+    position: static;
   }
   .detail-grid {
     grid-template-columns: 1fr;
@@ -3482,20 +3487,52 @@ td strong {
   color: var(--muted);
 }
 
+body:has(.login-page) {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
 .login-page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
   background: var(--canvas);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .login-card {
-  width: min(100%, 420px);
-  padding: 36px;
+  width: 100%;
+  max-width: 440px;
+  padding: 24px 18px;
+  margin: auto;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface-solid);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+}
+@media (min-width: 640px) {
+  .login-card {
+    padding: 36px;
+  }
+}
+@media (max-height: 720px) {
+  .login-page {
+    justify-content: flex-start;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .login-logo {
   display: block;
