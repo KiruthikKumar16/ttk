@@ -1016,7 +1016,7 @@ export function UserRoles({
                     </label>
                     <input
                       type="email"
-                      placeholder="e.g. rajesh@elysium.local (leave blank for any email)"
+                      placeholder="e.g. rajesh@thoorigai.local (leave blank for any email)"
                       value={genRecipientEmail}
                       onChange={(e) => setGenRecipientEmail(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"

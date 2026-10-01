@@ -54,7 +54,9 @@ export const GET = withApi({ roles: ['admin'] }, async ({ supabase }) => {
       .order('created_at', { ascending: false })
       .limit(100)
 
-    if (fallback.error) throw fallback.error
+    if (fallback.error) {
+      return []
+    }
     return (fallback.data ?? []).map((row) => ({
       id: row.id,
       code: row.code,
