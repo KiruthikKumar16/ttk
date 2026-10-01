@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import type { StaffDashboardData } from '@/modules/dashboard/service'
 import { Button } from '@/components/ui/button'
+import { CategoryBadge } from '@/components/CategoryBadge'
 
 export function StaffDashboardView({
   data,
@@ -32,6 +33,7 @@ export function StaffDashboardView({
     assessmentCount,
     recentAssessments,
     lowAttendanceStudents,
+    categoryMix = [],
   } = data
 
   const todayFormatted = new Date().toLocaleDateString('en-US', {
@@ -369,6 +371,59 @@ export function StaffDashboardView({
           </div>
         </div>
       </div>
+
+      {/* Course Mix: Curriculum Categories & Internship Programs */}
+      <section className="rounded-xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+        <div className="flex items-center justify-between p-4 px-5 border-b border-slate-100">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Course mix</h2>
+            <p className="text-xs text-slate-500">
+              Curriculum categories, duration tiers, and enrolled student breakdown
+            </p>
+          </div>
+          <Link href="/courses" className="text-xs font-medium text-indigo-600 hover:underline">
+            View courses &rarr;
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
+              <tr>
+                <th className="py-3 px-5">Course Category</th>
+                <th className="py-3 px-4">Tier</th>
+                <th className="py-3 px-4">Duration</th>
+                <th className="py-3 px-5 text-right">Students</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {categoryMix.map((row) => (
+                <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="py-3.5 px-5">
+                    <span className="font-semibold text-slate-900 text-sm block">{row.name}</span>
+                    {row.courseNames.length > 0 ? (
+                      <span className="text-[11px] text-slate-500 block mt-0.5">{row.courseNames.join(' • ')}</span>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 italic block mt-0.5">No active courses</span>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <CategoryBadge categoryName={row.name} />
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600 font-medium">{row.duration}</td>
+                  <td className="py-3.5 px-5 text-right font-bold text-slate-900 text-sm">{row.studentCount}</td>
+                </tr>
+              ))}
+              {categoryMix.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-slate-400">
+                    No course categories configured.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }

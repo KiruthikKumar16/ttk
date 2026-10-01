@@ -93,6 +93,13 @@ export type StaffDashboardData = {
     presentSessions: number
     rate: number
   }>
+  categoryMix: Array<{
+    id: string
+    name: string
+    duration: string
+    courseNames: string[]
+    studentCount: number
+  }>
 }
 
 export async function getStaffDashboardData(): Promise<StaffDashboardData> {
@@ -105,6 +112,8 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
     { data: allAttendance },
     { data: assessments, count: assessmentCount },
     { count: materialsCount },
+    { data: categoriesData },
+    { data: coursesData },
   ] = await Promise.all([
     supabase.from('students').select('id, register_id, name, course, status, phone').order('register_id'),
     supabase.from('attendance').select('id, status, course_id, student_id').eq('session_date', today),
@@ -115,6 +124,8 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
       .order('assessment_date', { ascending: false })
       .limit(6),
     supabase.from('course_materials').select('*', { count: 'exact', head: true }),
+    supabase.from('course_categories').select('id, name, duration').order('name'),
+    supabase.from('courses').select('id, name, duration, category_id'),
   ])
 
   const studentAttendanceMap = new Map<string, { total: number; present: number }>()
@@ -159,6 +170,87 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
     assessmentDate: String(a.assessment_date),
   }))
 
+  const fallbackCategories = [
+    { id: 'c0000000-0000-0000-0000-000000000001', name: 'Essential', duration: '6 weeks' },
+    { id: 'c0000000-0000-0000-0000-000000000002', name: 'Elite', duration: '12 weeks' },
+    { id: 'c0000000-0000-0000-0000-000000000003', name: 'Internship', duration: '3 Months' },
+  ]
+
+  const catList = ((categoriesData && categoriesData.length > 0 ? categoriesData : fallbackCategories) as any[]).map(
+    (c) => ({
+      id: String(c.id),
+      name: String(c.name),
+      duration: String(c.duration),
+    }),
+  )
+
+  const courseList = ((coursesData ?? []) as any[]).map((c) => ({
+    id: String(c.id),
+    name: String(c.name),
+    duration: String(c.duration || ''),
+    categoryId: c.category_id ? String(c.category_id) : null,
+  }))
+
+  const courseToCatMap = new Map<string, { id: string; name: string }>()
+  for (const c of courseList) {
+    const cat = catList.find((item) => item.id === c.categoryId)
+    if (cat) {
+      courseToCatMap.set(c.name.toLowerCase().trim(), { id: cat.id, name: cat.name })
+    }
+  }
+
+  const categoryMix = catList.map((cat) => {
+    const isInternship = cat.name.toLowerCase().includes('internship')
+    const isElite = cat.name.toLowerCase().includes('elite')
+
+    const catCourses = courseList.filter((c) => {
+      if (c.categoryId === cat.id) return true
+      if (isInternship && c.name.toLowerCase().includes('internship')) return true
+      if (!c.categoryId && isElite && (c.duration.includes('month') || c.duration.includes('12'))) return true
+      return false
+    })
+    const catCourseNames = Array.from(new Set(catCourses.map((c) => c.name)))
+
+    const count = (students ?? []).filter((s) => {
+      if (!s.course) return false
+      const sCourse = String(s.course).trim().toLowerCase()
+      if (catCourseNames.some((cn) => cn.trim().toLowerCase() === sCourse)) return true
+      const mapped = courseToCatMap.get(sCourse)
+      if (mapped && mapped.id === cat.id) return true
+      if (isInternship && sCourse.includes('internship')) return true
+      if (
+        !mapped &&
+        isElite &&
+        (sCourse.includes('professional') || sCourse.includes('crash') || sCourse.includes('slash'))
+      )
+        return true
+      return false
+    }).length
+
+    ;(students ?? []).forEach((s) => {
+      if (!s.course) return
+      const sCourse = String(s.course).trim()
+      const sCourseLower = sCourse.toLowerCase()
+      if (isInternship && sCourseLower.includes('internship') && !catCourseNames.includes(sCourse)) {
+        catCourseNames.push(sCourse)
+      } else if (
+        isElite &&
+        (sCourseLower.includes('professional') || sCourseLower.includes('crash') || sCourseLower.includes('slash')) &&
+        !catCourseNames.includes(sCourse)
+      ) {
+        catCourseNames.push(sCourse)
+      }
+    })
+
+    return {
+      id: cat.id,
+      name: cat.name,
+      duration: cat.duration,
+      courseNames: catCourseNames,
+      studentCount: count,
+    }
+  })
+
   return {
     totalStudents: studentCount ?? (students?.length || 0),
     activeStudents: (students ?? []).length,
@@ -172,5 +264,6 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
     assessmentCount: assessmentCount ?? 0,
     recentAssessments: mappedAssessments,
     lowAttendanceStudents,
+    categoryMix,
   }
 }

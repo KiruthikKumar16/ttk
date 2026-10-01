@@ -113,22 +113,80 @@ export function DashboardMetrics({
     },
   ]
 
-  const courseToCategoryMap = new Map<string, { categoryName?: string; duration?: string }>()
+  const fallbackCategories = [
+    { id: 'c0000000-0000-0000-0000-000000000001', name: 'Essential', duration: '6 weeks' },
+    { id: 'c0000000-0000-0000-0000-000000000002', name: 'Elite', duration: '12 weeks' },
+    { id: 'c0000000-0000-0000-0000-000000000003', name: 'Internship', duration: '3 Months' },
+  ]
+  const catList = (categories.length > 0 ? categories : fallbackCategories).map((c) => ({
+    id: c.id,
+    name: c.name,
+    duration: c.duration,
+  }))
+
+  const courseToCatMap = new Map<string, { id: string; name: string }>()
   courses.forEach((c) => {
-    courseToCategoryMap.set(c.name.toLowerCase().trim(), {
-      categoryName: c.categoryName ?? undefined,
-      duration: c.duration,
-    })
+    const cat = catList.find((item) => item.id === c.categoryId)
+    if (cat) {
+      courseToCatMap.set(c.name.toLowerCase().trim(), { id: cat.id, name: cat.name })
+    }
   })
 
-  const tierPills = categories.map((cat) => {
-    const matchingCourseNames = courses.filter((c) => c.categoryId === cat.id).map((c) => c.name.toLowerCase().trim())
-    const count = students.filter((s) => s.course && matchingCourseNames.includes(s.course.toLowerCase().trim())).length
+  const categoryMix = catList.map((cat) => {
+    const isInternship = cat.name.toLowerCase().includes('internship')
+    const isElite = cat.name.toLowerCase().includes('elite')
+    const catCourses = courses.filter((c) => {
+      if (c.categoryId === cat.id) return true
+      if (isInternship && c.name.toLowerCase().includes('internship')) return true
+      if (!c.categoryId && isElite && (c.duration.includes('month') || c.duration.includes('12'))) return true
+      return false
+    })
+    const catCourseNames = Array.from(new Set(catCourses.map((c) => c.name)))
+
+    const count = students.filter((s) => {
+      if (!s.course) return false
+      const sCourse = s.course.trim().toLowerCase()
+      if (catCourseNames.some((cn) => cn.trim().toLowerCase() === sCourse)) return true
+      const mapped = courseToCatMap.get(sCourse)
+      if (mapped && mapped.id === cat.id) return true
+      if (isInternship && sCourse.includes('internship')) return true
+      if (
+        !mapped &&
+        isElite &&
+        (sCourse.includes('professional') || sCourse.includes('crash') || sCourse.includes('slash'))
+      )
+        return true
+      return false
+    }).length
+
+    students.forEach((s) => {
+      if (!s.course) return
+      const sCourse = s.course.trim()
+      const sCourseLower = sCourse.toLowerCase()
+      if (isInternship && sCourseLower.includes('internship') && !catCourseNames.includes(sCourse)) {
+        catCourseNames.push(sCourse)
+      } else if (
+        isElite &&
+        (sCourseLower.includes('professional') || sCourseLower.includes('crash') || sCourseLower.includes('slash')) &&
+        !catCourseNames.includes(sCourse)
+      ) {
+        catCourseNames.push(sCourse)
+      }
+    })
+
     return {
-      ...cat,
+      id: cat.id,
+      name: cat.name,
+      duration: cat.duration,
+      courseNames: catCourseNames,
       studentCount: count,
     }
   })
+
+  const tierPills = categoryMix.map((tier) => ({
+    ...tier,
+    studentCount: tier.studentCount,
+  }))
 
   return (
     <>
@@ -189,33 +247,33 @@ export function DashboardMetrics({
           <table>
             <thead>
               <tr>
-                <th>Course</th>
+                <th>Course Category</th>
                 <th>Tier</th>
                 <th>Duration</th>
                 <th className="align-right">Students</th>
               </tr>
             </thead>
             <tbody>
-              {summary.courseMix.map((row) => {
-                const info = courseToCategoryMap.get(row.course.toLowerCase().trim())
-                return (
-                  <tr key={row.course}>
-                    <td className="font-medium text-slate-900">{row.course}</td>
-                    <td>
-                      {info?.categoryName ? (
-                        <CategoryBadge categoryName={info.categoryName} />
-                      ) : (
-                        <span className="text-slate-400 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="text-xs text-slate-600">{info?.duration || '—'}</td>
-                    <td className="align-right font-medium">{row.studentCount}</td>
-                  </tr>
-                )
-              })}
-              {summary.courseMix.length === 0 && (
+              {categoryMix.map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    <span className="font-semibold text-slate-900 block">{row.name}</span>
+                    {row.courseNames.length > 0 ? (
+                      <span className="text-[11px] text-slate-500 block mt-0.5">{row.courseNames.join(' • ')}</span>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 italic block mt-0.5">No active courses</span>
+                    )}
+                  </td>
+                  <td>
+                    <CategoryBadge categoryName={row.name} />
+                  </td>
+                  <td className="text-xs text-slate-600 font-medium">{row.duration}</td>
+                  <td className="align-right font-bold text-slate-900">{row.studentCount}</td>
+                </tr>
+              ))}
+              {categoryMix.length === 0 && (
                 <tr>
-                  <td colSpan={4}>No enrollment data yet.</td>
+                  <td colSpan={4}>No category data yet.</td>
                 </tr>
               )}
             </tbody>

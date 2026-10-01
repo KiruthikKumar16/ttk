@@ -118,5 +118,7 @@ describe('dashboard service', () => {
     expect(staffData.todayAttendance.rate).toBe(50)
     expect(staffData.recentAssessments).toHaveLength(1)
     expect(staffData.materialsCount).toBe(5)
+    expect(staffData.categoryMix).toBeDefined()
+    expect(staffData.categoryMix.length).toBeGreaterThanOrEqual(3)
   })
 })
