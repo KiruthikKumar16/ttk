@@ -135,3 +135,18 @@ export type CertificateRecord = {
   customNote?: string
   issuedAt?: string
 }
+
+export type InviteCode = {
+  id: string
+  code: string
+  role: 'staff' | 'admin'
+  createdBy?: string | null
+  createdByName?: string | null
+  recipientEmail?: string | null
+  expiresAt: string
+  isUsed: boolean
+  usedByUserId?: string | null
+  usedByUserName?: string | null
+  usedAt?: string | null
+  createdAt: string
+}

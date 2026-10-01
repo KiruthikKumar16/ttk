@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { brand } from '@/lib/brand'
-import { Clock, CheckCircle2, KeyRound, ArrowRight, AlertCircle, ShieldAlert } from 'lucide-react'
+import { Clock, CheckCircle2, KeyRound, ArrowRight, AlertCircle, ShieldAlert, Sparkles } from 'lucide-react'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -13,10 +13,23 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPasscode, setShowPasscode] = useState(false)
   const [passcode, setPasscode] = useState('')
+  const [isFromUrl, setIsFromUrl] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submittedStatus, setSubmittedStatus] = useState<'pending' | 'active' | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const codeParam = params.get('code')
+      if (codeParam) {
+        setPasscode(codeParam.toUpperCase().trim())
+        setShowPasscode(true)
+        setIsFromUrl(true)
+      }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +55,7 @@ export default function SignupPage() {
           fullName: fullName.trim(),
           email: email.trim().toLowerCase(),
           password,
-          passcode: showPasscode && passcode.trim() ? passcode.trim() : undefined,
+          passcode: (showPasscode || isFromUrl) && passcode.trim() ? passcode.trim() : undefined,
         }),
       })
 
@@ -53,7 +66,7 @@ export default function SignupPage() {
       }
 
       const role = result?.data?.role
-      setSubmittedStatus(role === 'staff' ? 'active' : 'pending')
+      setSubmittedStatus(role === 'staff' || role === 'admin' ? 'active' : 'pending')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unable to complete registration. Please try again.')
     } finally {
@@ -225,7 +238,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* Optional Staff Passcode for instant approval */}
+          {/* Optional One-Time Staff Invite Code */}
           <div className="pt-1">
             {!showPasscode ? (
               <button
@@ -233,38 +246,45 @@ export default function SignupPage() {
                 onClick={() => setShowPasscode(true)}
                 className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium"
               >
-                <KeyRound size={12} /> Have a staff invite passcode?
+                <KeyRound size={12} /> Have a one-time staff invite code?
               </button>
             ) : (
-              <div className="p-3 rounded-lg bg-indigo-50/50 border border-indigo-100">
+              <div className="p-3 rounded-lg bg-indigo-50/60 border border-indigo-200/80">
                 <div className="flex items-center justify-between mb-1">
                   <label
                     htmlFor="passcode"
-                    className="text-[11px] font-semibold text-indigo-900 flex items-center gap-1"
+                    className="text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5"
                   >
-                    <KeyRound size={12} className="text-indigo-600" /> Academy Staff Invite Passcode
+                    <KeyRound size={12} className="text-indigo-600" /> One-Time Staff Invite Code
+                    {isFromUrl && (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-300">
+                        <Sparkles size={9} className="text-emerald-600" /> Link Applied
+                      </span>
+                    )}
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPasscode(false)
-                      setPasscode('')
-                    }}
-                    className="text-[10px] text-indigo-500 hover:underline"
-                  >
-                    Hide
-                  </button>
+                  {!isFromUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPasscode(false)
+                        setPasscode('')
+                      }}
+                      className="text-[10px] text-indigo-500 hover:underline"
+                    >
+                      Hide
+                    </button>
+                  )}
                 </div>
                 <input
                   id="passcode"
                   type="text"
-                  placeholder="e.g. THOORIGAI-STAFF"
+                  placeholder="e.g. STAFF-8392-WP4K"
                   value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  className="w-full px-2.5 py-1.5 border border-indigo-200 rounded text-xs text-slate-900 placeholder:text-indigo-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  onChange={(e) => setPasscode(e.target.value.toUpperCase())}
+                  className="w-full px-2.5 py-1.5 border border-indigo-200 rounded text-xs font-mono font-medium text-slate-900 placeholder:text-indigo-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 uppercase"
                 />
                 <span className="text-[10px] text-indigo-700 mt-1 block">
-                  Staff passcodes grant immediate access without waiting for admin review.
+                  One-time invite codes grant immediate access without waiting for administrator review.
                 </span>
               </div>
             )}

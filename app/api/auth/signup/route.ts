@@ -38,9 +38,52 @@ async function postSignup(request: Request, requestId: string) {
     }
 
     const { fullName, email, password, passcode } = parsed.data
-    const expectedPasscode = process.env.STAFF_INVITE_PASSCODE || 'THOORIGAI-STAFF'
-    const isInstantStaff = Boolean(passcode && passcode.trim().toUpperCase() === expectedPasscode.toUpperCase())
-    const assignedRole = isInstantStaff ? 'staff' : 'pending'
+    let assignedRole: 'staff' | 'admin' | 'pending' = 'pending'
+    let validInviteId: string | null = null
+
+    if (passcode && passcode.trim()) {
+      const trimmedCode = passcode.trim().toUpperCase()
+      const expectedStatic = (process.env.STAFF_INVITE_PASSCODE || 'THOORIGAI-STAFF').toUpperCase()
+
+      if (trimmedCode === expectedStatic) {
+        assignedRole = 'staff'
+      } else {
+        const adminClient = getSupabaseAdminClient(requestId)
+        const { data: invite } = await adminClient
+          .from('invite_codes')
+          .select('id, role, recipient_email, expires_at, is_used')
+          .ilike('code', trimmedCode)
+          .maybeSingle()
+
+        if (!invite) {
+          return NextResponse.json(
+            { error: 'Invalid invite code. Please check the code or leave it blank to request access.' },
+            { status: 400, headers: { 'x-request-id': requestId } },
+          )
+        }
+        if (invite.is_used) {
+          return NextResponse.json(
+            { error: 'This invite code has already been redeemed. Please request a new code.' },
+            { status: 400, headers: { 'x-request-id': requestId } },
+          )
+        }
+        if (new Date(invite.expires_at).getTime() < Date.now()) {
+          return NextResponse.json(
+            { error: 'This invite code has expired. Please ask your administrator to generate a new code.' },
+            { status: 400, headers: { 'x-request-id': requestId } },
+          )
+        }
+        if (invite.recipient_email && invite.recipient_email.toLowerCase() !== email.toLowerCase().trim()) {
+          return NextResponse.json(
+            { error: `This invite code is reserved for ${invite.recipient_email}.` },
+            { status: 400, headers: { 'x-request-id': requestId } },
+          )
+        }
+
+        assignedRole = invite.role as 'staff' | 'admin'
+        validInviteId = invite.id
+      }
+    }
 
     const adminClient = getSupabaseAdminClient(requestId)
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -68,6 +111,17 @@ async function postSignup(request: Request, requestId: string) {
         role: assignedRole,
         full_name: fullName,
       })
+
+      if (validInviteId) {
+        await adminClient
+          .from('invite_codes')
+          .update({
+            is_used: true,
+            used_by_user_id: authData.user.id,
+            used_at: new Date().toISOString(),
+          })
+          .eq('id', validInviteId)
+      }
     }
 
     logger.info({ requestId, role: assignedRole, userId: authData?.user?.id }, 'User registered')
