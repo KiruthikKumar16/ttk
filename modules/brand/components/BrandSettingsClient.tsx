@@ -91,7 +91,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
       {/* Page Heading */}
       <div className="page-heading">
         <div>
-          <h1>Brand Information</h1>
+          <h1>Brand information</h1>
           <p className="subcopy">
             Configure core identity, official legal details, and public verification endpoints used across student
             invoices, completion certificates, and public portals.

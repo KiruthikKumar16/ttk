@@ -52,7 +52,7 @@ export function StaffDashboardView({
             </span>
             <span className="text-xs text-muted-foreground">{todayFormatted}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Academic Operations Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">Good morning</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Monitor daily attendance, grade assessments, track student engagement, and distribute course materials.
           </p>
