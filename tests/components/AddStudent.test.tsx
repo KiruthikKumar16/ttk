@@ -13,9 +13,9 @@ describe('AddStudent', () => {
     const onSave = vi.fn()
     render(<AddStudent onClose={vi.fn()} onSave={onSave} />)
     expect(screen.getByLabelText(/Student Name/)).toBeRequired()
-    expect(screen.getByLabelText(/Mobile Number/)).toBeRequired()
+    expect(screen.getByLabelText(/^Mobile Number/i)).toBeRequired()
     await user.type(screen.getByLabelText(/Student Name/), 'Asha Kumar')
-    await user.type(screen.getByLabelText(/Mobile Number/), '9876543210')
+    await user.type(screen.getByLabelText(/^Mobile Number/i), '9876543210')
     await user.type(screen.getByLabelText(/Tuition Fee/), '25000')
     await user.click(screen.getByRole('button', { name: 'Register Student' }))
     expect(onSave).toHaveBeenCalledWith(

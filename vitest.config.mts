@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   resolve: { alias: { '@': root } },
   test: {
-    include: ['lib/**/*.test.ts', 'modules/**/*.test.ts', 'tests/**/*.test.ts'],
+    include: ['lib/**/*.test.ts', 'modules/**/*.test.ts', 'tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     exclude: ['tests/integration/**'],
     environment: 'node',
     coverage: {

@@ -1,7 +1,7 @@
 import { requirePermission } from '@/lib/auth/current-profile'
 import { getAllStudents, getAllPayments, getStaffAcademicReportData } from '@/modules/reports/service'
-import { ReportsView } from '@/modules/reports/components/ReportsView'
 import { StaffReportsView } from '@/modules/reports/components/StaffReportsView'
+import { AdminReportsClient } from '@/modules/reports/components/AdminReportsClient'
 import { getCachedCourseOptions, listCourseCategories } from '@/modules/courses/service'
 
 export default async function ReportsPage() {
@@ -26,13 +26,22 @@ export default async function ReportsPage() {
     )
   }
 
-  // Admin Executive Financial Reports
-  const [students, payments, categories, courseOptions] = await Promise.all([
+  // Admin Executive Reports: Fetch both financial and academic data for toggle switching
+  const [students, payments, academicData, categories, courseOptions] = await Promise.all([
     getAllStudents(),
     getAllPayments(),
-    listCourseCategories(),
-    getCachedCourseOptions(),
+    getStaffAcademicReportData(),
+    listCourseCategories().catch(() => []),
+    getCachedCourseOptions().catch(() => []),
   ])
 
-  return <ReportsView students={students} payments={payments} categories={categories} courses={courseOptions} />
+  return (
+    <AdminReportsClient
+      students={students}
+      payments={payments}
+      academicData={academicData}
+      categories={categories}
+      courses={courseOptions}
+    />
+  )
 }
