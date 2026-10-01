@@ -66,19 +66,23 @@ async function getCourseMaterials(req: NextRequest, requestId: string) {
       (data || []).map(async (material) => {
         const course = normalizeJoined(material.courses)
         const profile = normalizeJoined(material.profiles)
-        const { data: signedUrlData, error: signedUrlError } = await adminSupabase.storage
-          .from('course-materials')
-          .createSignedUrl(material.storage_path, 300)
-
-        if (signedUrlError) {
-          throw signedUrlError
+        let signedUrl: string | null = null
+        try {
+          const { data: signedUrlData, error: signedUrlError } = await adminSupabase.storage
+            .from('course-materials')
+            .createSignedUrl(material.storage_path, 300)
+          if (!signedUrlError && signedUrlData?.signedUrl) {
+            signedUrl = signedUrlData.signedUrl
+          }
+        } catch {
+          signedUrl = null
         }
 
         return {
           ...material,
           course,
           profile,
-          signedUrl: signedUrlData.signedUrl,
+          signedUrl,
         }
       }),
     )
@@ -210,12 +214,16 @@ async function postCourseMaterial(req: NextRequest, requestId: string) {
 
     // Generate a signed URL for the uploaded file (short-lived)
     const adminSupabase = getSupabaseAdminClient(requestId)
-    const { data: signedUrlData, error: signedUrlError } = await adminSupabase.storage
-      .from('course-materials')
-      .createSignedUrl(storagePath, 300)
-
-    if (signedUrlError) {
-      throw signedUrlError
+    let uploadSignedUrl: string | null = null
+    try {
+      const { data: signedUrlData, error: signedUrlError } = await adminSupabase.storage
+        .from('course-materials')
+        .createSignedUrl(storagePath, 300)
+      if (!signedUrlError && signedUrlData?.signedUrl) {
+        uploadSignedUrl = signedUrlData.signedUrl
+      }
+    } catch {
+      uploadSignedUrl = null
     }
 
     // Format the response
@@ -232,7 +240,7 @@ async function postCourseMaterial(req: NextRequest, requestId: string) {
         role: profile.role,
       },
       createdAt: courseMaterial.created_at,
-      signedUrl: signedUrlData?.signedUrl ?? null,
+      signedUrl: uploadSignedUrl,
     }
 
     return NextResponse.json(

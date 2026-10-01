@@ -14,19 +14,14 @@ export default async function CourseMaterialsPage({ params, searchParams }: Page
   const result = await listCourseMaterials(id, pagination.page, pagination.pageSize)
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <Link href="/courses">Courses</Link>
-          <h1>{result.courseName} materials</h1>
-        </div>
-      </div>
       <CourseMaterials
         courseId={id}
+        courseName={result.courseName}
         initialMaterials={result.data}
         serverLoaded
         canUpload={can(profile.role, 'materials', 'create')}
       />
-      <div className="panel-header">
+      <div className="panel-header mt-4">
         <Link
           href={`/courses/${id}/materials?page=${Math.max(1, page - 1)}&pageSize=${pageSize}`}
           aria-disabled={page === 1}

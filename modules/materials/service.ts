@@ -32,10 +32,23 @@ export async function listCourseMaterials(
     (data ?? []).map(async (material) => {
       const courseData = normalizeJoined(material.courses)
       const profile = normalizeJoined(material.profiles)
+      let signedUrl: string | null = null
       const { data: urlData, error: urlError } = await supabase.storage
         .from('course-materials')
         .createSignedUrl(material.storage_path, 3600)
-      if (urlError) throw urlError
+      if (urlError) {
+        const isNotFound =
+          (urlError as any).statusCode === '404' ||
+          (urlError as any).code === 'NoSuchKey' ||
+          urlError.message?.toLowerCase().includes('not found')
+        if (isNotFound) {
+          signedUrl = null
+        } else {
+          throw urlError
+        }
+      } else if (urlData?.signedUrl) {
+        signedUrl = urlData.signedUrl
+      }
       return {
         id: String(material.id),
         courseId: String(material.course_id),
@@ -47,7 +60,7 @@ export async function listCourseMaterials(
           ? { id: String(profile.id), fullName: String(profile.full_name), role: String(profile.role) }
           : null,
         createdAt: String(material.created_at),
-        signedUrl: urlData.signedUrl,
+        signedUrl,
       }
     }),
   )
