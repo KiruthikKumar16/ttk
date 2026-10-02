@@ -72,6 +72,19 @@ describe('payment service', () => {
       expect.anything(),
       expect.objectContaining({ sort: 'payment_date' }),
     )
+    await listPaymentPage({
+      page: 1,
+      pageSize: 10,
+      search: '',
+      sort: 'payment_date',
+      direction: 'desc',
+      startDate: '2026-01-01',
+      endDate: '2026-01-31',
+    })
+    expect(mocks.listPayments).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ startDate: '2026-01-01', endDate: '2026-01-31' }),
+    )
     mocks.role = 'staff'
     await expect(
       listPaymentPage({ page: 1, pageSize: 10, search: '', sort: 'amount', direction: 'desc' }),

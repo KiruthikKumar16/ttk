@@ -14,6 +14,9 @@ export const GET = withApi(
       search: String(query.search ?? ''),
       sort: String(query.sort ?? 'payment_date'),
       direction: query.direction === 'asc' ? 'asc' : 'desc',
+      date: typeof query.date === 'string' ? query.date : undefined,
+      startDate: typeof query.startDate === 'string' ? query.startDate : undefined,
+      endDate: typeof query.endDate === 'string' ? query.endDate : undefined,
       keyset,
       cursor: typeof query.cursor === 'string' ? query.cursor : undefined,
     })

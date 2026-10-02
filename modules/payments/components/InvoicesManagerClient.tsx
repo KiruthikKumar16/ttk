@@ -29,7 +29,9 @@ interface InvoicesManagerClientProps {
   page: number
   pageSize: number
   search: string
-  dateFilter: string
+  dateFilter?: string
+  startDateFilter?: string
+  endDateFilter?: string
   sort: string
   direction: 'asc' | 'desc'
   courseCategoryMap: Record<string, string>
@@ -41,7 +43,9 @@ export function InvoicesManagerClient({
   page,
   pageSize,
   search: initialSearch,
-  dateFilter: initialDate,
+  dateFilter: initialDate = '',
+  startDateFilter: initialStartDate = '',
+  endDateFilter: initialEndDate = '',
   sort,
   direction,
   courseCategoryMap,
@@ -51,7 +55,11 @@ export function InvoicesManagerClient({
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
   const [searchInput, setSearchInput] = useState(initialSearch)
+  const isRangeInitial = Boolean(initialStartDate || initialEndDate)
+  const [dateMode, setDateMode] = useState<'single' | 'range'>(isRangeInitial ? 'range' : 'single')
   const [dateInput, setDateInput] = useState(initialDate)
+  const [startDateInput, setStartDateInput] = useState(initialStartDate)
+  const [endDateInput, setEndDateInput] = useState(initialEndDate)
 
   // Compute metrics
   const totalVolume = useMemo(() => {
@@ -84,11 +92,29 @@ export function InvoicesManagerClient({
     } else {
       params.delete('search')
     }
-    if (dateInput) {
-      params.set('date', dateInput)
+
+    if (dateMode === 'single') {
+      params.delete('startDate')
+      params.delete('endDate')
+      if (dateInput) {
+        params.set('date', dateInput)
+      } else {
+        params.delete('date')
+      }
     } else {
       params.delete('date')
+      if (startDateInput) {
+        params.set('startDate', startDateInput)
+      } else {
+        params.delete('startDate')
+      }
+      if (endDateInput) {
+        params.set('endDate', endDateInput)
+      } else {
+        params.delete('endDate')
+      }
     }
+
     params.set('page', '1')
     router.push(`/invoices?${params.toString()}`)
   }
@@ -96,12 +122,18 @@ export function InvoicesManagerClient({
   const handleClearFilters = () => {
     setSearchInput('')
     setDateInput('')
+    setStartDateInput('')
+    setEndDateInput('')
     const params = new URLSearchParams(searchParams.toString())
     params.delete('search')
     params.delete('date')
+    params.delete('startDate')
+    params.delete('endDate')
     params.set('page', '1')
     router.push(`/invoices?${params.toString()}`)
   }
+
+  const hasActiveFilter = Boolean(initialSearch || initialDate || initialStartDate || initialEndDate)
 
   const handleSortChange = (newSort: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -187,6 +219,7 @@ export function InvoicesManagerClient({
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
+              aria-label="Search invoice number, student name, or course"
               placeholder="Search invoice number, student name, or course..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -197,31 +230,118 @@ export function InvoicesManagerClient({
                 type="button"
                 onClick={() => setSearchInput('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
+                aria-label="Clear search input"
               >
                 <X size={14} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 border border-gray-300 rounded-xl px-2.5 py-1.5 bg-white">
-            <Calendar size={14} className="text-gray-400 shrink-0" />
-            <input
-              type="date"
-              aria-label="Filter invoices by date"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-              className="text-xs text-gray-800 bg-transparent focus:outline-none"
-            />
-            {dateInput && (
-              <button
-                type="button"
-                onClick={() => setDateInput('')}
-                className="text-gray-400 hover:text-gray-600 p-0.5"
-              >
-                <X size={13} />
-              </button>
-            )}
+          {/* Date Filter Mode Selector */}
+          <div
+            className="flex items-center p-0.5 bg-gray-100 rounded-xl border border-gray-200 shrink-0"
+            role="group"
+            aria-label="Date filter selection mode"
+          >
+            <button
+              type="button"
+              id="invoice-filter-mode-single"
+              onClick={() => setDateMode('single')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                dateMode === 'single'
+                  ? 'bg-white text-emerald-700 shadow-2xs font-bold'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              aria-pressed={dateMode === 'single'}
+            >
+              Single Date
+            </button>
+            <button
+              type="button"
+              id="invoice-filter-mode-range"
+              onClick={() => setDateMode('range')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                dateMode === 'range'
+                  ? 'bg-white text-emerald-700 shadow-2xs font-bold'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              aria-pressed={dateMode === 'range'}
+            >
+              Date Range
+            </button>
           </div>
+
+          {/* Single Date Picker */}
+          {dateMode === 'single' ? (
+            <div className="flex items-center gap-1.5 border border-gray-300 rounded-xl px-2.5 py-1.5 bg-white">
+              <Calendar size={14} className="text-gray-500 shrink-0" />
+              <input
+                id="invoice-single-date"
+                type="date"
+                aria-label="Filter invoices by date"
+                value={dateInput}
+                onChange={(e) => setDateInput(e.target.value)}
+                className="text-xs text-gray-800 bg-transparent focus:outline-none"
+              />
+              {dateInput && (
+                <button
+                  type="button"
+                  onClick={() => setDateInput('')}
+                  className="text-gray-400 hover:text-gray-600 p-0.5"
+                  aria-label="Clear date filter"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Date Range Pickers */
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center gap-1.5 border border-gray-300 rounded-xl px-2.5 py-1.5 bg-white">
+                <span className="text-[11px] font-semibold text-gray-600">From:</span>
+                <input
+                  id="invoice-start-date"
+                  type="date"
+                  aria-label="Filter invoices from start date"
+                  value={startDateInput}
+                  onChange={(e) => setStartDateInput(e.target.value)}
+                  className="text-xs text-gray-800 bg-transparent focus:outline-none"
+                />
+                {startDateInput && (
+                  <button
+                    type="button"
+                    onClick={() => setStartDateInput('')}
+                    className="text-gray-400 hover:text-gray-600 p-0.5"
+                    aria-label="Clear start date filter"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 border border-gray-300 rounded-xl px-2.5 py-1.5 bg-white">
+                <span className="text-[11px] font-semibold text-gray-600">To:</span>
+                <input
+                  id="invoice-end-date"
+                  type="date"
+                  aria-label="Filter invoices to end date"
+                  value={endDateInput}
+                  onChange={(e) => setEndDateInput(e.target.value)}
+                  className="text-xs text-gray-800 bg-transparent focus:outline-none"
+                />
+                {endDateInput && (
+                  <button
+                    type="button"
+                    onClick={() => setEndDateInput('')}
+                    className="text-gray-400 hover:text-gray-600 p-0.5"
+                    aria-label="Clear end date filter"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -230,7 +350,7 @@ export function InvoicesManagerClient({
             Apply Filter
           </button>
 
-          {(initialSearch || initialDate) && (
+          {hasActiveFilter && (
             <button
               type="button"
               onClick={handleClearFilters}
@@ -298,11 +418,11 @@ export function InvoicesManagerClient({
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-1">No invoices found</h3>
           <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
-            {initialSearch || initialDate
+            {hasActiveFilter
               ? 'No invoices match your selected search or date criteria. Try resetting filters.'
               : 'No invoices have been recorded yet.'}
           </p>
-          {(initialSearch || initialDate) && (
+          {hasActiveFilter && (
             <button
               type="button"
               onClick={handleClearFilters}

@@ -19,7 +19,8 @@ function clientWith(results: Record<string, QueryResult[]>) {
     from(table: string) {
       const result = (results[table] ?? []).shift() ?? { data: [], error: null, count: 0 }
       const query: any = {}
-      for (const method of ['select', 'eq', 'or', 'in', 'order', 'range', 'limit']) query[method] = vi.fn(() => query)
+      for (const method of ['select', 'eq', 'gte', 'lte', 'or', 'in', 'order', 'range', 'limit'])
+        query[method] = vi.fn(() => query)
       query.insert = vi.fn((row) => {
         inserted.push(row)
         return query
@@ -167,6 +168,13 @@ describe('server data mapping and pagination', () => {
     await expect(
       listPayments(fixture.client, { search: 'Asha', studentId: 9, date: '2026-01-01', page: 1 }),
     ).resolves.toMatchObject({ totalCount: 1, data: [{ student: 'Asha', amount: 25, verification_code: 'verify-1' }] })
+    const rangeFixture = clientWith({
+      payments: [{ data: [{ id: 2, amount: 5000, invoice: 'INV-2', payment_date: '2026-01-15' }], count: 1 }],
+      verifiable_documents: [{ data: [] }],
+    })
+    await expect(
+      listPayments(rangeFixture.client, { startDate: '2026-01-01', endDate: '2026-01-31', page: 1 }),
+    ).resolves.toMatchObject({ totalCount: 1 })
     const empty = clientWith({ payments: [{ data: [], count: null }] })
     await expect(listPayments(empty.client)).resolves.toMatchObject({ count: 0, totalCount: 0, data: [] })
     const broken = clientWith({ payments: [{ error: new Error('payment query') }] })

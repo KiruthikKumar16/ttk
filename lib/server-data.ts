@@ -149,6 +149,8 @@ export async function listPayments(
     search?: string
     studentId?: number
     date?: string
+    startDate?: string
+    endDate?: string
     sort?: 'payment_date' | 'amount' | 'invoice'
     direction?: 'asc' | 'desc'
     keyset?: boolean
@@ -176,7 +178,16 @@ export async function listPayments(
     query = query.or(`payment_date.lt.${cursor.date},and(payment_date.eq.${cursor.date},id.lt.${cursor.id})`)
   }
   if (options.studentId !== undefined) query = query.eq('student_register_id', options.studentId)
-  if (options.date && /^\d{4}-\d{2}-\d{2}$/.test(options.date)) query = query.eq('payment_date', options.date)
+  if (options.date && /^\d{4}-\d{2}-\d{2}$/.test(options.date)) {
+    query = query.eq('payment_date', options.date)
+  } else {
+    const rawFrom = options.startDate && /^\d{4}-\d{2}-\d{2}$/.test(options.startDate) ? options.startDate : undefined
+    const rawTo = options.endDate && /^\d{4}-\d{2}-\d{2}$/.test(options.endDate) ? options.endDate : undefined
+    const fromDate = rawFrom && rawTo && rawFrom > rawTo ? rawTo : rawFrom
+    const toDate = rawFrom && rawTo && rawFrom > rawTo ? rawFrom : rawTo
+    if (fromDate) query = query.gte('payment_date', fromDate)
+    if (toDate) query = query.lte('payment_date', toDate)
+  }
   const search = options.search?.trim().slice(0, 100)
   if (search) {
     const safeSearch = search.replace(/[\\%_,()]/g, ' ').trim()

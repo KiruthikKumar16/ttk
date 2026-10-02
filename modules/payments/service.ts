@@ -34,6 +34,8 @@ export async function listPaymentPage(options: {
   sort: string
   direction: 'asc' | 'desc'
   date?: string
+  startDate?: string
+  endDate?: string
   keyset?: boolean
   cursor?: string
 }) {
