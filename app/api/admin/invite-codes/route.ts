@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { withApi } from '@/lib/http/handler'
+import { ValidationError } from '@/lib/http/errors'
 
 const createInviteSchema = z.object({
   role: z.enum(['staff', 'admin']).default('staff'),
@@ -105,7 +106,7 @@ export const POST = withApi({ roles: ['admin'], body: createInviteSchema }, asyn
     .single()
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 400 })
+    throw new ValidationError(error.message)
   }
 
   return {
@@ -122,12 +123,19 @@ export const POST = withApi({ roles: ['admin'], body: createInviteSchema }, asyn
   }
 })
 
-export const DELETE = withApi({ roles: ['admin'], query: deleteInviteSchema }, async ({ supabase, query }) => {
-  const { error } = await supabase!.from('invite_codes').delete().eq('id', query.id).eq('is_used', false)
+export const DELETE = withApi(
+  {
+    roles: ['admin'],
+    query: deleteInviteSchema,
+    mutationContentTypes: ['application/json', ''],
+  },
+  async ({ supabase, query }) => {
+    const { error } = await supabase!.from('invite_codes').delete().eq('id', query.id).eq('is_used', false)
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 400 })
-  }
+    if (error) {
+      throw new ValidationError(error.message)
+    }
 
-  return { deleted: true }
-})
+    return { deleted: true }
+  },
+)

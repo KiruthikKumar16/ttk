@@ -25,6 +25,19 @@ import {
 type UserProfile = { id: string; full_name: string | null; role: Role; created_at: string | null }
 type FilterTab = 'all' | 'pending' | 'staff' | 'admin' | 'invites'
 
+function getErrorMessage(result: unknown, fallback: string): string {
+  if (result && typeof result === 'object') {
+    const r = result as Record<string, unknown>
+    if (typeof r.error === 'string') return r.error
+    if (r.error && typeof r.error === 'object') {
+      const errObj = r.error as Record<string, unknown>
+      if (typeof errObj.message === 'string') return errObj.message
+    }
+    if (typeof r.message === 'string') return r.message
+  }
+  return fallback
+}
+
 export function UserRoles({
   users,
   currentUserId,
@@ -69,9 +82,9 @@ export function UserRoles({
     setLoadingInvites(true)
     try {
       const res = await fetch('/api/admin/invite-codes')
-      const json = await res.json()
-      if (res.ok && json.data) {
-        setInviteCodes(json.data)
+      const json = await res.json().catch(() => null)
+      if (res.ok && json) {
+        setInviteCodes(json.data ?? json ?? [])
       }
     } catch {
       // ignore
@@ -121,7 +134,7 @@ export function UserRoles({
       })
       const result = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(result?.error?.message ?? result?.error ?? `Failed to approve user ${userId}.`)
+        throw new Error(getErrorMessage(result, `Failed to approve user ${userId}.`))
       }
 
       setRows((current) => current.map((row) => (row.id === userId ? { ...row, role: targetRole } : row)))
@@ -155,7 +168,7 @@ export function UserRoles({
         })
         const result = await response.json().catch(() => null)
         if (!response.ok) {
-          throw new Error(result?.error?.message ?? result?.error ?? `Failed to update role for user ${userId}.`)
+          throw new Error(getErrorMessage(result, `Failed to update role for user ${userId}.`))
         }
       })
 
@@ -193,10 +206,10 @@ export function UserRoles({
 
       const result = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(result?.error || 'Failed to generate invite code.')
+        throw new Error(getErrorMessage(result, 'Failed to generate invite code.'))
       }
 
-      setGeneratedInvite(result.data.invite)
+      setGeneratedInvite(result?.data?.invite ?? result?.invite ?? null)
       fetchInviteCodes()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to generate invite code.')
@@ -209,12 +222,13 @@ export function UserRoles({
     setRevokingId(id)
     setError('')
     try {
-      const response = await fetch(`/api/admin/invite-codes?id=${id}`, {
+      const response = await fetch(`/api/admin/invite-codes?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
       })
       const result = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(result?.error || 'Failed to revoke invite code.')
+        throw new Error(getErrorMessage(result, 'Failed to revoke invite code.'))
       }
       setInviteCodes((prev) => prev.filter((c) => c.id !== id))
       setSuccess('Invite code was revoked and can no longer be used.')
@@ -582,25 +596,27 @@ export function UserRoles({
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-right space-x-1.5">
-                        {!invite.isUsed && new Date(invite.expiresAt).getTime() > Date.now() ? (
+                        {!invite.isUsed ? (
                           <>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => copyToClipboard(inviteUrl, invite.id, 'link')}
-                              className="text-xs border-slate-300 hover:bg-slate-50"
-                            >
-                              {isCopiedLink ? (
-                                <>
-                                  <Check size={13} className="mr-1 text-emerald-600" /> Copied Link
-                                </>
-                              ) : (
-                                <>
-                                  <ExternalLink size={13} className="mr-1" /> Copy Link
-                                </>
-                              )}
-                            </Button>
+                            {new Date(invite.expiresAt).getTime() > Date.now() && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyToClipboard(inviteUrl, invite.id, 'link')}
+                                className="text-xs border-slate-300 hover:bg-slate-50"
+                              >
+                                {isCopiedLink ? (
+                                  <>
+                                    <Check size={13} className="mr-1 text-emerald-600" /> Copied Link
+                                  </>
+                                ) : (
+                                  <>
+                                    <ExternalLink size={13} className="mr-1" /> Copy Link
+                                  </>
+                                )}
+                              </Button>
+                            )}
                             <Button
                               type="button"
                               size="sm"

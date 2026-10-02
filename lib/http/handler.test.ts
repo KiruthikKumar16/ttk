@@ -177,4 +177,18 @@ describe('withApi authentication and authorization', () => {
     expect(response.headers.get('x-request-id')).toBe('trace.123')
     await expect(response.json()).resolves.toMatchObject({ data: { requestId: 'trace.123' } })
   })
+
+  it('allows bodyless DELETE requests without Content-Type header on valid origin and host', async () => {
+    const deleteAction = withApi({ roles: ['admin'] }, async () => ({ deleted: true }))
+    const req = new Request('https://app.example.test/api/items?id=123', {
+      method: 'DELETE',
+      headers: {
+        origin: 'https://app.example.test',
+        host: 'app.example.test',
+      },
+    })
+    const response = await deleteAction(req)
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({ data: { deleted: true } })
+  })
 })

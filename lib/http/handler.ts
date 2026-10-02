@@ -207,9 +207,11 @@ export function withApi<TOptions extends ApiOptions, TResult>(
       }
 
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+        const defaultContentTypes =
+          request.method === 'DELETE' && !options.body ? ['application/json', ''] : ['application/json']
         const rejected = validateMutationRequest(
           request,
-          options.mutationContentTypes ? [...options.mutationContentTypes] : ['application/json'],
+          options.mutationContentTypes ? [...options.mutationContentTypes] : defaultContentTypes,
         )
         if (rejected) {
           status = rejected.status
