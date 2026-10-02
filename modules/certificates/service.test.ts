@@ -55,26 +55,34 @@ describe('certificates service', () => {
     mocks.client = {
       from: vi.fn((table: string) => {
         if (table === 'certificates') {
+          const createCertBuilder = () => {
+            const builder: any = {
+              or: vi.fn(() => builder),
+              eq: vi.fn(() => builder),
+              ilike: vi.fn(() => builder),
+              order: vi.fn(() => builder),
+              limit: vi.fn(() => builder),
+              maybeSingle: vi.fn(async () => ({ data: mocks.certData, error: mocks.error })),
+            }
+            return builder
+          }
           return {
-            select: vi.fn(() => ({
-              or: vi.fn(() => ({
-                maybeSingle: vi.fn(async () => ({ data: mocks.certData, error: mocks.error })),
-              })),
-              eq: vi.fn(() => ({
-                maybeSingle: vi.fn(async () => ({ data: mocks.certData, error: mocks.error })),
-              })),
-            })),
+            select: vi.fn(() => createCertBuilder()),
           }
         }
         if (table === 'verifiable_documents') {
+          const createDocBuilder = () => {
+            const builder: any = {
+              or: vi.fn(() => builder),
+              eq: vi.fn(() => builder),
+              in: vi.fn(() => builder),
+              limit: vi.fn(() => builder),
+              maybeSingle: vi.fn(async () => ({ data: mocks.docData, error: null })),
+            }
+            return builder
+          }
           return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(() => ({
-                  maybeSingle: vi.fn(async () => ({ data: mocks.docData, error: null })),
-                })),
-              })),
-            })),
+            select: vi.fn(() => createDocBuilder()),
           }
         }
         return {}
@@ -148,6 +156,26 @@ describe('certificates service', () => {
       mocks.error = new Error('db error')
       const errorResult = await getCertificateDetail('ERROR')
       expect(errorResult).toBeNull()
+    })
+
+    it('fetches certificate with UUID identifier', async () => {
+      const result = await getCertificateDetail('a0000001-0000-4000-8000-000000000001')
+      expect(result).not.toBeNull()
+      expect(result?.certificate.certificateId).toBe('CERT-2026-001')
+    })
+
+    it('fetches certificate with TAI prefix student register id', async () => {
+      const result = await getCertificateDetail('TAI-101')
+      expect(result).not.toBeNull()
+      expect(result?.certificate.certificateId).toBe('CERT-2026-001')
+    })
+
+    it('returns null for empty or whitespace certificate identifier', async () => {
+      const emptyResult = await getCertificateDetail('')
+      expect(emptyResult).toBeNull()
+
+      const whitespaceResult = await getCertificateDetail('   ')
+      expect(whitespaceResult).toBeNull()
     })
 
     it('handles student detail fetch failure with fallback student record', async () => {

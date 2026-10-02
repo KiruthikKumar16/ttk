@@ -27,26 +27,40 @@ export async function listCertificatePage(options: {
   })
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function getCertificateDetail(certificateIdentifier: string) {
   const supabase = await createClient()
-  const cleanId = decodeURIComponent(certificateIdentifier).trim()
+  const cleanId = decodeURIComponent(certificateIdentifier)
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+  if (!cleanId) return null
+
+  const isUuid = UUID_REGEX.test(cleanId)
+  const isNumeric = /^\d+$/.test(cleanId)
+  const taiMatch = /^tai-(\d+)$/i.exec(cleanId)
+  const studentRegId = isNumeric ? Number(cleanId) : taiMatch ? Number(taiMatch[1]) : null
 
   let query = supabase.from('certificates').select('*')
-  if (cleanId.includes('-')) {
+  if (isUuid) {
     query = query.or(`certificate_id.eq.${cleanId},id.eq.${cleanId}`)
+  } else if (studentRegId !== null) {
+    query = query.or(`certificate_id.ilike.${cleanId},student_register_id.eq.${studentRegId}`)
   } else {
-    query = query.eq('certificate_id', cleanId)
+    query = query.ilike('certificate_id', cleanId)
   }
 
-  const { data: cert, error } = await query.maybeSingle()
+  const { data: cert, error } = await query.order('issue_date', { ascending: false }).limit(1).maybeSingle()
+
   if (error || !cert) return null
 
-  // Fetch verification code from verifiable_documents
+  // Fetch verification code from verifiable_documents checking both cert.id and cert.certificate_id
   const { data: doc } = await supabase
     .from('verifiable_documents')
     .select('verification_code')
-    .eq('reference_id', cert.id)
+    .in('reference_id', [String(cert.id), String(cert.certificate_id)])
     .eq('doc_type', 'certificate')
+    .limit(1)
     .maybeSingle()
 
   // Fetch student detail if exists
