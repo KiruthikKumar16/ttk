@@ -313,9 +313,7 @@ export function DashboardMetrics({
             aria-controls="admin-financial-panel"
             onClick={() => handleViewChange('financial')}
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'financial'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              activeView === 'financial' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <CircleDollarSign size={14} className={activeView === 'financial' ? 'text-white' : 'text-slate-500'} />
@@ -330,9 +328,7 @@ export function DashboardMetrics({
             aria-controls="admin-staff-panel"
             onClick={() => handleViewChange('staff')}
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'staff'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              activeView === 'staff' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <GraduationCap size={14} className={activeView === 'staff' ? 'text-white' : 'text-slate-500'} />
@@ -559,7 +555,9 @@ export function DashboardMetrics({
 
                     <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/70">
                       <p className="text-xs font-medium text-slate-700">Total Marked</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">{academicData.todayAttendance.totalMarked}</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">
+                        {academicData.todayAttendance.totalMarked}
+                      </p>
                       <p className="text-[11px] text-slate-500 mt-0.5">Records logged today</p>
                     </div>
                   </div>

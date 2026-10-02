@@ -487,10 +487,7 @@ export function StudentDetail({
 
                   <label className="col-span-full">
                     Payment Type (Instance)
-                    <select
-                      value={paymentType}
-                      onChange={(e) => setPaymentType(e.target.value)}
-                    >
+                    <select value={paymentType} onChange={(e) => setPaymentType(e.target.value)}>
                       {PAYMENT_TYPES.map((t) => (
                         <option key={t} value={t}>
                           {t}

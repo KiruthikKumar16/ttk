@@ -1,11 +1,6 @@
 import { z } from 'zod'
 import { apiResult, withApi } from '@/lib/http/handler'
-import {
-  listSkillTags,
-  createSkillTag,
-  updateSkillTag,
-  deleteSkillTag,
-} from '@/modules/skills/service'
+import { listSkillTags, createSkillTag, updateSkillTag, deleteSkillTag } from '@/modules/skills/service'
 
 const createSkillSchema = z.object({
   name: z.string().min(1).max(50),

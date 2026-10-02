@@ -544,9 +544,7 @@ export function CoursesManager({
                     <h2 className="text-lg font-semibold text-gray-900">
                       {editingCourse ? 'Edit Course' : 'Add New Course'}
                     </h2>
-                    {editingCourse?.categoryName && (
-                      <CategoryBadge categoryName={editingCourse.categoryName} />
-                    )}
+                    {editingCourse?.categoryName && <CategoryBadge categoryName={editingCourse.categoryName} />}
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {editingCourse
@@ -566,7 +564,11 @@ export function CoursesManager({
                       <ArrowUpRight size={12} />
                     </Link>
                   )}
-                  <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                  >
                     <X size={18} />
                   </button>
                 </div>
@@ -835,12 +837,19 @@ export function CoursesManager({
                     <span>Important Data Archival & Impact Warning</span>
                   </div>
                   <p className="leading-relaxed">
-                    Deleting <strong className="text-gray-900 font-semibold">{deleteConfirmCourse.name}</strong> will also cascade:
+                    Deleting <strong className="text-gray-900 font-semibold">{deleteConfirmCourse.name}</strong> will
+                    also cascade:
                   </p>
                   <ul className="list-disc pl-4 space-y-1 text-amber-800/90 leading-normal">
-                    <li>Disassociates or removes all linked <strong>course materials</strong> and uploaded files.</li>
-                    <li>Unlinks <strong>attendance records</strong>, session progress, and trainer allocations.</li>
-                    <li>Removes linked <strong>assessment tests</strong> and student performance evaluations.</li>
+                    <li>
+                      Disassociates or removes all linked <strong>course materials</strong> and uploaded files.
+                    </li>
+                    <li>
+                      Unlinks <strong>attendance records</strong>, session progress, and trainer allocations.
+                    </li>
+                    <li>
+                      Removes linked <strong>assessment tests</strong> and student performance evaluations.
+                    </li>
                   </ul>
                 </div>
 
@@ -884,12 +893,7 @@ export function CoursesManager({
                 )}
 
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeSecurityDeleteModal}
-                    disabled={deleting}
-                  >
+                  <Button type="button" variant="outline" onClick={closeSecurityDeleteModal} disabled={deleting}>
                     Cancel
                   </Button>
                   <Button

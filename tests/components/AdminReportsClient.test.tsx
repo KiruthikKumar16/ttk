@@ -48,13 +48,7 @@ const mockAcademicData: AcademicReportData = {
 describe('AdminReportsClient', () => {
   it('renders both toggle tabs and defaults to financial view', () => {
     render(
-      <AdminReportsClient
-        students={[]}
-        payments={[]}
-        academicData={mockAcademicData}
-        categories={[]}
-        courses={[]}
-      />,
+      <AdminReportsClient students={[]} payments={[]} academicData={mockAcademicData} categories={[]} courses={[]} />,
     )
 
     const financialTab = screen.getByRole('tab', { name: /financial overview/i })
@@ -70,13 +64,7 @@ describe('AdminReportsClient', () => {
   it('switches to staff view on click and persists in localStorage', async () => {
     const user = userEvent.setup()
     render(
-      <AdminReportsClient
-        students={[]}
-        payments={[]}
-        academicData={mockAcademicData}
-        categories={[]}
-        courses={[]}
-      />,
+      <AdminReportsClient students={[]} payments={[]} academicData={mockAcademicData} categories={[]} courses={[]} />,
     )
 
     const staffTab = screen.getByRole('tab', { name: /staff & academic data/i })
@@ -91,13 +79,7 @@ describe('AdminReportsClient', () => {
     localStorage.setItem('admin_reports_active_view', 'staff')
 
     render(
-      <AdminReportsClient
-        students={[]}
-        payments={[]}
-        academicData={mockAcademicData}
-        categories={[]}
-        courses={[]}
-      />,
+      <AdminReportsClient students={[]} payments={[]} academicData={mockAcademicData} categories={[]} courses={[]} />,
     )
 
     const staffTab = screen.getByRole('tab', { name: /staff & academic data/i })

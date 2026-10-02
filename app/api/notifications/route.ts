@@ -27,16 +27,13 @@ const createNotificationSchema = z.object({
 
 import { getCurrentProfile } from '@/lib/auth/current-profile'
 
-export const GET = withApi(
-  { roles: ['admin', 'staff'] as const },
-  async ({ user, role }) => {
-    const profile = await getCurrentProfile()
-    const userId = user?.id || profile.id
-    const userRole = role || profile.role || 'staff'
-    const notifications = await listUserNotifications(userId, userRole)
-    return apiResult(notifications)
-  },
-)
+export const GET = withApi({ roles: ['admin', 'staff'] as const }, async ({ user, role }) => {
+  const profile = await getCurrentProfile()
+  const userId = user?.id || profile.id
+  const userRole = role || profile.role || 'staff'
+  const notifications = await listUserNotifications(userId, userRole)
+  return apiResult(notifications)
+})
 
 export const PATCH = withApi(
   {

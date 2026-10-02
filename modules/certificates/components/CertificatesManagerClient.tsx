@@ -76,7 +76,9 @@ export function CertificatesManagerClient({
     })
     certificates.forEach((c) => {
       const catName = courseCategoryMap[c.course_name.trim().toLowerCase()]
-      const cat = categories.find((catItem) => catItem.name.trim().toLowerCase() === (catName || '').trim().toLowerCase())
+      const cat = categories.find(
+        (catItem) => catItem.name.trim().toLowerCase() === (catName || '').trim().toLowerCase(),
+      )
       if (cat) {
         counts[cat.id] = (counts[cat.id] || 0) + 1
       }
@@ -213,7 +215,9 @@ export function CertificatesManagerClient({
         >
           <Layers size={14} className={!categoryId ? 'text-white' : 'text-gray-400'} />
           <span>All Programs</span>
-          <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-semibold ${!categoryId ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+          <span
+            className={`px-1.5 py-0.2 rounded-full text-[11px] font-semibold ${!categoryId ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
             {totalCount}
           </span>
         </button>
@@ -244,7 +248,9 @@ export function CertificatesManagerClient({
               }`}
             >
               <span>{cat.name}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-semibold ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[11px] font-semibold ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
                 {cat.duration}
               </span>
             </button>
@@ -381,17 +387,13 @@ export function CertificatesManagerClient({
                     <h3 className="text-base font-bold text-gray-900 group-hover:text-amber-800 transition-colors mt-0.5 leading-snug">
                       {cert.student_name}
                     </h3>
-                    <div className="text-xs text-gray-500 mt-1 font-medium">
-                      Student #{cert.student_register_id}
-                    </div>
+                    <div className="text-xs text-gray-500 mt-1 font-medium">Student #{cert.student_register_id}</div>
 
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                         Course Curriculum
                       </span>
-                      <p className="text-xs font-semibold text-slate-800 mt-0.5 line-clamp-1">
-                        {cert.course_name}
-                      </p>
+                      <p className="text-xs font-semibold text-slate-800 mt-0.5 line-clamp-1">{cert.course_name}</p>
                     </div>
                   </div>
 
@@ -451,13 +453,7 @@ export function CertificatesManagerClient({
             <tbody className="divide-y divide-gray-100">
               {certificates.map((certificate) => {
                 const catName = courseCategoryMap[certificate.course_name.trim().toLowerCase()]
-                return (
-                  <CertificateTableRow
-                    key={certificate.id}
-                    certificate={certificate}
-                    categoryName={catName}
-                  />
-                )
+                return <CertificateTableRow key={certificate.id} certificate={certificate} categoryName={catName} />
               })}
             </tbody>
           </table>

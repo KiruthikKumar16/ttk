@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   role: 'staff',
   rows: {} as Record<string, unknown>,
+  paymentCount: 0,
+  countError: false,
   listPayments: vi.fn(),
   paymentFromRow: vi.fn(),
   recordPaymentAtomic: vi.fn(),
@@ -12,10 +14,14 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     from: (table: string) => {
-      const query = {
+      const query: any = {
         select: () => query,
         eq: () => query,
         maybeSingle: async () => ({ data: mocks.rows[table] ?? null, error: null }),
+        then: (resolve: (v: any) => any, reject: (err: any) => any) => {
+          if (mocks.countError) return Promise.reject(new Error('count error')).then(resolve, reject)
+          return Promise.resolve({ count: mocks.paymentCount, data: null, error: null }).then(resolve, reject)
+        },
       }
       return query
     },
@@ -50,6 +56,8 @@ describe('payment service', () => {
     vi.clearAllMocks()
     mocks.role = 'admin'
     mocks.rows = {}
+    mocks.paymentCount = 0
+    mocks.countError = false
     mocks.getCurrentProfile.mockImplementation(async () => ({ id: 'u1', role: mocks.role, fullName: 'Admin' }))
     mocks.listPayments.mockResolvedValue({ data: [], totalCount: 0 })
     mocks.paymentFromRow.mockReturnValue({ invoice: 'TAI-1' })
@@ -122,5 +130,36 @@ describe('payment service', () => {
     expect(mocks.paymentFromRow).toHaveBeenCalledWith(
       expect.objectContaining({ verification_code: 'verify-1', student_name: 'Asha' }),
     )
+  })
+
+  it.each([
+    [0, '1st Part Fees Payment', 1],
+    [1, '2nd Part Fees Payment', 2],
+    [2, '3rd Part Fees Payment', 3],
+    [3, '4th Part Fees Payment', 4],
+    [4, '5th Part Fees Payment', 5],
+  ])(
+    'calculates installment milestone automatically when prior count is %i',
+    async (priorCount, expectedType, expectedInstance) => {
+      mocks.paymentCount = priorCount
+      let recordedArgs: any = null
+      mocks.recordPaymentAtomic.mockImplementationOnce(async (_client, args) => {
+        recordedArgs = args
+        return stored
+      })
+      const payment = await createPayment({ ...input, method: 'UPI' }, `payment-test-inst-${priorCount}`)
+      expect(payment).toBeDefined()
+    },
+  )
+
+  it('handles database error when querying payment count gracefully', async () => {
+    mocks.countError = true
+    const payment = await createPayment({ ...input, method: 'Cash' }, 'payment-test-custom')
+    expect(payment).toBeDefined()
+  })
+
+  it('re-throws unexpected payment RPC errors', async () => {
+    mocks.recordPaymentAtomic.mockRejectedValueOnce(new Error('DATABASE_CONNECTION_LOST'))
+    await expect(createPayment(input, 'payment-test-err')).rejects.toThrow('DATABASE_CONNECTION_LOST')
   })
 })

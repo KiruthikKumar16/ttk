@@ -3,11 +3,7 @@ import { requirePermission } from '@/lib/auth/current-profile'
 import { getCertificateDetail } from '@/modules/certificates/service'
 import { CertificatePrintDynamic } from '@/modules/certificates/components/CertificatePrintDynamic'
 
-export default async function CertificateDetailPage({
-  params,
-}: {
-  params: Promise<{ certificateId: string }>
-}) {
+export default async function CertificateDetailPage({ params }: { params: Promise<{ certificateId: string }> }) {
   await requirePermission('certificates', 'read')
   const { certificateId } = await params
   const decodedId = decodeURIComponent(certificateId)
@@ -17,10 +13,5 @@ export default async function CertificateDetailPage({
     notFound()
   }
 
-  return (
-    <CertificatePrintDynamic
-      student={result.student}
-      certificateRecord={result.certificate}
-    />
-  )
+  return <CertificatePrintDynamic student={result.student} certificateRecord={result.certificate} />
 }

@@ -57,13 +57,9 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
     verification_code: row.verification_code ? String(row.verification_code) : undefined,
     paymentType: row.payment_type ? String(row.payment_type) : undefined,
     instanceNumber:
-      row.instance_number !== undefined && row.instance_number !== null
-        ? Number(row.instance_number)
-        : undefined,
+      row.instance_number !== undefined && row.instance_number !== null ? Number(row.instance_number) : undefined,
     instance:
-      row.instance_number !== undefined && row.instance_number !== null
-        ? Number(row.instance_number)
-        : undefined,
+      row.instance_number !== undefined && row.instance_number !== null ? Number(row.instance_number) : undefined,
   }
   if (
     cgst > 0 ||
@@ -83,13 +79,9 @@ export function paymentFromRow(row: Record<string, unknown>): Payment {
       customNote: row.custom_note ? String(row.custom_note) : undefined,
       paymentType: row.payment_type ? String(row.payment_type) : undefined,
       instanceNumber:
-        row.instance_number !== undefined && row.instance_number !== null
-          ? Number(row.instance_number)
-          : undefined,
+        row.instance_number !== undefined && row.instance_number !== null ? Number(row.instance_number) : undefined,
       instance:
-        row.instance_number !== undefined && row.instance_number !== null
-          ? Number(row.instance_number)
-          : undefined,
+        row.instance_number !== undefined && row.instance_number !== null ? Number(row.instance_number) : undefined,
     }
   }
   return base

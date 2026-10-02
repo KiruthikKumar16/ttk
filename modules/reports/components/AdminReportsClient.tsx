@@ -80,9 +80,7 @@ export function AdminReportsClient({
             aria-controls="admin-reports-financial-panel"
             onClick={() => handleViewChange('financial')}
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'financial'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              activeView === 'financial' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <CircleDollarSign size={14} className={activeView === 'financial' ? 'text-white' : 'text-slate-500'} />
@@ -97,9 +95,7 @@ export function AdminReportsClient({
             aria-controls="admin-reports-staff-panel"
             onClick={() => handleViewChange('staff')}
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'staff'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              activeView === 'staff' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <GraduationCap size={14} className={activeView === 'staff' ? 'text-white' : 'text-slate-500'} />

@@ -614,12 +614,12 @@ export function CourseMaterials({
                       <Icon size={20} />
                     </div>
                     <div>
-                      <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${theme.badge}`}>
+                      <span
+                        className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${theme.badge}`}
+                      >
                         {theme.tag}
                       </span>
-                      <div className="text-[11px] text-gray-600 font-medium mt-0.5">
-                        {theme.label}
-                      </div>
+                      <div className="text-[11px] text-gray-600 font-medium mt-0.5">{theme.label}</div>
                     </div>
                   </div>
 
@@ -639,7 +639,10 @@ export function CourseMaterials({
                 {/* Body Details */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title={material.title}>
+                    <h3
+                      className="font-semibold text-gray-900 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors"
+                      title={material.title}
+                    >
                       {material.title}
                     </h3>
                     <p className="text-[11px] text-gray-400 font-mono mt-1 truncate" title={material.storagePath}>
@@ -746,7 +749,9 @@ export function CourseMaterials({
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${theme.badge}`}>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${theme.badge}`}
+                      >
                         {theme.tag}
                       </span>
                     </td>
@@ -758,9 +763,7 @@ export function CourseMaterials({
                         <span>{material.uploadedBy?.fullName || 'Staff Member'}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-500 whitespace-nowrap">
-                      {formatDate(material.createdAt)}
-                    </td>
+                    <td className="py-3 px-4 text-gray-500 whitespace-nowrap">{formatDate(material.createdAt)}</td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         {material.signedUrl ? (
@@ -963,12 +966,7 @@ export function CourseMaterials({
 
               {/* Modal Footer */}
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setUploadModalOpen(false)}
-                  disabled={uploading}
-                >
+                <Button type="button" variant="outline" onClick={() => setUploadModalOpen(false)} disabled={uploading}>
                   Cancel
                 </Button>
                 <Button

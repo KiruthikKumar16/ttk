@@ -55,9 +55,7 @@ export function StaffDashboardView({
             <span className="text-xs text-muted-foreground font-medium">{greetingData.formattedDate}</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">{greetingData.greeting}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {greetingData.subcopy}
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{greetingData.subcopy}</p>
         </div>
 
         {/* Quick Actions Dock */}

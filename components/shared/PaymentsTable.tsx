@@ -10,7 +10,10 @@ function formatPaymentType(p: Payment, index?: number): { title: string; isFull:
     }
   }
 
-  if (p.customNote && (p.customNote.includes('Part') || p.customNote.includes('Fees') || p.customNote.includes('installment'))) {
+  if (
+    p.customNote &&
+    (p.customNote.includes('Part') || p.customNote.includes('Fees') || p.customNote.includes('installment'))
+  ) {
     return {
       title: p.customNote,
       isFull: p.customNote.toLowerCase().includes('full'),

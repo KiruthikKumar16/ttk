@@ -4,7 +4,7 @@ test('signed-in staff reaches the dashboard and sees the ThoorigAI brand', async
   await page.goto('/')
   await expect(page).toHaveTitle(/ThoorigAI/)
   await expect(page.locator('body')).toContainText('THOORIGAI')
-  await expect(page.getByRole('heading', { name: /Good morning/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/i })).toBeVisible()
 })
 
 test('staff can navigate to Students and Reports from the dashboard', async ({ page }) => {

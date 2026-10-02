@@ -166,9 +166,7 @@ export function SkillTagsManager({
           <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
             Configured Skills ({skills.length})
           </span>
-          <span className="text-[11px] text-slate-500">
-            Evenly distributed across 2 rows on registration form
-          </span>
+          <span className="text-[11px] text-slate-500">Evenly distributed across 2 rows on registration form</span>
         </div>
 
         <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto">
@@ -180,9 +178,7 @@ export function SkillTagsManager({
                 className="p-3 px-4 flex items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="w-5 text-[11px] font-mono text-slate-400">
-                    {index + 1}.
-                  </span>
+                  <span className="w-5 text-[11px] font-mono text-slate-400">{index + 1}.</span>
                   {isEditing ? (
                     <input
                       type="text"
@@ -198,9 +194,7 @@ export function SkillTagsManager({
                     />
                   ) : (
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-medium text-slate-900 truncate">
-                        {skill.name}
-                      </span>
+                      <span className="text-xs font-medium text-slate-900 truncate">{skill.name}</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
                         Tag
                       </span>

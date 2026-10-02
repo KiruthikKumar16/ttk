@@ -149,9 +149,7 @@ export function InvoicesManagerClient({
             <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
               Page Collections Volume
             </span>
-            <div className="text-xl font-bold text-emerald-700 leading-tight mt-0.5">
-              {money(totalVolume)}
-            </div>
+            <div className="text-xl font-bold text-emerald-700 leading-tight mt-0.5">{money(totalVolume)}</div>
           </div>
         </div>
 
@@ -177,9 +175,7 @@ export function InvoicesManagerClient({
             <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
               Average Receipt
             </span>
-            <div className="text-xl font-bold text-purple-700 leading-tight mt-0.5">
-              {money(avgPayment)}
-            </div>
+            <div className="text-xl font-bold text-purple-700 leading-tight mt-0.5">{money(avgPayment)}</div>
           </div>
         </div>
       </div>
@@ -337,9 +333,7 @@ export function InvoicesManagerClient({
                   </div>
 
                   <div className="flex items-baseline justify-between mb-3">
-                    <div className="text-xl font-bold text-gray-900">
-                      {money(p.amount)}
-                    </div>
+                    <div className="text-xl font-bold text-gray-900">{money(p.amount)}</div>
                     <span className="text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
                       {p.method}
                     </span>
@@ -349,15 +343,11 @@ export function InvoicesManagerClient({
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                       Student
                     </span>
-                    <h3 className="text-sm font-semibold text-gray-900 leading-snug">
-                      {p.student}
-                    </h3>
+                    <h3 className="text-sm font-semibold text-gray-900 leading-snug">{p.student}</h3>
                   </div>
 
                   <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-gray-600 truncate max-w-[65%]">
-                      {p.course || '—'}
-                    </span>
+                    <span className="text-gray-600 truncate max-w-[65%]">{p.course || '—'}</span>
                     {catName && <CategoryBadge categoryName={catName} />}
                   </div>
                 </div>
@@ -392,11 +382,7 @@ export function InvoicesManagerClient({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {payments.map((payment) => (
-                <InvoiceTableRow
-                  key={payment.id}
-                  payment={payment}
-                  courseCategoryMap={courseCategoryMap}
-                />
+                <InvoiceTableRow key={payment.id} payment={payment} courseCategoryMap={courseCategoryMap} />
               ))}
             </tbody>
           </table>

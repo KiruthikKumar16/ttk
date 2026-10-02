@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/security/rate-limit'
 
-const expectedMigration = '20261001140000'
+const expectedMigration = '20261001170000'
 const deadline = <T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> =>
   new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Readiness dependency timed out')), timeoutMs)

@@ -536,12 +536,8 @@ export function AddStudent({
 
               return (
                 <div className="space-y-2">
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                    {line1.map(renderTag)}
-                  </div>
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                    {line2.map(renderTag)}
-                  </div>
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">{line1.map(renderTag)}</div>
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">{line2.map(renderTag)}</div>
                 </div>
               )
             })()}

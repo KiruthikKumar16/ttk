@@ -23,7 +23,8 @@ export async function listUserNotifications(userId: string, role: string): Promi
   // 1. Fetch accessible notifications matching user_id or recipient_role/all
   const { data: notifs, error } = await supabase
     .from('notifications')
-    .select(`
+    .select(
+      `
       id,
       title,
       message,
@@ -35,7 +36,8 @@ export async function listUserNotifications(userId: string, role: string): Promi
       created_at,
       recipient_role,
       user_id
-    `)
+    `,
+    )
     .or(`user_id.eq.${userId},and(user_id.is.null,recipient_role.in.(${role},all))`)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -45,10 +47,7 @@ export async function listUserNotifications(userId: string, role: string): Promi
   }
 
   // 2. Fetch read markers for this user
-  const { data: reads } = await supabase
-    .from('notification_reads')
-    .select('notification_id')
-    .eq('user_id', userId)
+  const { data: reads } = await supabase.from('notification_reads').select('notification_id').eq('user_id', userId)
 
   const readSet = new Set((reads ?? []).map((r: any) => String(r.notification_id)))
 
@@ -69,16 +68,14 @@ export async function listUserNotifications(userId: string, role: string): Promi
 
 export async function markNotificationRead(userId: string, notificationId: string): Promise<void> {
   const supabase = await createClient()
-  await supabase
-    .from('notification_reads')
-    .upsert(
-      {
-        user_id: userId,
-        notification_id: notificationId,
-        read_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,notification_id' },
-    )
+  await supabase.from('notification_reads').upsert(
+    {
+      user_id: userId,
+      notification_id: notificationId,
+      read_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,notification_id' },
+  )
 }
 
 export async function markAllNotificationsRead(userId: string, role: string): Promise<void> {
@@ -127,4 +124,3 @@ export async function createNotification(input: CreateNotificationInput, client?
     // Non-blocking background notification creation
   }
 }
-

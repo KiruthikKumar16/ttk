@@ -28,7 +28,9 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 }
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided via environment or .env.local')
+  console.error(
+    'Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided via environment or .env.local',
+  )
   process.exit(1)
 }
 

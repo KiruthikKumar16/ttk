@@ -16,7 +16,7 @@ export async function listCertificatePage(options: {
 }) {
   const supabase = await createClient()
   const sort = ['issue_date', 'student_name', 'certificate_id'].includes(options.sort)
-  ? (options.sort as 'issue_date' | 'student_name' | 'certificate_id')
+    ? (options.sort as 'issue_date' | 'student_name' | 'certificate_id')
     : 'issue_date'
   return listCertificates(supabase, {
     ...options,

@@ -174,7 +174,9 @@ async function runAudit() {
     }
   }
   // Modal: Add Student
-  const addStudentBtn = page.getByRole('button', { name: /add student|enroll/i }).or(page.getByRole('link', { name: /add student|enroll/i }))
+  const addStudentBtn = page
+    .getByRole('button', { name: /add student|enroll/i })
+    .or(page.getByRole('link', { name: /add student|enroll/i }))
   if (await addStudentBtn.first().isVisible()) {
     await safeClick(addStudentBtn.first(), 'Open Add/Enroll Student modal/page')
     await page.waitForTimeout(800)
@@ -201,7 +203,10 @@ async function runAudit() {
     await invoiceSearch.fill('')
   }
   // Click tabs (All, Paid, Partial, etc.)
-  const tabBtns = await page.getByRole('tab').or(page.locator('.tab-btn, button:has-text("Paid"), button:has-text("All")')).all()
+  const tabBtns = await page
+    .getByRole('tab')
+    .or(page.locator('.tab-btn, button:has-text("Paid"), button:has-text("All")'))
+    .all()
   for (const tab of tabBtns.slice(0, 4)) {
     const label = (await tab.textContent())?.trim()
     await safeClick(tab, `Invoice Filter Tab: ${label}`)
@@ -233,7 +238,9 @@ async function runAudit() {
   auditLog.testedPages.push('/courses')
   await page.waitForTimeout(1200)
 
-  const newCourseBtn = page.getByRole('button', { name: /add course|new course/i }).or(page.getByRole('link', { name: /add course|new course/i }))
+  const newCourseBtn = page
+    .getByRole('button', { name: /add course|new course/i })
+    .or(page.getByRole('link', { name: /add course|new course/i }))
   if (await newCourseBtn.first().isVisible()) {
     await safeClick(newCourseBtn.first(), 'Open Add Course modal/page')
     await page.waitForTimeout(800)
@@ -291,7 +298,9 @@ async function runAudit() {
   }
 
   // Toggle student status button (Present/Absent)
-  const attendanceToggle = page.locator('button:has-text("Present"), button:has-text("Absent"), button:has-text("P"), button:has-text("A")').first()
+  const attendanceToggle = page
+    .locator('button:has-text("Present"), button:has-text("Absent"), button:has-text("P"), button:has-text("A")')
+    .first()
   if (await attendanceToggle.isVisible()) {
     await safeClick(attendanceToggle, 'Toggle Student Attendance status button')
   }
@@ -432,7 +441,8 @@ async function runAudit() {
 
   async function safeStaffClick(selectorOrLocator, description) {
     try {
-      const loc = typeof selectorOrLocator === 'string' ? staffPage.locator(selectorOrLocator).first() : selectorOrLocator
+      const loc =
+        typeof selectorOrLocator === 'string' ? staffPage.locator(selectorOrLocator).first() : selectorOrLocator
       if (await loc.isVisible({ timeout: 2500 })) {
         await loc.click({ timeout: 2500 })
         auditLog.clickedButtons.push(`Staff: ${description}`)

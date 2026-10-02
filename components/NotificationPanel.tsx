@@ -2,17 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Bell,
-  CheckCheck,
-  X,
-  AlertTriangle,
-  UserCheck,
-  Receipt,
-  FolderOpen,
-  ArrowRight,
-  Sparkles,
-} from 'lucide-react'
+import { Bell, CheckCheck, X, AlertTriangle, UserCheck, Receipt, FolderOpen, ArrowRight, Sparkles } from 'lucide-react'
 import type { Role } from '@/lib/types'
 import type { AppNotification } from '@/app/api/notifications/route'
 
@@ -146,9 +136,7 @@ export function NotificationPanel({ role }: { role: Role }) {
   const isNotificationRead = (n: AppNotification) => Boolean(n.isRead || readIds.includes(n.id))
   const unreadCount = notifications.filter((n) => !isNotificationRead(n)).length
   const displayedNotifications =
-    filter === 'unread'
-      ? notifications.filter((n) => !isNotificationRead(n))
-      : notifications
+    filter === 'unread' ? notifications.filter((n) => !isNotificationRead(n)) : notifications
 
   const hasUrgentUnread = notifications.some((n) => n.urgent && !isNotificationRead(n))
 
@@ -292,10 +280,10 @@ export function NotificationPanel({ role }: { role: Role }) {
                         n.type === 'alert'
                           ? 'bg-amber-100/80 text-amber-800'
                           : n.type === 'warning'
-                          ? 'bg-rose-100/80 text-rose-800'
-                          : n.type === 'info'
-                          ? 'bg-indigo-100/80 text-indigo-800'
-                          : 'bg-emerald-100/80 text-emerald-800'
+                            ? 'bg-rose-100/80 text-rose-800'
+                            : n.type === 'info'
+                              ? 'bg-indigo-100/80 text-indigo-800'
+                              : 'bg-emerald-100/80 text-emerald-800'
                       }`}
                     >
                       {getIcon(n.type)}
@@ -304,25 +292,16 @@ export function NotificationPanel({ role }: { role: Role }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-bold text-slate-900 truncate">{n.title}</span>
-                        <span className="text-[10px] text-slate-600 shrink-0 font-medium">
-                          {n.timestamp}
-                        </span>
+                        <span className="text-[10px] text-slate-600 shrink-0 font-medium">{n.timestamp}</span>
                       </div>
-                      <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 leading-relaxed">
-                        {n.message}
-                      </p>
+                      <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                       <div className="flex items-center gap-1 text-[11px] text-indigo-600 font-semibold mt-1">
                         <span>Take action</span>
                         <ArrowRight size={11} />
                       </div>
                     </div>
 
-                    {!isRead && (
-                      <span
-                        className="w-2 h-2 rounded-full bg-indigo-600 mt-2 shrink-0"
-                        title="Unread"
-                      />
-                    )}
+                    {!isRead && <span className="w-2 h-2 rounded-full bg-indigo-600 mt-2 shrink-0" title="Unread" />}
                   </div>
                 )
               })
