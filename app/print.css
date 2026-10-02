@@ -216,4 +216,23 @@
   .ttk-payment-aside strong {
     margin-bottom: 0;
   }
+
+  /* Student Comprehensive Academic & Financial Dossier Print Styles */
+  .student-dossier-print-root {
+    display: block !important;
+    width: 210mm !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    padding: 10mm 12mm !important;
+  }
+  .student-dossier-page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+  .student-dossier-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
