@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
@@ -178,6 +179,26 @@ export function StudentDetail({
   const passedEvaluations = assessments.filter((a) => (a.score / (a.maxScore || 100)) * 100 >= 50).length
 
   const [showPrintPreviewModal, setShowPrintPreviewModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handlePrint = () => {
+    document.body.classList.add('printing-student-dossier')
+    window.print()
+  }
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.classList.remove('printing-student-dossier')
+    }
+    window.addEventListener('afterprint', handleAfterPrint)
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint)
+    }
+  }, [])
 
   return (
     <>
@@ -198,7 +219,7 @@ export function StudentDetail({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="text-xs font-semibold shadow-xs"
               title="Print official academic and financial transcript"
             >
@@ -962,18 +983,23 @@ export function StudentDetail({
         </section>
       </div>
 
-      {/* ─── OFFICIAL PRINT DOSSIER (Visible only during print) ─── */}
-      <div className="hidden print:block">
-        <StudentPrintDossier
-          student={student}
-          payments={payments}
-          attendance={attendance}
-          assessments={assessments}
-          categoryName={categoryName}
-          courseDuration={courseDuration}
-          gstRate={gstRate}
-        />
-      </div>
+      {/* ─── OFFICIAL PRINT DOSSIER PORTAL (Directly mounted on document.body for multi-page isolation) ─── */}
+      {mounted &&
+        createPortal(
+          <div id="student-dossier-print-portal" className="student-dossier-print-portal">
+            <StudentPrintDossier
+              student={student}
+              payments={payments}
+              attendance={attendance}
+              assessments={assessments}
+              categoryName={categoryName}
+              courseDuration={courseDuration}
+              gstRate={gstRate}
+              isPortalPrint={true}
+            />
+          </div>,
+          document.body,
+        )}
 
       {/* ─── ON-SCREEN PDF PREVIEW MODAL ─── */}
       {showPrintPreviewModal && (
@@ -981,7 +1007,7 @@ export function StudentDetail({
           role="dialog"
           aria-modal="true"
           aria-labelledby="print-preview-modal-title"
-          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-start p-4 sm:p-6 overflow-y-auto"
+          className="print:hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-start p-4 sm:p-6 overflow-y-auto"
         >
           {/* Top Modal Controls */}
           <div className="w-full max-w-4xl bg-slate-900 text-white rounded-t-2xl px-5 py-3.5 flex items-center justify-between border-b border-slate-800 shadow-lg sticky top-0 z-10">
@@ -1000,9 +1026,7 @@ export function StudentDetail({
                 type="button"
                 variant="default"
                 size="sm"
-                onClick={() => {
-                  window.print()
-                }}
+                onClick={handlePrint}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
               >
                 <Printer size={15} className="mr-1.5" />
