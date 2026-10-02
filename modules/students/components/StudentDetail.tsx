@@ -463,14 +463,21 @@ export function StudentDetail({
                     <ArrowRight size={14} className="ml-1" />
                   </Link>
                 ) : balance === 0 ? (
-                  <div className="flex items-center justify-between gap-3 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
-                    <div className="flex items-center gap-2 text-emerald-800 text-xs font-semibold">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
+                    <div className="flex items-center gap-2 flex-wrap text-emerald-800 text-xs font-semibold">
                       <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                       <span>Account settled in full</span>
+                      <span className="text-emerald-400 font-normal">•</span>
+                      <span className="text-emerald-700 font-medium">Eligible for certificate</span>
                     </div>
-                    <Button variant="default" size="sm" onClick={onCertificate} className="text-xs font-bold">
-                      <FileCheck2 size={14} className="mr-1" />
-                      Certificate
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={onCertificate}
+                      className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 shadow-xs"
+                    >
+                      <FileCheck2 size={14} className="mr-1.5" />
+                      Generate Certificate
                     </Button>
                   </div>
                 ) : (
@@ -479,21 +486,6 @@ export function StudentDetail({
               </div>
             </div>
           </div>
-
-          {/* Certificate Banner when balance is cleared */}
-          {canRecordPayment && balance === 0 && (
-            <section className="certificate-banner">
-              <div>
-                <p className="eyebrow">PAYMENT COMPLETE</p>
-                <h2>Eligible for Course Completion Certificate</h2>
-                <p>{student.name}&apos;s balance is fully cleared. Generate the completion certificate now.</p>
-                <Button variant="default" size="default" onClick={onCertificate}>
-                  <FileCheck2 size={16} />
-                  <span className="ml-2">Generate certificate</span>
-                </Button>
-              </div>
-            </section>
-          )}
 
           {/* Payment History Table */}
           <div className="panel mt-4">
