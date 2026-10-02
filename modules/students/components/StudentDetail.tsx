@@ -7,15 +7,18 @@ import {
   ArrowUpRight,
   Award,
   BookOpen,
+  Calendar,
   CalendarCheck,
   CheckCircle2,
   CircleDollarSign,
   CreditCard,
   FileCheck2,
   GraduationCap,
+  Mail,
+  MapPin,
+  Phone,
   Printer,
   ShieldAlert,
-  Users,
 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import type { Course, Payment, Receipt, Student, Role } from '@/lib/types'
@@ -62,7 +65,7 @@ export function StudentDetail({
   }[]
 }) {
   const isStaff = role === 'staff'
-  const [activeTab, setActiveTab] = useState<'payments' | 'academics' | 'profile'>(
+  const [activeTab, setActiveTab] = useState<'payments' | 'academics'>(
     isStaff || !canRecordPayment ? 'academics' : 'payments',
   )
   const [amount, setAmount] = useState('')
@@ -228,6 +231,132 @@ export function StudentDetail({
         )}
       </div>
 
+      {/* Always Visible Contact & Personal Details Card */}
+      <section
+        aria-labelledby="student-contact-heading"
+        className="bg-white rounded-2xl border border-slate-200/80 p-5 mb-6 shadow-xs"
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <Phone size={15} />
+            </div>
+            <div>
+              <h2 id="student-contact-heading" className="text-sm font-bold text-slate-900">
+                Contact & Student Profile
+              </h2>
+              <p className="text-xs text-slate-500">
+                Always accessible communication details, location, and student information
+              </p>
+            </div>
+          </div>
+          {student.gender && (
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {student.gender} {student.maritalStatus ? `· ${student.maritalStatus}` : ''}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-xs">
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium flex items-center gap-1">
+              <Phone size={12} className="text-slate-500" /> Primary Phone
+            </span>
+            <strong className="text-slate-900 font-mono text-sm block">
+              <a href={`tel:+91${student.phone}`} className="hover:text-indigo-600 transition-colors">
+                +91 {student.phone}
+              </a>
+            </strong>
+          </div>
+
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium flex items-center gap-1">
+              <Phone size={12} className="text-slate-500" /> Alternate Phone
+            </span>
+            <strong className="text-slate-900 font-mono text-sm block">
+              {student.altPhone ? (
+                <a href={`tel:+91${student.altPhone}`} className="hover:text-indigo-600 transition-colors">
+                  +91 {student.altPhone}
+                </a>
+              ) : (
+                <span className="text-slate-500 font-mono">—</span>
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium flex items-center gap-1">
+              <Mail size={12} className="text-slate-500" /> Email Address
+            </span>
+            <strong className="text-slate-900 truncate block">
+              {student.email ? (
+                <a
+                  href={`mailto:${student.email}`}
+                  className="hover:text-indigo-600 transition-colors"
+                  title={student.email}
+                >
+                  {student.email}
+                </a>
+              ) : (
+                <span className="text-slate-500">—</span>
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium flex items-center gap-1">
+              <Calendar size={12} className="text-slate-500" /> Date of Birth
+            </span>
+            <strong className="text-slate-900 block">{student.dob || '—'}</strong>
+          </div>
+
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium flex items-center gap-1">
+              <MapPin size={12} className="text-slate-500" /> Location
+            </span>
+            <strong
+              className="text-slate-900 block truncate"
+              title={[student.area, student.city, student.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+            >
+              {[student.area, student.city, student.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+            </strong>
+          </div>
+
+          <div>
+            <span className="text-slate-500 block mb-0.5 font-medium">Country</span>
+            <strong className="text-slate-900 block">{student.country || 'India'}</strong>
+          </div>
+        </div>
+
+        {((student.knowledgeTags && student.knowledgeTags.length > 0) || student.comments) && (
+          <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col md:flex-row gap-4 items-start justify-between text-xs">
+            {student.knowledgeTags && student.knowledgeTags.length > 0 && (
+              <div className="flex-1">
+                <span className="text-slate-500 font-medium block mb-1">Knowledge / Interest Tags</span>
+                <div className="flex flex-wrap gap-1">
+                  {student.knowledgeTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {student.comments && (
+              <div className="flex-1">
+                <span className="text-slate-500 font-medium block mb-1">Counselor Notes / Remarks:</span>
+                <p className="text-slate-700 italic bg-slate-50 p-2.5 rounded-lg border border-slate-200/60">
+                  &ldquo;{student.comments}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
       {/* Navigation Tab Bar */}
       <div
         role="tablist"
@@ -277,23 +406,6 @@ export function StudentDetail({
         >
           <GraduationCap size={15} />
           <span>Attendance & Academic Progress</span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          id="student-tab-profile"
-          aria-selected={activeTab === 'profile'}
-          aria-controls="student-panel-profile"
-          onClick={() => setActiveTab('profile')}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-            activeTab === 'profile'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-50'
-          }`}
-        >
-          <Users size={15} />
-          <span>Student Profile & Contacts</span>
         </button>
       </div>
 
@@ -820,83 +932,6 @@ export function StudentDetail({
               Browse Materials
               <ArrowUpRight size={13} className="ml-1" />
             </Link>
-          </section>
-        </div>
-      )}
-
-      {/* ─── TAB 3: PERSONAL PROFILE & DEMOGRAPHICS ─── */}
-      {activeTab === 'profile' && (
-        <div id="student-panel-profile" role="tabpanel" aria-labelledby="student-tab-profile">
-          <section className="panel mb-6 p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
-              <div>
-                <h2 className="text-sm font-bold text-gray-900">Personal & Student Profile</h2>
-                <p className="text-xs text-gray-400">Communication channels, address, and student background</p>
-              </div>
-              {student.gender && (
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-gray-100 text-gray-700">
-                  {student.gender} {student.maritalStatus ? `· ${student.maritalStatus}` : ''}
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Primary Phone</span>
-                <strong className="text-gray-800 font-mono text-sm">+91 {student.phone}</strong>
-              </div>
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Alternate Phone</span>
-                <strong className="text-gray-800 font-mono">
-                  {student.altPhone ? `+91 ${student.altPhone}` : '—'}
-                </strong>
-              </div>
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Email Address</span>
-                <strong className="text-gray-800 truncate block">{student.email || '—'}</strong>
-              </div>
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Date of Birth</span>
-                <strong className="text-gray-800">{student.dob || '—'}</strong>
-              </div>
-
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Location</span>
-                <strong className="text-gray-800">
-                  {[student.area, student.city, student.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
-                </strong>
-              </div>
-              <div>
-                <span className="text-gray-400 block mb-0.5 font-medium">Country</span>
-                <strong className="text-gray-800">{student.country || 'India'}</strong>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-400 block mb-0.5 font-medium">Knowledge / Interest Tags</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {student.knowledgeTags && student.knowledgeTags.length > 0 ? (
-                    student.knowledgeTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100"
-                      >
-                        {tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-gray-400">No tags assigned</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {student.comments && (
-              <div className="mt-4 pt-3 border-t border-gray-100 text-xs">
-                <span className="text-gray-400 font-medium block mb-1">Counselor Notes / Remarks:</span>
-                <p className="text-gray-700 italic bg-slate-50 p-2.5 rounded-md border border-slate-100">
-                  &ldquo;{student.comments}&rdquo;
-                </p>
-              </div>
-            )}
           </section>
         </div>
       )}
