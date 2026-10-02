@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
@@ -10,7 +10,10 @@ import {
   Calendar,
   CalendarCheck,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
+  Clock,
   Compass,
   FileCheck2,
   Mail,
@@ -20,6 +23,7 @@ import {
   Receipt,
   User,
   X,
+  XCircle,
 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import type { Course, Payment, Receipt as ReceiptType, Student, Role } from '@/lib/types'
@@ -28,6 +32,29 @@ import { Status } from '@/components/Status'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { PaymentsTable } from '@/components/shared/PaymentsTable'
 import { differenceRupees, percentageOfRupees } from '@/lib/money'
+
+function getMonday(d: Date): Date {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1)
+  date.setDate(diff)
+  return date
+}
+
+function formatDateIso(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatShortDate(d: Date): string {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function formatFullDate(d: Date): string {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 
 export function StudentDetail({
   student,
@@ -87,6 +114,56 @@ export function StudentDetail({
   const absentSessions = attendance.filter((a) => a.status === 'Absent').length
   const attendanceRate =
     totalSessions > 0 ? Math.round(((presentSessions + lateSessions * 0.5) / totalSessions) * 100) : 0
+
+  // Weekly attendance roster & historic week navigation
+  const [weekOffset, setWeekOffset] = useState(0)
+
+  const { weekDays, weekRangeLabel, isCurrentWeek, weekSummary } = useMemo(() => {
+    const today = new Date()
+    const targetDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    targetDate.setDate(targetDate.getDate() + weekOffset * 7)
+
+    const monday = getMonday(targetDate)
+    const todayIso = formatDateIso(today)
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    const days = []
+    for (let i = 0; i < 7; i++) {
+      const current = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)
+      const dateStr = formatDateIso(current)
+      const record = attendance.find((a) => a.sessionDate === dateStr)
+
+      days.push({
+        dateStr,
+        dayName: dayNames[i],
+        dayNumber: current.getDate(),
+        isToday: dateStr === todayIso,
+        isFuture: dateStr > todayIso,
+        record,
+      })
+    }
+
+    const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6)
+    const weekRangeLabel = `${formatShortDate(monday)} – ${formatFullDate(sunday)}`
+    const isCurrentWeek = weekOffset === 0
+
+    const loggedInWeek = days.map((d) => d.record).filter(Boolean)
+    const presentInWeek = loggedInWeek.filter((r) => r?.status === 'Present').length
+    const lateInWeek = loggedInWeek.filter((r) => r?.status === 'Late').length
+    const absentInWeek = loggedInWeek.filter((r) => r?.status === 'Absent').length
+
+    return {
+      weekDays: days,
+      weekRangeLabel,
+      isCurrentWeek,
+      weekSummary: {
+        total: loggedInWeek.length,
+        present: presentInWeek,
+        late: lateInWeek,
+        absent: absentInWeek,
+      },
+    }
+  }, [attendance, weekOffset])
 
   // Assessment metrics
   const totalEvaluations = assessments.length
@@ -578,33 +655,150 @@ export function StudentDetail({
             </div>
           </div>
 
-          {/* Recent Attendance Sessions */}
-          <div className="mt-6">
-            <h4 className="text-xs font-semibold text-slate-700 mb-2">Recent Attendance Sessions</h4>
-            {attendance.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {attendance.slice(0, 6).map((att) => (
-                  <div
-                    key={att.id}
-                    className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 text-xs flex items-center justify-between"
+          {/* Weekly Attendance Schedule & Historic Navigation */}
+          <div className="mt-6 pt-5 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Weekly Roster</h4>
+                {isCurrentWeek ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Current Week
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setWeekOffset(0)}
+                    className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline transition-colors cursor-pointer"
                   >
-                    <span className="font-medium text-slate-700 font-mono">{att.sessionDate}</span>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        att.status === 'Present'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : att.status === 'Late'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      {att.status}
-                    </span>
+                    Jump to Current Week
+                  </button>
+                )}
+              </div>
+
+              {/* Historic Week Navigation */}
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWeekOffset((prev) => prev - 1)}
+                  className="h-7 px-2 text-xs text-slate-700 hover:bg-slate-100"
+                  aria-label="Previous week"
+                >
+                  <ChevronLeft size={14} className="mr-0.5" />
+                  <span>Prev</span>
+                </Button>
+
+                <span className="text-xs font-semibold text-slate-800 font-mono px-2.5 py-1 bg-slate-100 rounded-lg border border-slate-200">
+                  {weekRangeLabel}
+                </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWeekOffset((prev) => prev + 1)}
+                  disabled={weekOffset >= 4}
+                  className="h-7 px-2 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                  aria-label="Next week"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={14} className="ml-0.5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* 7-Day Week Calendar Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+              {weekDays.map((day) => {
+                const att = day.record
+                return (
+                  <div
+                    key={day.dateStr}
+                    className={`p-3 rounded-xl border text-xs flex flex-col justify-between min-h-[96px] transition-all ${
+                      day.isToday
+                        ? 'border-indigo-300 ring-2 ring-indigo-500/20 bg-indigo-50/20'
+                        : 'border-slate-200/80 bg-slate-50/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-1 pb-1">
+                      <div>
+                        <span className="text-[11px] font-bold text-slate-500 uppercase block">{day.dayName}</span>
+                        <span className="font-mono text-xs font-bold text-slate-900 block">{day.dateStr.slice(5)}</span>
+                      </div>
+                      {day.isToday && (
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-600 text-white tracking-wider">
+                          Today
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="pt-2">
+                      {att ? (
+                        <span
+                          className={`inline-flex items-center gap-1 w-full justify-center px-2 py-1 rounded-md text-[11px] font-bold border ${
+                            att.status === 'Present'
+                              ? 'bg-emerald-100/90 text-emerald-800 border-emerald-200'
+                              : att.status === 'Late'
+                                ? 'bg-amber-100/90 text-amber-800 border-amber-200'
+                                : att.status === 'Absent'
+                                  ? 'bg-rose-100/90 text-rose-800 border-rose-200'
+                                  : 'bg-indigo-100/90 text-indigo-800 border-indigo-200'
+                          }`}
+                        >
+                          {att.status === 'Present' && <CheckCircle2 size={12} className="shrink-0" />}
+                          {att.status === 'Late' && <Clock size={12} className="shrink-0" />}
+                          {att.status === 'Absent' && <XCircle size={12} className="shrink-0" />}
+                          <span>{att.status}</span>
+                        </span>
+                      ) : day.isFuture ? (
+                        <span className="text-[11px] text-slate-400 font-medium italic block text-center py-1">
+                          Upcoming
+                        </span>
+                      ) : day.dayName === 'Sun' ? (
+                        <span className="text-[11px] text-slate-400 font-medium block text-center py-1">Weekend</span>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-medium block text-center py-1">
+                          No Session
+                        </span>
+                      )}
+                    </div>
                   </div>
-                ))}
+                )
+              })}
+            </div>
+
+            {/* Week Summary Bar */}
+            {weekSummary.total > 0 ? (
+              <div className="mt-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs flex flex-wrap items-center justify-between gap-2 text-slate-600">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span>
+                    Logged this week: <strong className="text-slate-900">{weekSummary.total} sessions</strong>
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-emerald-700 font-semibold">{weekSummary.present} Present</span>
+                  {weekSummary.late > 0 && (
+                    <>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-amber-700 font-semibold">{weekSummary.late} Late</span>
+                    </>
+                  )}
+                  {weekSummary.absent > 0 && (
+                    <>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-rose-700 font-semibold">{weekSummary.absent} Absent</span>
+                    </>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {Math.round(((weekSummary.present + weekSummary.late * 0.5) / weekSummary.total) * 100)}% weekly
+                  attendance
+                </span>
               </div>
             ) : (
-              <p className="text-xs text-slate-500 italic py-2">No attendance records logged yet for this student.</p>
+              <p className="mt-3 text-xs text-slate-400 italic py-1">
+                No attendance sessions recorded for this week ({weekRangeLabel}).
+              </p>
             )}
           </div>
         </div>

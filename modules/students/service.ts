@@ -129,7 +129,7 @@ export async function getStudentAcademicHistory(registerId: number) {
       .select('id,session_date,status')
       .eq('student_id', studentRow.id)
       .order('session_date', { ascending: false })
-      .limit(30),
+      .limit(180),
     supabase
       .from('assessment_results')
       .select('id,score,remarks,graded_at,assessments(title,max_score,assessment_date)')
