@@ -8,6 +8,7 @@ import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   Trash2,
   Plus,
   Search,
@@ -364,27 +365,72 @@ export function CoursesManager({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <form action="/courses" method="get" className="search-box" style={{ maxWidth: 300 }}>
-              <Search size={16} />
-              <input
-                name="search"
-                aria-label="Search courses"
-                type="text"
-                placeholder="Search courses..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+            <form action="/courses" method="get" className="flex items-center gap-2">
+              <div className="relative">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+                <input
+                  name="search"
+                  aria-label="Search courses"
+                  type="text"
+                  placeholder="Search courses..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-48 sm:w-60 pl-9 pr-8 py-2 rounded-xl border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('')
+                      const params = new URLSearchParams()
+                      if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
+                      if (sort) params.set('sort', sort)
+                      const qs = params.toString()
+                      router.push('/courses' + (qs ? `?${qs}` : ''))
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
+                    aria-label="Clear search input"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
               {selectedCategoryId && <input type="hidden" name="categoryId" value={selectedCategoryId} />}
               <input type="hidden" name="pageSize" value={pageSize} />
-              <label className="sr-only" htmlFor="course-sort">
-                Sort courses by
-              </label>
-              <select id="course-sort" name="sort" defaultValue={sort}>
-                <option value="name">Name</option>
-                <option value="fee">Fee</option>
-                <option value="duration">Duration</option>
-              </select>
               <input type="hidden" name="direction" value={direction} />
+
+              <div className="relative">
+                <label className="sr-only" htmlFor="course-sort">
+                  Sort courses by
+                </label>
+                <select
+                  id="course-sort"
+                  name="sort"
+                  defaultValue={sort}
+                  onChange={(e) => {
+                    const newSort = e.target.value
+                    const params = new URLSearchParams()
+                    if (query) params.set('search', query)
+                    if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
+                    params.set('sort', newSort)
+                    params.set('pageSize', String(pageSize))
+                    router.push(`/courses?${params.toString()}`)
+                  }}
+                  className="py-2 pl-3 pr-7 rounded-xl border border-gray-300 bg-white text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs appearance-none cursor-pointer"
+                >
+                  <option value="name">Name</option>
+                  <option value="fee">Fee</option>
+                  <option value="duration">Duration</option>
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+              </div>
+
               <button type="submit" className="sr-only">
                 Search
               </button>
