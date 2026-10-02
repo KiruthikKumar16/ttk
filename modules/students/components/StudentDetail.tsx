@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   CheckCircle2,
   CircleDollarSign,
+  Compass,
   FileCheck2,
   Mail,
   MapPin,
@@ -24,7 +25,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import type { Course, Payment, Receipt as ReceiptType, Student, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
-import { CategoryBadge, getCategoryBadgeStyle } from '@/components/CategoryBadge'
+import { CategoryBadge } from '@/components/CategoryBadge'
 import { PaymentsTable } from '@/components/shared/PaymentsTable'
 import { differenceRupees, percentageOfRupees } from '@/lib/money'
 
@@ -193,28 +194,14 @@ export function StudentDetail({
             </div>
 
             <div>
-              <div className="flex items-center flex-wrap gap-2 mb-1.5">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">{student.name}</h1>
+
+              <div className="flex items-center gap-2.5 flex-wrap text-xs text-slate-500 mt-2">
                 <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                   TAI-{student.registerId}
                 </span>
                 <Status status={student.status} />
-                {categoryName && (
-                  <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${getCategoryBadgeStyle(categoryName).badge}`}
-                  >
-                    {categoryName} Tier {courseDuration ? `(${courseDuration})` : ''}
-                  </span>
-                )}
-                {!isStaff && (student.studentSource || (student as any).leadSource) && (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                    Source: {student.studentSource || (student as any).leadSource}
-                  </span>
-                )}
-              </div>
-
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">{student.name}</h1>
-
-              <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 mt-1">
+                <span className="text-slate-300">|</span>
                 <span className="font-semibold text-slate-800">{student.course}</span>
                 {categoryName && <CategoryBadge categoryName={categoryName} duration={courseDuration} />}
                 <span>•</span>
@@ -237,7 +224,7 @@ export function StudentDetail({
 
         {/* Contact & Personal Information Details Grid */}
         <div className="pt-5">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4 text-xs">
             <div>
               <span className="text-slate-500 block mb-1 font-medium flex items-center gap-1">
                 <Phone size={13} className="text-slate-500" /> Primary Phone
@@ -314,6 +301,20 @@ export function StudentDetail({
                 {[student.gender, student.maritalStatus].filter(Boolean).join(' · ') || 'Student'}
               </strong>
             </div>
+
+            {!isStaff && (
+              <div>
+                <span className="text-slate-500 block mb-1 font-medium flex items-center gap-1">
+                  <Compass size={13} className="text-slate-500" /> Source
+                </span>
+                <strong
+                  className="text-slate-900 block truncate"
+                  title={student.studentSource || (student as any).leadSource || 'Direct Walk-in'}
+                >
+                  {student.studentSource || (student as any).leadSource || 'Direct Walk-in'}
+                </strong>
+              </div>
+            )}
           </div>
 
           {((student.knowledgeTags && student.knowledgeTags.length > 0) || student.comments) && (
