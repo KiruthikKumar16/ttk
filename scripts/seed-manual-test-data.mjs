@@ -560,7 +560,7 @@ async function seed() {
     {
       id: 'f0000001-0000-4000-8000-000000000001',
       doc_type: 'certificate',
-      reference_id: 'TAI-CERT-2026-001',
+      reference_id: 'e0000001-0000-4000-8000-000000000001',
       verification_code: 'VREF-CERT-1048-A9B8',
       status: 'active',
       issued_at: '2026-09-15T10:00:00Z',
@@ -568,7 +568,7 @@ async function seed() {
     {
       id: 'f0000002-0000-4000-8000-000000000002',
       doc_type: 'certificate',
-      reference_id: 'TAI-CERT-2026-002',
+      reference_id: 'e0000002-0000-4000-8000-000000000002',
       verification_code: 'VREF-CERT-1044-C7D6',
       status: 'active',
       issued_at: '2026-09-18T10:00:00Z',
@@ -576,7 +576,7 @@ async function seed() {
     {
       id: 'f0000003-0000-4000-8000-000000000003',
       doc_type: 'certificate',
-      reference_id: 'TAI-CERT-2026-003',
+      reference_id: 'e0000003-0000-4000-8000-000000000003',
       verification_code: 'VREF-CERT-1046-E5F4',
       status: 'active',
       issued_at: '2026-09-20T10:00:00Z',

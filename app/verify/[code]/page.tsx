@@ -8,6 +8,7 @@ export default function VerificationPage({ params }: { params: Promise<{ code: s
   const [verificationResult, setVerificationResult] = useState<
     | {
         status: 'Valid'
+        document_type?: 'certificate' | 'invoice' | string | null
         student_name?: string | null
         course_name?: string | null
         issue_date?: string | null
@@ -20,21 +21,20 @@ export default function VerificationPage({ params }: { params: Promise<{ code: s
   useEffect(() => {
     const fetchVerification = async () => {
       try {
-        const res = await fetch(`/api/verify/${code}`)
+        const cleanCode = decodeURIComponent(code).trim()
+        const res = await fetch(`/api/verify/${encodeURIComponent(cleanCode)}`)
         if (!res.ok) {
-          // If the API returns an error, treat as invalid
           setVerificationResult({ status: 'Invalid' })
           setLoading(false)
           return
         }
 
         const data = await res.json()
-        // The API returns { data: PublicVerificationResult }
-        if (data.data && data.data.status === 'Valid') {
-          // We have a valid result, extract the fields based on what's present
+        const payload = data?.data || data
+        if (payload && payload.status === 'Valid') {
           setVerificationResult({
             status: 'Valid',
-            ...data.data,
+            ...payload,
           })
         } else {
           setVerificationResult({ status: 'Invalid' })
@@ -74,11 +74,15 @@ export default function VerificationPage({ params }: { params: Promise<{ code: s
   }
 
   // Valid result - render based on document type
-  // We can infer the type by which fields are present
   const isCertificate = Boolean(
-    verificationResult.status === 'Valid' && verificationResult.student_name && verificationResult.course_name,
+    verificationResult.status === 'Valid' &&
+    (verificationResult.document_type === 'certificate' ||
+      (verificationResult.student_name && verificationResult.course_name)),
   )
-  const isInvoice = Boolean(verificationResult.status === 'Valid' && verificationResult.invoice_number)
+  const isInvoice = Boolean(
+    verificationResult.status === 'Valid' &&
+    (verificationResult.document_type === 'invoice' || Boolean(verificationResult.invoice_number)),
+  )
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
