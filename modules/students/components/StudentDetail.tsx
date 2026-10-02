@@ -512,31 +512,9 @@ export function StudentDetail({
       )}
 
       {/* ─── CLASSROOM ATTENDANCE ─── */}
-      <section aria-labelledby="section-attendance-heading" className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-              <CalendarCheck size={20} />
-            </div>
-            <div>
-              <h2 id="section-attendance-heading" className="text-base font-bold text-slate-900 tracking-tight">
-                Classroom Attendance
-              </h2>
-              <p className="text-xs text-slate-500">Attendance sessions, presence rate, and roster status</p>
-            </div>
-          </div>
-
-          <Link
-            href={`/attendance?search=${encodeURIComponent(student.name)}`}
-            className={buttonVariants({ variant: 'outline', size: 'sm', className: 'text-xs font-semibold' })}
-          >
-            <CalendarCheck size={14} className="mr-1.5 text-emerald-600" />
-            <span>Open Attendance Roster</span>
-          </Link>
-        </div>
-
+      <section aria-label="Classroom Attendance" className="space-y-4">
         <div className="panel p-6 bg-white border border-slate-200/80 shadow-xs rounded-2xl">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
                 <CalendarCheck size={18} />
@@ -546,17 +524,26 @@ export function StudentDetail({
                 <p className="text-xs text-slate-500">Live roster records for {student.name}</p>
               </div>
             </div>
-            <span
-              className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                attendanceRate >= 80
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : attendanceRate >= 70
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : 'bg-rose-50 text-rose-700 border-rose-200'
-              }`}
-            >
-              {attendanceRate >= 80 ? 'Good Standing' : attendanceRate >= 70 ? 'Average' : 'Attendance Alert'}
-            </span>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span
+                className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+                  attendanceRate >= 80
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : attendanceRate >= 70
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}
+              >
+                {attendanceRate >= 80 ? 'Good Standing' : attendanceRate >= 70 ? 'Average' : 'Attendance Alert'}
+              </span>
+              <Link
+                href={`/attendance?search=${encodeURIComponent(student.name)}`}
+                className={buttonVariants({ variant: 'outline', size: 'sm', className: 'text-xs font-semibold' })}
+              >
+                <CalendarCheck size={14} className="mr-1.5 text-emerald-600" />
+                <span>Open Attendance Roster</span>
+              </Link>
+            </div>
           </div>
 
           <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
@@ -624,33 +611,9 @@ export function StudentDetail({
       </section>
 
       {/* ─── ACADEMIC ASSESSMENTS & MATERIALS ─── */}
-      <section aria-labelledby="section-academics-heading" className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-violet-50 text-violet-700 border border-violet-200/80">
-              <Award size={20} />
-            </div>
-            <div>
-              <h2 id="section-academics-heading" className="text-base font-bold text-slate-900 tracking-tight">
-                Academic Assessments & Materials
-              </h2>
-              <p className="text-xs text-slate-500">
-                Evaluations, test scores, cohort benchmarks, and curriculum handouts
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href={`/assessments?search=${encodeURIComponent(student.name)}`}
-            className={buttonVariants({ variant: 'outline', size: 'sm', className: 'text-xs font-semibold' })}
-          >
-            <Award size={14} className="mr-1.5 text-indigo-600" />
-            <span>Enter Assessment Score</span>
-          </Link>
-        </div>
-
+      <section aria-label="Academic Assessments & Materials" className="space-y-4">
         <div className="panel p-6 bg-white border border-slate-200/80 shadow-xs rounded-2xl">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
                 <Award size={18} />
@@ -660,9 +623,18 @@ export function StudentDetail({
                 <p className="text-xs text-slate-500">Evaluations, test scores, & grades</p>
               </div>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {totalEvaluations > 0 ? `${avgScore}% Average` : 'No tests yet'}
-            </span>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {totalEvaluations > 0 ? `${avgScore}% Average` : 'No tests yet'}
+              </span>
+              <Link
+                href={`/assessments?search=${encodeURIComponent(student.name)}`}
+                className={buttonVariants({ variant: 'outline', size: 'sm', className: 'text-xs font-semibold' })}
+              >
+                <Award size={14} className="mr-1.5 text-indigo-600" />
+                <span>Enter Assessment Score</span>
+              </Link>
+            </div>
           </div>
 
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
