@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, ChevronLeft, ChevronRight, X, Filter } from 'lucide-react'
+import { Plus, Search, ChevronLeft, ChevronRight, X, Filter, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Student, Course, CourseCategory, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
@@ -39,6 +39,7 @@ export function StudentsView({
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [categoryFilter, setCategoryFilter] = useState(selectedCategoryId)
   const [courseFilter, setCourseFilter] = useState(selectedCourse)
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const fromIndex = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
@@ -228,43 +229,166 @@ export function StudentsView({
             )}
           </div>
 
-          <div className="text-xs text-slate-500 whitespace-nowrap">
-            Total Enrolled: <strong className="text-slate-800">{totalCount}</strong>
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <div className="text-xs text-slate-500 whitespace-nowrap">
+              Total Enrolled: <strong className="text-slate-800">{totalCount}</strong>
+            </div>
+
+            {/* View Mode Toggle: Table List vs Grid Cards */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'table'
+                    ? 'bg-white text-indigo-600 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title="Table List View"
+                aria-label="Table List View"
+              >
+                <ListIcon size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-indigo-600 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title="Cards Grid View"
+                aria-label="Cards Grid View"
+              >
+                <LayoutGrid size={15} />
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="data-wrap">
-          <table>
-            <thead>
-              {isStaff ? (
-                <tr>
-                  <th>Register ID</th>
-                  <th>Student</th>
-                  <th>Course & Curriculum</th>
-                  <th>Batch start</th>
-                  <th>Contact & Location</th>
-                  <th>Specialization</th>
-                  <th>Status</th>
-                  <th className="align-right">Action</th>
-                </tr>
-              ) : (
-                <tr>
-                  <th>Register ID</th>
-                  <th>Student</th>
-                  <th>Course</th>
-                  <th>Batch start</th>
-                  <th className="align-right">Total fees</th>
-                  <th className="align-right">Balance</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                </tr>
-              )}
-            </thead>
-            <tbody>
-              {students.map((s) => {
-                const categoryName = courseCategoryMap.get(s.course.trim().toLowerCase())
+        {viewMode === 'table' ? (
+          <div className="data-wrap">
+            <table>
+              <thead>
+                {isStaff ? (
+                  <tr>
+                    <th>Register ID</th>
+                    <th>Student</th>
+                    <th>Course & Curriculum</th>
+                    <th>Batch start</th>
+                    <th>Contact & Location</th>
+                    <th>Specialization</th>
+                    <th>Status</th>
+                    <th className="align-right">Action</th>
+                  </tr>
+                ) : (
+                  <tr>
+                    <th>Register ID</th>
+                    <th>Student</th>
+                    <th>Course</th>
+                    <th>Batch start</th>
+                    <th className="align-right">Total fees</th>
+                    <th className="align-right">Balance</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                  </tr>
+                )}
+              </thead>
+              <tbody>
+                {students.map((s) => {
+                  const categoryName = courseCategoryMap.get(s.course.trim().toLowerCase())
 
-                if (isStaff) {
+                  if (isStaff) {
+                    return (
+                      <tr
+                        key={s.registerId}
+                        className="clickable-row hover:bg-slate-50/80 transition-colors"
+                        onClick={() => router.push(`/students/${s.registerId}`)}
+                      >
+                        <td className="mono font-mono font-medium text-slate-500">
+                          <Link
+                            href={`/students/${s.registerId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hover:text-indigo-600 hover:underline"
+                          >
+                            TAI-{s.registerId}
+                          </Link>
+                        </td>
+                        <td>
+                          <Link
+                            href={`/students/${s.registerId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="student-cell flex items-center gap-2.5"
+                          >
+                            <div className="mini-avatar">
+                              {s.name
+                                .split(' ')
+                                .map((x) => x[0])
+                                .join('')
+                                .slice(0, 2)
+                                .toUpperCase() || 'ST'}
+                            </div>
+                            <div>
+                              <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
+                                {s.name}
+                              </strong>
+                              <small className="block text-xs text-slate-500">{s.phone}</small>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="text-sm text-slate-700">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="font-medium text-slate-900 leading-snug">{s.course}</span>
+                            {categoryName && <CategoryBadge categoryName={categoryName} />}
+                          </div>
+                        </td>
+                        <td className="text-sm text-slate-600 font-mono">{s.batch}</td>
+                        <td className="text-xs text-slate-600">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="truncate max-w-[170px] text-slate-700 font-medium">{s.email || '—'}</span>
+                            <span className="text-slate-400">
+                              {[s.area, s.city, s.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex flex-wrap gap-1 max-w-[190px]">
+                            {s.knowledgeTags && s.knowledgeTags.length > 0 ? (
+                              s.knowledgeTags.slice(0, 2).map((t) => (
+                                <span
+                                  key={t}
+                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
+                                >
+                                  {t}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                            {s.knowledgeTags && s.knowledgeTags.length > 2 && (
+                              <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-slate-100 text-slate-600">
+                                +{s.knowledgeTags.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <Status status={s.status} />
+                        </td>
+                        <td className="align-right">
+                          <Link
+                            href={`/students/${s.registerId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                          >
+                            <span>Profile</span>
+                            <ChevronRight size={13} />
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  }
+
                   return (
                     <tr
                       key={s.registerId}
@@ -298,7 +422,7 @@ export function StudentsView({
                             <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
                               {s.name}
                             </strong>
-                            <small className="block text-xs text-slate-500">{s.phone}</small>
+                            <small className="block text-xs text-slate-400">{s.phone}</small>
                           </div>
                         </Link>
                       </td>
@@ -309,119 +433,152 @@ export function StudentsView({
                         </div>
                       </td>
                       <td className="text-sm text-slate-600 font-mono">{s.batch}</td>
-                      <td className="text-xs text-slate-600">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="truncate max-w-[170px] text-slate-700 font-medium">{s.email || '—'}</span>
-                          <span className="text-slate-400">
-                            {[s.area, s.city, s.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
-                          </span>
-                        </div>
+                      <td className="align-right text-sm font-medium text-slate-900">{money(s.total)}</td>
+                      <td className="align-right amount text-sm font-bold text-slate-900">
+                        {money(Math.max(0, s.total - s.paid))}
                       </td>
-                      <td>
-                        <div className="flex flex-wrap gap-1 max-w-[190px]">
-                          {s.knowledgeTags && s.knowledgeTags.length > 0 ? (
-                            s.knowledgeTags.slice(0, 2).map((t) => (
-                              <span
-                                key={t}
-                                className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
-                              >
-                                {t}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-slate-400">—</span>
-                          )}
-                          {s.knowledgeTags && s.knowledgeTags.length > 2 && (
-                            <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-slate-100 text-slate-600">
-                              +{s.knowledgeTags.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      </td>
+                      <td className="text-xs text-slate-500">{s.studentSource || '-'}</td>
                       <td>
                         <Status status={s.status} />
                       </td>
-                      <td className="align-right">
-                        <Link
-                          href={`/students/${s.registerId}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
-                        >
-                          <span>Profile</span>
-                          <ChevronRight size={13} />
-                        </Link>
-                      </td>
                     </tr>
                   )
-                }
-
-                return (
-                  <tr
-                    key={s.registerId}
-                    className="clickable-row hover:bg-slate-50/80 transition-colors"
-                    onClick={() => router.push(`/students/${s.registerId}`)}
-                  >
-                    <td className="mono font-mono font-medium text-slate-500">
-                      <Link
-                        href={`/students/${s.registerId}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hover:text-indigo-600 hover:underline"
-                      >
-                        TAI-{s.registerId}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link
-                        href={`/students/${s.registerId}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="student-cell flex items-center gap-2.5"
-                      >
-                        <div className="mini-avatar">
-                          {s.name
-                            .split(' ')
-                            .map((x) => x[0])
-                            .join('')
-                            .slice(0, 2)
-                            .toUpperCase() || 'ST'}
-                        </div>
-                        <div>
-                          <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
-                            {s.name}
-                          </strong>
-                          <small className="block text-xs text-slate-400">{s.phone}</small>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="text-sm text-slate-700">
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="font-medium text-slate-900 leading-snug">{s.course}</span>
-                        {categoryName && <CategoryBadge categoryName={categoryName} />}
-                      </div>
-                    </td>
-                    <td className="text-sm text-slate-600 font-mono">{s.batch}</td>
-                    <td className="align-right text-sm font-medium text-slate-900">{money(s.total)}</td>
-                    <td className="align-right amount text-sm font-bold text-slate-900">
-                      {money(Math.max(0, s.total - s.paid))}
-                    </td>
-                    <td className="text-xs text-slate-500">{s.studentSource || '-'}</td>
-                    <td>
-                      <Status status={s.status} />
+                })}
+                {students.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center py-10 text-muted-foreground text-sm">
+                      {hasActiveFilters
+                        ? 'No students found matching your search or category/course filter criteria.'
+                        : 'No students registered yet.'}
                     </td>
                   </tr>
-                )
-              })}
-              {students.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="text-center py-10 text-muted-foreground text-sm">
-                    {hasActiveFilters
-                      ? 'No students found matching your search or category/course filter criteria.'
-                      : 'No students registered yet.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Students Grid View */
+          <div className="p-4">
+            {students.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-sm">
+                <p className="font-medium text-slate-700">No students found</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {hasActiveFilters
+                    ? 'No students match your search or filter criteria. Try resetting filters.'
+                    : 'No students registered yet.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {students.map((s) => {
+                  const categoryName = courseCategoryMap.get(s.course.trim().toLowerCase())
+                  const balance = Math.max(0, s.total - s.paid)
+
+                  return (
+                    <div
+                      key={s.registerId}
+                      onClick={() => router.push(`/students/${s.registerId}`)}
+                      className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col justify-between"
+                      title={`View student ${s.name}`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="mini-avatar shrink-0">
+                              {s.name
+                                .split(' ')
+                                .map((x) => x[0])
+                                .join('')
+                                .slice(0, 2)
+                                .toUpperCase() || 'ST'}
+                            </div>
+                            <div className="min-w-0">
+                              <strong className="block text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                                {s.name}
+                              </strong>
+                              <span className="block text-xs font-mono text-slate-500">TAI-{s.registerId}</span>
+                            </div>
+                          </div>
+                          <Status status={s.status} />
+                        </div>
+
+                        <div className="mb-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <div className="truncate pr-2">
+                            <span className="text-slate-900 font-semibold block truncate">{s.course}</span>
+                            <span className="text-slate-500 text-[11px]">Batch: {s.batch}</span>
+                          </div>
+                          {categoryName && <CategoryBadge categoryName={categoryName} />}
+                        </div>
+
+                        {!isStaff ? (
+                          <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 mb-3 space-y-1 text-xs">
+                            <div className="flex justify-between items-center text-slate-600">
+                              <span>Total Fees:</span>
+                              <strong className="text-slate-900">{money(s.total)}</strong>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-600">Balance:</span>
+                              <strong
+                                className={balance > 0 ? 'text-amber-700 font-bold' : 'text-emerald-700 font-bold'}
+                              >
+                                {balance === 0 ? 'Fully Paid' : money(balance)}
+                              </strong>
+                            </div>
+                            {(s.studentSource || (s as any).leadSource) && (
+                              <div className="flex justify-between items-center text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
+                                <span>Source:</span>
+                                <span className="font-medium text-slate-700">
+                                  {s.studentSource || (s as any).leadSource}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mb-3 space-y-1.5 text-xs text-slate-600">
+                            <div className="truncate">
+                              <span className="text-slate-500 block text-[11px]">Email:</span>
+                              <span className="font-medium text-slate-800 truncate block">{s.email || '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block text-[11px]">Location:</span>
+                              <span className="text-slate-700 text-xs truncate block">
+                                {[s.area, s.city, s.state].filter(Boolean).join(', ') || 'Tamil Nadu, India'}
+                              </span>
+                            </div>
+                            {s.knowledgeTags && s.knowledgeTags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {s.knowledgeTags.slice(0, 3).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {s.knowledgeTags.length > 3 && (
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                    +{s.knowledgeTags.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span className="text-slate-600 text-[11px]">Phone: {s.phone || '—'}</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-indigo-600 group-hover:text-indigo-700">
+                          Profile <ChevronRight size={13} />
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Table summary & Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 bg-slate-50/40 text-xs text-slate-500">

@@ -15,6 +15,8 @@ import {
   Layers,
   Sparkles,
   ShieldAlert,
+  LayoutGrid,
+  List as ListIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Course, CourseCategory } from '@/lib/types'
@@ -60,6 +62,7 @@ export function CoursesManager({
   const [query, setQuery] = useState(search)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const router = useRouter()
 
   // Form state
@@ -360,143 +363,285 @@ export function CoursesManager({
               {gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})
             </p>
           </div>
-          <form action="/courses" method="get" className="search-box" style={{ maxWidth: 300 }}>
-            <Search size={16} />
-            <input
-              name="search"
-              aria-label="Search courses"
-              type="text"
-              placeholder="Search courses..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            {selectedCategoryId && <input type="hidden" name="categoryId" value={selectedCategoryId} />}
-            <input type="hidden" name="pageSize" value={pageSize} />
-            <label className="sr-only" htmlFor="course-sort">
-              Sort courses by
-            </label>
-            <select id="course-sort" name="sort" defaultValue={sort}>
-              <option value="name">Name</option>
-              <option value="fee">Fee</option>
-              <option value="duration">Duration</option>
-            </select>
-            <input type="hidden" name="direction" value={direction} />
-            <button type="submit" className="sr-only">
-              Search
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <form action="/courses" method="get" className="search-box" style={{ maxWidth: 300 }}>
+              <Search size={16} />
+              <input
+                name="search"
+                aria-label="Search courses"
+                type="text"
+                placeholder="Search courses..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {selectedCategoryId && <input type="hidden" name="categoryId" value={selectedCategoryId} />}
+              <input type="hidden" name="pageSize" value={pageSize} />
+              <label className="sr-only" htmlFor="course-sort">
+                Sort courses by
+              </label>
+              <select id="course-sort" name="sort" defaultValue={sort}>
+                <option value="name">Name</option>
+                <option value="fee">Fee</option>
+                <option value="duration">Duration</option>
+              </select>
+              <input type="hidden" name="direction" value={direction} />
+              <button type="submit" className="sr-only">
+                Search
+              </button>
+            </form>
+
+            {/* View Mode Toggle: Table List vs Grid Cards */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'table'
+                    ? 'bg-white text-blue-600 shadow-2xs font-bold'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+                title="Table List View"
+                aria-label="Table List View"
+              >
+                <ListIcon size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-blue-600 shadow-2xs font-bold'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+                title="Course Cards Grid View"
+                aria-label="Course Cards Grid View"
+              >
+                <LayoutGrid size={15} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="data-wrap" role="region" aria-label="Course list" tabIndex={0}>
-          <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
-            <thead>
-              <tr>
-                <th style={{ width: '28%' }}>Course</th>
-                <th style={{ width: '15%' }}>Category</th>
-                <th style={{ width: '12%' }}>Duration</th>
-                <th style={{ width: '13%' }}>Tax Mode</th>
-                <th style={{ width: '20%' }}>Description</th>
-                <th className="align-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
-                  Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCourses.length === 0 ? (
+        {viewMode === 'table' ? (
+          <div className="data-wrap" role="region" aria-label="Course list" tabIndex={0}>
+            <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
+              <thead>
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-500">
-                    <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
-                    <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
-                    <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
-                  </td>
+                  <th style={{ width: '28%' }}>Course</th>
+                  <th style={{ width: '15%' }}>Category</th>
+                  <th style={{ width: '12%' }}>Duration</th>
+                  <th style={{ width: '13%' }}>Tax Mode</th>
+                  <th style={{ width: '20%' }}>Description</th>
+                  <th className="align-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
+                    Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
+                  </th>
                 </tr>
-              ) : (
-                filteredCourses.map((c) => {
+              </thead>
+              <tbody>
+                {filteredCourses.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-gray-500">
+                      <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
+                      <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
+                      <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCourses.map((c) => {
+                    const isInclusive = Boolean(c.gstInclusive)
+                    const courseBreakdown = calculateGstForRupees(c.fee, gstRate, isInclusive)
+                    const courseBase = courseBreakdown.taxableAmount
+                    const courseGst = courseBreakdown.gstAmount
+                    const courseTotal = courseBreakdown.totalAmount
+                    const isElite = c.categoryName?.toLowerCase().includes('elite')
+                    const isEssential = c.categoryName?.toLowerCase().includes('essential')
+
+                    return (
+                      <tr
+                        key={c.id}
+                        className="cursor-pointer hover:bg-slate-50/90 transition-colors group"
+                        onClick={() => openEditModal(c)}
+                        title="Click to view & edit course details"
+                      >
+                        <td>
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={`mini-avatar shrink-0 ${
+                                isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                              }`}
+                            >
+                              {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
+                            </div>
+                            <div className="min-w-0">
+                              <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                                {c.name}
+                              </strong>
+                              <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          {c.categoryName ? (
+                            <CategoryBadge categoryName={c.categoryName} />
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">Unassigned</span>
+                          )}
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <div className="flex items-center gap-1.5 text-gray-700 text-xs font-medium">
+                            <Clock size={13} className="text-gray-400 shrink-0" />
+                            <span>{c.duration}</span>
+                          </div>
+                        </td>
+                        <td>
+                          {isInclusive ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              GST Inclusive
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                              GST Exclusive
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed" title={c.description}>
+                            {c.description || '—'}
+                          </p>
+                        </td>
+                        <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="text-sm font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
+                          {gstRate > 0 && (
+                            <div className="text-[11px] text-gray-500 mt-0.5">
+                              {isInclusive ? (
+                                <>
+                                  Base: {money(courseBase)}{' '}
+                                  <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span>
+                                </>
+                              ) : (
+                                <>
+                                  Base: {money(c.fee)} <span className="text-gray-600">+{money(courseGst)}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Courses Grid View */
+          <div className="p-4" role="region" aria-label="Course grid" tabIndex={0}>
+            {filteredCourses.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
+                <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
+                <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCourses.map((c) => {
                   const isInclusive = Boolean(c.gstInclusive)
                   const courseBreakdown = calculateGstForRupees(c.fee, gstRate, isInclusive)
-                  const courseBase = courseBreakdown.taxableAmount
                   const courseGst = courseBreakdown.gstAmount
                   const courseTotal = courseBreakdown.totalAmount
                   const isElite = c.categoryName?.toLowerCase().includes('elite')
-                  const isEssential = c.categoryName?.toLowerCase().includes('essential')
 
                   return (
-                    <tr
+                    <div
                       key={c.id}
-                      className="cursor-pointer hover:bg-slate-50/90 transition-colors group"
                       onClick={() => openEditModal(c)}
+                      className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex flex-col justify-between"
                       title="Click to view & edit course details"
                     >
-                      <td>
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`mini-avatar shrink-0 ${
-                              isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
-                            }`}
-                          >
-                            {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`mini-avatar shrink-0 ${
+                                isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                              }`}
+                            >
+                              {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
+                            </div>
+                            <div className="min-w-0">
+                              <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug truncate">
+                                {c.name}
+                              </strong>
+                              <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                              {c.name}
-                            </strong>
-                            <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
+                          {isInclusive ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                              GST Incl.
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                              GST Excl.
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs mb-3">
+                          <div className="flex items-center gap-1.5 text-gray-700 font-medium">
+                            <Clock size={13} className="text-gray-400 shrink-0" />
+                            <span>{c.duration}</span>
                           </div>
+                          {c.categoryName ? (
+                            <CategoryBadge categoryName={c.categoryName} />
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">Unassigned</span>
+                          )}
                         </div>
-                      </td>
-                      <td>
-                        {c.categoryName ? (
-                          <CategoryBadge categoryName={c.categoryName} />
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">Unassigned</span>
-                        )}
-                      </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        <div className="flex items-center gap-1.5 text-gray-700 text-xs font-medium">
-                          <Clock size={13} className="text-gray-400 shrink-0" />
-                          <span>{c.duration}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {isInclusive ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            GST Inclusive
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            GST Exclusive
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed" title={c.description}>
-                          {c.description || '—'}
+
+                        <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed mb-3" title={c.description}>
+                          {c.description || 'No course description provided.'}
                         </p>
-                      </td>
-                      <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
-                        <div className="text-sm font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
-                        {gstRate > 0 && (
-                          <div className="text-[11px] text-gray-500 mt-0.5">
-                            {isInclusive ? (
-                              <>
-                                Base: {money(courseBase)}{' '}
-                                <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span>
-                              </>
-                            ) : (
-                              <>
-                                Base: {money(c.fee)} <span className="text-gray-600">+{money(courseGst)}</span>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
+                      </div>
+
+                      <div className="pt-3 border-t border-gray-100 flex items-end justify-between">
+                        <div>
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">
+                            Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
+                          </span>
+                          <div className="text-base font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
+                          {gstRate > 0 && (
+                            <div className="text-[11px] text-gray-500 mt-0.5">
+                              {isInclusive ? (
+                                <span className="text-emerald-700">Incl. {money(courseGst)} GST</span>
+                              ) : (
+                                <span>+{money(courseGst)} GST</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/courses/${encodeURIComponent(c.id)}/materials`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                            title="Manage course materials and syllabus"
+                          >
+                            <BookOpen size={12} />
+                            <span>Materials</span>
+                          </Link>
+                          {canUpdate && (
+                            <span className="text-xs font-semibold text-blue-600 group-hover:underline">Edit</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="panel-header flex items-center justify-between">
           <span>
