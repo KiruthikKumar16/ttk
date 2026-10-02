@@ -222,7 +222,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-16">
+    <div className="w-full space-y-6 pb-16">
       {/* Executive Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/90 pb-5">
         <div>
@@ -423,55 +423,72 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
               </div>
             </div>
 
-            {/* Student Search Results Grid */}
-            <div className="max-h-72 overflow-y-auto space-y-2 pr-1 border border-slate-100 rounded-xl p-2 bg-slate-50/50">
+            {/* Student Search Results Responsive Grid */}
+            <div className="max-h-96 overflow-y-auto pr-1 border border-slate-200/80 rounded-xl p-3 bg-slate-50/50">
               {filteredStudents.length > 0 ? (
-                filteredStudents.map((s) => {
-                  const sBalance = differenceRupees(s.total, s.paid)
-                  const isCurrent = selectedStudent?.registerId === s.registerId
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => handleSelectStudent(s)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between gap-4 group cursor-pointer ${
-                        isCurrent
-                          ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-500/20'
-                          : 'bg-white border-slate-200/90 hover:border-indigo-300 hover:bg-indigo-50/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 group-hover:text-indigo-700 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 transition-colors">
-                          {s.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <strong className="text-xs font-bold text-slate-900 group-hover:text-indigo-950 truncate">
-                              {s.name}
-                            </strong>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                              TAI-{s.registerId}
-                            </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {filteredStudents.map((s) => {
+                    const sBalance = differenceRupees(s.total, s.paid)
+                    const isCurrent = selectedStudent?.registerId === s.registerId
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleSelectStudent(s)}
+                        className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-3 group cursor-pointer ${
+                          isCurrent
+                            ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            : 'bg-white border-slate-200/90 hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-xs'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 group-hover:text-indigo-700 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 transition-colors">
+                              {s.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <strong className="text-xs font-bold text-slate-900 group-hover:text-indigo-950 truncate block">
+                                {s.name}
+                              </strong>
+                              <span className="font-mono text-[10px] text-slate-500 font-semibold block">
+                                TAI-{s.registerId}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[11px] text-slate-500 truncate block mt-0.5">
-                            {s.course} • Batch: {s.batch}
+
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${
+                              sBalance > 0
+                                ? 'bg-amber-50 text-amber-900 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            }`}
+                          >
+                            {sBalance > 0 ? `Due: ${money(sBalance)}` : 'Fully Paid'}
                           </span>
                         </div>
-                      </div>
 
-                      <div className="text-right shrink-0">
-                        <span
-                          className={`text-xs font-bold block ${sBalance > 0 ? 'text-amber-700' : 'text-emerald-700'}`}
-                        >
-                          {sBalance > 0 ? `Due: ${money(sBalance)}` : 'Fully Paid'}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          Collected {money(s.paid)} / {money(s.total)}
-                        </span>
-                      </div>
-                    </button>
-                  )
-                })
+                        <div className="text-[11px] text-slate-500 space-y-0.5">
+                          <p className="truncate font-medium text-slate-700">{s.course}</p>
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span>Batch: {s.batch}</span>
+                            <span className="font-semibold text-slate-700">
+                              Collected {money(s.paid)} / {money(s.total)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              sBalance > 0 ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${percentageOfRupees(s.paid, s.total)}%` }}
+                          />
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               ) : (
                 <div className="text-center py-8 text-slate-400 text-xs">
                   No students found matching &ldquo;{studentSearch}&rdquo;.
@@ -484,9 +501,9 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
 
       {/* ─── TRANSACTION DETAILS & DIGITAL INVOICE PREVIEW ─── */}
       {selectedStudent && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Transaction Form (2 Columns) */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Transaction Form (7 cols on lg, 8 cols on xl) */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
@@ -607,7 +624,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
               {/* Payment Method Selector Grid */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-2">Payment Collection Method*</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5">
                   {PAYMENT_METHODS.map((item) => {
                     const Icon = item.icon
                     const isSelected = method === item.id
@@ -696,8 +713,8 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
             </div>
           </div>
 
-          {/* Right Sidebar: Digital Tax Invoice Summary (1 Column) */}
-          <div className="space-y-6">
+          {/* Right Sidebar: Digital Tax Invoice Summary (5 cols on lg, 4 cols on xl) */}
+          <div className="lg:col-span-5 xl:col-span-4 space-y-6 lg:sticky lg:top-6">
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-5">
               <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                 <Receipt size={18} className="text-emerald-600" />
