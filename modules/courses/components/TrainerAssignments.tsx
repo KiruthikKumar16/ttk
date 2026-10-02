@@ -67,8 +67,12 @@ export function TrainerAssignments({
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <form onSubmit={assign} className="p-6 space-y-4 sm:grid sm:grid-cols-[1fr_1fr_auto] sm:gap-4 sm:items-end">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 block">Course</label>
+            <label htmlFor="trainer-course-select" className="text-sm font-medium text-gray-700 block">
+              Course
+            </label>
             <select
+              id="trainer-course-select"
+              aria-label="Course"
               className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
@@ -82,8 +86,12 @@ export function TrainerAssignments({
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 block">Trainer</label>
+            <label htmlFor="trainer-person-select" className="text-sm font-medium text-gray-700 block">
+              Trainer
+            </label>
             <select
+              id="trainer-person-select"
+              aria-label="Trainer"
               className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
               value={trainerId}
               onChange={(e) => setTrainerId(e.target.value)}

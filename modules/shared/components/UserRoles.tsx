@@ -1016,8 +1016,12 @@ export function UserRoles({
 
                 <div className="space-y-3 pt-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned Role</label>
+                    <label htmlFor="invite-role-select" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Assigned Role
+                    </label>
                     <select
+                      id="invite-role-select"
+                      aria-label="Assigned Role"
                       value={genRole}
                       onChange={(e) => setGenRole(e.target.value as 'staff' | 'admin')}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
@@ -1028,8 +1032,12 @@ export function UserRoles({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Expiration Window</label>
+                    <label htmlFor="invite-expiry-select" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Expiration Window
+                    </label>
                     <select
+                      id="invite-expiry-select"
+                      aria-label="Expiration Window"
                       value={genExpiryHours}
                       onChange={(e) => setGenExpiryHours(Number(e.target.value))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"

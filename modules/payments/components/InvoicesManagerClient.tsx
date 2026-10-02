@@ -244,8 +244,12 @@ export function InvoicesManagerClient({
         <div className="flex items-center gap-3 self-end md:self-auto">
           {/* Sort Selector */}
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="hidden sm:inline font-medium">Sort:</span>
+            <label htmlFor="invoices-sort-select" className="hidden sm:inline font-medium">
+              Sort:
+            </label>
             <select
+              id="invoices-sort-select"
+              aria-label="Sort invoices"
               value={sort}
               onChange={(e) => handleSortChange(e.target.value)}
               className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"

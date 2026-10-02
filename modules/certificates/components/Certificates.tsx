@@ -100,7 +100,11 @@ export function Certificates({
             />
           </div>
           {tab === 'eligibility' && (
-            <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <select
+              aria-label="Filter students by certificate eligibility"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
               <option>Eligible</option>
               <option>Pending fees</option>
               <option>All students</option>
