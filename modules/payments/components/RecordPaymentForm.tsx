@@ -4,9 +4,11 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Banknote,
+  Calendar,
   CheckCircle2,
   ChevronDown,
   CircleDollarSign,
@@ -16,10 +18,10 @@ import {
   Receipt,
   Search,
   ShieldCheck,
+  Sparkles,
   User,
   Wallet,
   X,
-  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CategoryBadge } from '@/components/CategoryBadge'
@@ -49,7 +51,7 @@ interface RecordPaymentFormProps {
 const PAYMENT_METHODS = [
   { id: 'UPI', label: 'UPI / QR', desc: 'GPay, PhonePe, Paytm', icon: Wallet },
   { id: 'Bank Transfer', label: 'Bank Transfer', desc: 'NEFT / RTGS / IMPS', icon: Landmark },
-  { id: 'Cash', label: 'Cash in Hand', desc: 'Front desk receipt', icon: Banknote },
+  { id: 'Cash', label: 'Cash in Counter', desc: 'Front desk receipt', icon: Banknote },
   { id: 'Card', label: 'Debit / Credit', desc: 'POS Terminal', icon: CreditCard },
   { id: 'Cheque', label: 'Cheque / DD', desc: 'Bank clearance', icon: FileText },
 ]
@@ -60,9 +62,15 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
   const [selectedStudent, setSelectedStudent] = useState<StudentPaymentCandidate | null>(initialStudent)
   const [studentSearch, setStudentSearch] = useState('')
   const [filterDueOnly, setFilterDueOnly] = useState(true)
-  const [isChangingStudent, setIsChangingStudent] = useState(!initialStudent)
+  const [isPickerOpen, setIsPickerOpen] = useState(!initialStudent)
 
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<string>(() => {
+    if (initialStudent) {
+      const bal = differenceRupees(initialStudent.total, initialStudent.paid)
+      return bal > 0 ? String(bal) : ''
+    }
+    return ''
+  })
   const [method, setMethod] = useState<string>('UPI')
   const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [transactionId, setTransactionId] = useState<string>('')
@@ -84,7 +92,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
 
   const isGstInclusive = Boolean(matchedCourse?.gstInclusive)
 
-  // Compute default payment type based on current paid / balance status
+  // Default payment type recommendation
   useMemo(() => {
     if (!selectedStudent) return
     if (paymentType) return // don't override manual selection
@@ -96,7 +104,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
     }
   }, [selectedStudent, paymentType])
 
-  // Filtered students for selection
+  // Filtered students for search
   const filteredStudents = useMemo(() => {
     const q = studentSearch.trim().toLowerCase()
     return students.filter((s) => {
@@ -114,7 +122,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
 
   const handleSelectStudent = (student: StudentPaymentCandidate) => {
     setSelectedStudent(student)
-    setIsChangingStudent(false)
+    setIsPickerOpen(false)
     setStudentSearch('')
     setFormError(null)
 
@@ -146,19 +154,19 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
   const handleValidateAndReview = () => {
     setFormError(null)
     if (!selectedStudent) {
-      setFormError('Please select a student first.')
+      setFormError('Please select a student from the directory first.')
       return
     }
     if (!numAmount || numAmount <= 0) {
-      setFormError('Payment amount must be greater than ₹0.')
+      setFormError('Please enter a payment amount greater than ₹0.')
       return
     }
-    if (numAmount > balance) {
+    if (numAmount > balance && balance > 0) {
       setFormError(`Payment of ${money(numAmount)} exceeds outstanding dues of ${money(balance)}.`)
       return
     }
     if (!method) {
-      setFormError('Please choose a payment method.')
+      setFormError('Please select a payment method.')
       return
     }
 
@@ -201,24 +209,24 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
 
       const invoiceNum = json?.data?.invoice || ''
 
-      // Directs to student profile with celebration query params
+      // Seamless redirect directly to the student profile
       router.push(
         `/students/${selectedStudent.registerId}?paymentSuccess=true${invoiceNum ? `&invoice=${encodeURIComponent(invoiceNum)}` : ''}`,
       )
       router.refresh()
     } catch (err: any) {
-      setFormError(err?.message || 'Failed to record payment. Please check your network and try again.')
+      setFormError(err?.message || 'Failed to commit payment to ledger. Please try again.')
       setShowConfirmModal(false)
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
-      {/* Breadcrumb Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
+    <div className="max-w-6xl mx-auto space-y-6 pb-16">
+      {/* Executive Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/90 pb-5">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <nav className="flex items-center gap-2 mb-1.5" aria-label="Breadcrumb">
             <Link
               href="/invoices"
               className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
@@ -227,45 +235,71 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
               <span>Invoices</span>
             </Link>
             <span className="text-slate-300">/</span>
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
-              New Ledger Transaction
+            <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+              Record Fee Payment
             </span>
-          </div>
+          </nav>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
             <CircleDollarSign className="text-emerald-600 shrink-0" size={26} />
-            <span>Record Payment</span>
+            <span>Record Payment & Issue Tax Invoice</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Commit student fee receipts into the financial ledger and generate compliant GST tax invoices.
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            Commit tuition receipts into the financial ledger, compute CGST/SGST distribution, and post verified tax
+            invoices.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {selectedStudent && (
             <Link
               href={`/students/${selectedStudent.registerId}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
             >
               <User size={14} className="text-slate-500" />
-              <span>View Profile</span>
+              <span>Student Profile</span>
             </Link>
           )}
           <Link
             href="/invoices"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 shadow-2xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 shadow-2xs transition-colors"
           >
             <Receipt size={14} className="text-slate-500" />
-            <span>All Invoices</span>
+            <span>Invoices Ledger</span>
           </Link>
         </div>
       </div>
 
-      {/* STEP 1: STUDENT SELECTION OR ACTIVE STUDENT SUMMARY */}
-      {selectedStudent && !isChangingStudent ? (
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs transition-all">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      {/* ─── STUDENT RECIPIENT CARD OR INTERACTIVE SELECTOR ─── */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100">
+              <User size={18} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Student Account</h2>
+              <p className="text-xs text-slate-500">Selected enrollee receiving this fee credit</p>
+            </div>
+          </div>
+
+          {selectedStudent && !isPickerOpen && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPickerOpen(true)}
+              className="text-xs font-semibold"
+            >
+              Change Student
+            </Button>
+          )}
+        </div>
+
+        {selectedStudent && !isPickerOpen ? (
+          /* Active Selected Student Overview */
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
             <div className="flex items-start sm:items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-xs">
                 {selectedStudent.name
                   .split(' ')
                   .map((w) => w[0])
@@ -276,8 +310,8 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
 
               <div>
                 <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <h2 className="text-lg font-bold text-slate-900 leading-tight">{selectedStudent.name}</h2>
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">{selectedStudent.name}</h3>
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 shadow-2xs">
                     TAI-{selectedStudent.registerId}
                   </span>
                   {matchedCourse?.categoryName && (
@@ -289,204 +323,191 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                   )}
                 </div>
 
-                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                  <span className="font-medium text-slate-700">{selectedStudent.course}</span>
+                <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                  <span className="font-semibold text-slate-800">{selectedStudent.course}</span>
                   <span>•</span>
                   <span>Batch: {selectedStudent.batch}</span>
                   <span>•</span>
-                  <span>Phone: {selectedStudent.phone}</span>
+                  <span>Phone: +91 {selectedStudent.phone}</span>
                 </div>
               </div>
             </div>
 
             {/* Financial Ledger Widget */}
-            <div className="flex items-center gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 shrink-0">
+            <div className="flex items-center gap-5 bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs shrink-0">
               <div className="text-right">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                  Remaining Dues
+                  Outstanding Dues
                 </span>
                 <span
                   className={`text-xl font-extrabold leading-tight block ${
                     balance > 0 ? 'text-amber-600' : 'text-emerald-600'
                   }`}
                 >
-                  {money(balance)}
+                  {balance === 0 ? '₹0 · Fully Cleared' : money(balance)}
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium">
-                  {money(selectedStudent.paid)} of {money(selectedStudent.total)} paid
+                  {money(selectedStudent.paid)} of {money(selectedStudent.total)} collected
                 </span>
               </div>
 
               <div className="h-9 w-px bg-slate-200" />
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsChangingStudent(true)}
-                className="text-xs font-semibold"
-              >
-                Change Student
-              </Button>
+              <div className="w-24">
+                <div className="flex justify-between text-[10px] text-slate-500 font-bold mb-1">
+                  <span>Progress</span>
+                  <span>{percentageOfRupees(selectedStudent.paid, selectedStudent.total)}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${percentageOfRupees(selectedStudent.paid, selectedStudent.total)}%`,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
+        ) : (
+          /* Interactive Student Search & Selection Grid */
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  placeholder="Search by student name, ID (e.g. 1050 or TAI-1050), phone, or course..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  autoFocus
+                />
+              </div>
 
-          {/* Progress bar */}
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <div className="flex justify-between text-[11px] text-slate-500 font-medium mb-1.5">
-              <span>Payment Progress</span>
-              <span>{percentageOfRupees(selectedStudent.paid, selectedStudent.total)}% Complete</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
-                style={{
-                  width: `${percentageOfRupees(selectedStudent.paid, selectedStudent.total)}%`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Student Search & Picker Box */
-        <div className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-6 shadow-xs">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <User size={18} className="text-indigo-600" />
-                <span>Select Student for Payment Recording</span>
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Search enrolled students to load their live fee ledger and record an installment.
-              </p>
-            </div>
-
-            {selectedStudent && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                onClick={() => setIsChangingStudent(false)}
-                className="text-xs text-slate-500"
-              >
-                <X size={14} className="mr-1" />
-                Cancel
-              </Button>
-            )}
-          </div>
-
-          {/* Search bar & filter pills */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="relative flex-1">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={studentSearch}
-                onChange={(e) => setStudentSearch(e.target.value)}
-                placeholder="Search by student name, ID (e.g. 101 or TAI-101), phone, or course..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                autoFocus
-              />
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setFilterDueOnly(true)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                  filterDueOnly
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Outstanding Dues Only
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterDueOnly(false)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                  !filterDueOnly
-                    ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                All Students
-              </button>
-            </div>
-          </div>
-
-          {/* Student selection grid/list */}
-          <div className="max-h-72 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
-            {filteredStudents.length > 0 ? (
-              filteredStudents.map((s) => {
-                const sBalance = differenceRupees(s.total, s.paid)
-                return (
-                  <button
-                    key={s.id}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setFilterDueOnly(true)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    filterDueOnly
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Outstanding Dues Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterDueOnly(false)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    !filterDueOnly
+                      ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  All Enrollees
+                </button>
+                {selectedStudent && (
+                  <Button
                     type="button"
-                    onClick={() => handleSelectStudent(s)}
-                    className="w-full text-left p-3 rounded-xl hover:bg-indigo-50/60 border border-transparent hover:border-indigo-200 transition-all flex items-center justify-between gap-4 group cursor-pointer"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsPickerOpen(false)}
+                    className="text-xs text-slate-500 ml-1"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-indigo-100 group-hover:text-indigo-700 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 transition-colors">
-                        {s.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-slate-900 group-hover:text-indigo-950">
-                            {s.name}
-                          </strong>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
-                            TAI-{s.registerId}
+                    <X size={14} className="mr-1" />
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Student Search Results Grid */}
+            <div className="max-h-72 overflow-y-auto space-y-2 pr-1 border border-slate-100 rounded-xl p-2 bg-slate-50/50">
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((s) => {
+                  const sBalance = differenceRupees(s.total, s.paid)
+                  const isCurrent = selectedStudent?.registerId === s.registerId
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSelectStudent(s)}
+                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between gap-4 group cursor-pointer ${
+                        isCurrent
+                          ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-500/20'
+                          : 'bg-white border-slate-200/90 hover:border-indigo-300 hover:bg-indigo-50/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 group-hover:text-indigo-700 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 transition-colors">
+                          {s.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <strong className="text-xs font-bold text-slate-900 group-hover:text-indigo-950 truncate">
+                              {s.name}
+                            </strong>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                              TAI-{s.registerId}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 truncate block mt-0.5">
+                            {s.course} • Batch: {s.batch}
                           </span>
                         </div>
-                        <span className="text-[11px] text-slate-500 block">{s.course}</span>
                       </div>
-                    </div>
 
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`text-xs font-bold block ${sBalance > 0 ? 'text-amber-700' : 'text-emerald-700'}`}
-                      >
-                        {sBalance > 0 ? `Due: ${money(sBalance)}` : 'Fully Paid'}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        Paid {money(s.paid)} / {money(s.total)}
-                      </span>
-                    </div>
-                  </button>
-                )
-              })
-            ) : (
-              <div className="text-center py-8 text-slate-400 text-xs">
-                No students found matching &ldquo;{studentSearch}&rdquo;.
-              </div>
-            )}
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`text-xs font-bold block ${sBalance > 0 ? 'text-amber-700' : 'text-emerald-700'}`}
+                        >
+                          {sBalance > 0 ? `Due: ${money(sBalance)}` : 'Fully Paid'}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          Collected {money(s.paid)} / {money(s.total)}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  No students found matching &ldquo;{studentSearch}&rdquo;.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* STEP 2: PAYMENT FORM AND FINANCIAL BREAKDOWN */}
+      {/* ─── TRANSACTION DETAILS & DIGITAL INVOICE PREVIEW ─── */}
       {selectedStudent && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Payment Inputs (2 cols) */}
+          {/* Main Transaction Form (2 Columns) */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Banknote size={18} className="text-emerald-600" />
-                  <span>Payment Information</span>
-                </h2>
-                <span className="text-[11px] text-slate-500 font-medium">Fields marked with * are required</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <Banknote size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900">Payment Details</h2>
+                    <p className="text-xs text-slate-500">Installment amount, milestone tier, and collection channel</p>
+                  </div>
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">All amounts in INR (₹)</span>
               </div>
 
-              {/* Amount Input */}
+              {/* Amount Input with Hero Typography */}
               <div>
                 <label htmlFor="payment-amount" className="block text-xs font-bold text-slate-800 mb-1.5">
-                  Payment Amount (INR ₹)*
+                  Payment Amount*
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-extrabold text-xl">
                     ₹
                   </span>
                   <input
@@ -496,19 +517,22 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                     max={balance > 0 ? balance : undefined}
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter payment amount"
-                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Enter amount (e.g. 10000)"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-300 text-lg font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs"
                   />
                 </div>
 
-                {/* Quick Fill Chips */}
-                <div className="flex items-center flex-wrap gap-2 mt-2.5">
-                  <span className="text-[11px] text-slate-500 font-medium">Quick Presets:</span>
+                {/* Quick Fill Settlement Chips */}
+                <div className="flex items-center flex-wrap gap-2 mt-3">
+                  <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1">
+                    <Sparkles size={13} className="text-amber-500" />
+                    Quick Presets:
+                  </span>
                   {balance > 0 && (
                     <button
                       type="button"
                       onClick={() => setAmount(String(balance))}
-                      className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors cursor-pointer"
                     >
                       Full Balance ({money(balance)})
                     </button>
@@ -517,19 +541,19 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                     <button
                       type="button"
                       onClick={() => setAmount(String(Math.round(balance / 2)))}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                     >
                       50% Balance ({money(Math.round(balance / 2))})
                     </button>
                   )}
-                  {[5000, 10000, 15000].map((preset) => {
+                  {[5000, 10000, 15000, 20000].map((preset) => {
                     if (preset > balance && balance > 0) return null
                     return (
                       <button
                         key={preset}
                         type="button"
                         onClick={() => setAmount(String(preset))}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                       >
                         {money(preset)}
                       </button>
@@ -537,30 +561,32 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                   })}
                 </div>
 
-                {/* Real-time Balance Feedback */}
+                {/* Live Real-Time Ledger Balance Impact */}
                 {numAmount > 0 && (
-                  <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-slate-600">Balance after this payment:</span>
+                  <div className="mt-3.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium">New Account Balance after recording:</span>
                     <strong
-                      className={`font-bold ${remainingAfterPayment === 0 ? 'text-emerald-700' : 'text-slate-900'}`}
+                      className={`text-sm font-extrabold ${
+                        remainingAfterPayment === 0 ? 'text-emerald-700' : 'text-slate-900'
+                      }`}
                     >
-                      {remainingAfterPayment === 0 ? '₹0 (Fully Cleared)' : money(remainingAfterPayment)}
+                      {remainingAfterPayment === 0 ? '₹0 · Fully Cleared' : money(remainingAfterPayment)}
                     </strong>
                   </div>
                 )}
               </div>
 
-              {/* Payment Type / Milestone */}
+              {/* Payment Milestone / Tier */}
               <div>
                 <label htmlFor="payment-type" className="block text-xs font-bold text-slate-800 mb-1.5">
-                  Payment Milestone / Tier*
+                  Installment Milestone / Fee Tier*
                 </label>
                 <div className="relative">
                   <select
                     id="payment-type"
                     value={paymentType}
                     onChange={(e) => setPaymentType(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none shadow-2xs"
                   >
                     {PAYMENT_TYPES.map((type) => (
                       <option key={type} value={type}>
@@ -574,13 +600,13 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Specifies which installment or fees milestone is printed on the GST invoice.
+                  Prints on the official GST invoice and determines milestone progress in reports.
                 </p>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Payment Method Selector Grid */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-2">Payment Method*</label>
+                <label className="block text-xs font-bold text-slate-800 mb-2">Payment Collection Method*</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {PAYMENT_METHODS.map((item) => {
                     const Icon = item.icon
@@ -590,23 +616,23 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                         key={item.id}
                         type="button"
                         onClick={() => setMethod(item.id)}
-                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-emerald-50/70 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
-                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                            ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-2">
                           <Icon size={18} className={isSelected ? 'text-emerald-700' : 'text-slate-500'} />
-                          {isSelected && <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />}
+                          {isSelected && <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />}
                         </div>
                         <div>
                           <strong
-                            className={`text-xs block font-bold ${isSelected ? 'text-emerald-950' : 'text-slate-800'}`}
+                            className={`text-xs block font-bold ${isSelected ? 'text-emerald-950' : 'text-slate-900'}`}
                           >
                             {item.label}
                           </strong>
-                          <span className="text-[10px] text-slate-500 block">{item.desc}</span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">{item.desc}</span>
                         </div>
                       </button>
                     )
@@ -614,19 +640,21 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                 </div>
               </div>
 
-              {/* Two Column Grid: Date & Transaction ID */}
+              {/* Two Column Grid: Date & Reference */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="payment-date" className="block text-xs font-bold text-slate-800 mb-1.5">
                     Payment Date*
                   </label>
-                  <input
-                    id="payment-date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                  <div className="relative">
+                    <input
+                      id="payment-date"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -639,48 +667,58 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
                     placeholder="e.g. UPI Ref / UTR / Cheque No."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs"
                   />
                 </div>
               </div>
 
-              {/* Remarks / Custom Note */}
+              {/* Internal Notes */}
               <div>
                 <label htmlFor="custom-note" className="block text-xs font-bold text-slate-800 mb-1.5">
-                  Internal Remarks / Notes <span className="text-slate-400 font-normal">(Optional)</span>
+                  Internal Notes / Ledger Memo <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   id="custom-note"
                   type="text"
                   value={customNote}
                   onChange={(e) => setCustomNote(e.target.value)}
-                  placeholder="Additional memo or reference notes for this transaction..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Additional audit or ledger remarks for this installment..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs"
                 />
               </div>
 
               {formError && (
                 <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5">
                   <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                  <span>{formError}</span>
+                  <span className="font-semibold">{formError}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Sidebar: GST & Invoice Breakdown + Actions (1 col) */}
+          {/* Right Sidebar: Digital Tax Invoice Summary (1 Column) */}
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                 <Receipt size={18} className="text-emerald-600" />
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">GST & Ledger Breakdown</h3>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Tax Invoice Preview</h3>
+                  <p className="text-[11px] text-slate-500">Live GST & ledger distribution</p>
+                </div>
               </div>
 
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-3 text-xs">
                 <div className="flex justify-between items-center text-slate-600">
-                  <span>Course</span>
+                  <span>Enrolled Course</span>
                   <span className="font-semibold text-slate-900 text-right truncate max-w-[170px]">
                     {selectedStudent.course}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-slate-600">
+                  <span>Milestone Tier</span>
+                  <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    {paymentType || 'Part Fees Payment'}
                   </span>
                 </div>
 
@@ -714,13 +752,20 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                   </>
                 )}
 
-                <div className="h-px bg-slate-200 my-1.5" />
+                <div className="h-px bg-slate-200 my-2" />
 
-                <div className="flex justify-between items-center">
-                  <strong className="text-xs font-bold text-slate-900">Invoice Total</strong>
-                  <strong className="text-base font-extrabold text-emerald-700">
-                    {money(gstBreakdown.totalAmount)}
-                  </strong>
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Total Invoice
+                    </span>
+                    <strong className="text-xl font-extrabold text-emerald-700 block">
+                      {money(gstBreakdown.totalAmount)}
+                    </strong>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    {method}
+                  </span>
                 </div>
               </div>
 
@@ -728,13 +773,13 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-500 flex items-start gap-2">
                 <ShieldCheck size={16} className="text-emerald-600 shrink-0 mt-0.5" />
                 <p>
-                  Committing this payment updates the student&apos;s ledger balance, issues an immutable invoice, and
-                  redirects to their profile.
+                  Committing updates student balances, issues an immutable GST invoice, and redirects directly to their
+                  profile.
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2">
+              {/* Primary Actions */}
+              <div className="space-y-2 pt-1">
                 <Button
                   type="button"
                   onClick={handleValidateAndReview}
@@ -782,11 +827,13 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                   <h3 id="confirm-modal-title" className="text-base font-bold text-slate-900">
                     Confirm Fee Payment Recording
                   </h3>
-                  <p className="text-xs text-slate-500">Verify transaction details before committing to the ledger.</p>
+                  <p className="text-xs text-slate-500">
+                    Verify transaction details before committing to the financial ledger.
+                  </p>
                 </div>
               </div>
 
-              {/* Summary Box */}
+              {/* Summary Card */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs mb-4">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                   <span className="text-slate-500">Student</span>
@@ -802,7 +849,7 @@ export function RecordPaymentForm({ initialStudent = null, students, courses, gs
                 </div>
 
                 <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                  <span className="text-slate-500">Payment Milestone</span>
+                  <span className="text-slate-500">Installment Tier</span>
                   <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                     {paymentType}
                   </span>
