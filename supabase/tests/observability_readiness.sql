@@ -8,7 +8,7 @@ select ok(
   'anonymous callers cannot execute the readiness RPC'
 );
 select is(
-  (select migration_matches from public.get_app_readiness('20261001170000')),
+  (select migration_matches from public.get_app_readiness('20261002120000')),
   true,
   'readiness RPC recognizes the latest migration version'
 );

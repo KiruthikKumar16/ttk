@@ -29,26 +29,16 @@ export function CertificateTableRow({
     router.push(certTargetUrl)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      router.push(certTargetUrl)
-    }
-  }
-
   return (
     <tr
       onClick={handleRowClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="link"
-      className="cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-100 group"
+      className="cursor-pointer hover:bg-slate-50/80 transition-colors group"
       title={`Open certificate ${certificate.certificate_id}`}
     >
       <td>
         <Link
           href={certTargetUrl}
-          className="font-mono font-medium text-slate-900 group-hover:text-indigo-600 group-hover:underline"
+          className="inline-flex items-center min-h-[28px] font-mono font-medium text-slate-900 group-hover:text-indigo-600 group-hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {certificate.certificate_id}
@@ -57,7 +47,7 @@ export function CertificateTableRow({
       <td>
         <Link
           href={`/students/${certificate.student_register_id}`}
-          className="font-medium text-indigo-600 hover:underline"
+          className="inline-flex items-center min-h-[28px] font-medium text-indigo-600 hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {certificate.student_name}

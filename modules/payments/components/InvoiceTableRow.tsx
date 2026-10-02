@@ -21,26 +21,16 @@ export function InvoiceTableRow({
     router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)
-    }
-  }
-
   return (
     <tr
       onClick={handleRowClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="link"
-      className="cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-100"
+      className="cursor-pointer hover:bg-slate-50/80 transition-colors"
       title={`Open invoice ${payment.invoice}`}
     >
       <td>
         <Link
           href={`/invoices/${encodeURIComponent(payment.invoice)}`}
-          className="font-mono font-medium text-slate-900 hover:text-indigo-600 hover:underline"
+          className="inline-flex items-center min-h-[28px] font-mono font-medium text-slate-900 hover:text-indigo-600 hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {payment.invoice}
@@ -49,7 +39,7 @@ export function InvoiceTableRow({
       <td>
         <Link
           href={`/students/${payment.studentId}`}
-          className="font-medium text-indigo-600 hover:underline"
+          className="inline-flex items-center min-h-[28px] font-medium text-indigo-600 hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {payment.student}

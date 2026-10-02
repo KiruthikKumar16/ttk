@@ -431,21 +431,13 @@ export function DashboardMetrics({
                     <tr
                       key={payment.id}
                       onClick={() => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)
-                        }
-                      }}
-                      tabIndex={0}
-                      role="link"
-                      className="cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-100"
+                      className="cursor-pointer hover:bg-slate-50/80 transition-colors"
                       title={`Open invoice ${payment.invoice}`}
                     >
                       <td>
                         <Link
                           href={`/invoices/${encodeURIComponent(payment.invoice)}`}
-                          className="font-medium text-indigo-600 hover:text-indigo-800"
+                          className="inline-flex items-center min-h-[28px] font-medium text-indigo-600 hover:text-indigo-800"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {payment.invoice}

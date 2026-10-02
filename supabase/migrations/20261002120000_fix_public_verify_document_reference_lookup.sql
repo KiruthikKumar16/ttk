@@ -23,15 +23,25 @@ declare
 begin
   v_clean_code := trim(coalesce(p_code, ''));
 
+  if v_clean_code = '' or length(v_clean_code) > 128 then
+    return query select 'Invalid'::text, null::text, null::text, null::text, null::date, null::text;
+    return;
+  end if;
+
   -- 1. Try finding in verifiable_documents by verification_code or reference_id
-  select * into v_document
-  from public.verifiable_documents
-  where (verification_code ilike v_clean_code or reference_id ilike v_clean_code)
-    and status = 'active'
-    and revoked_at is null
+  select vd.id, vd.doc_type, vd.reference_id, vd.verification_code, vd.status, vd.revoked_at
+    into v_document
+  from public.verifiable_documents as vd
+  where vd.verification_code ilike v_clean_code
+     or vd.reference_id ilike v_clean_code
   limit 1;
 
   if found then
+    if v_document.status <> 'active' or v_document.revoked_at is not null then
+      return query select 'Invalid'::text, null::text, null::text, null::text, null::date, null::text;
+      return;
+    end if;
+
     if v_document.doc_type = 'certificate' then
       select c.student_name, c.course_name, c.issue_date
         into v_student_name, v_course_name, v_issue_date
@@ -42,8 +52,8 @@ begin
     elsif v_document.doc_type = 'invoice' then
       select coalesce(s.name, p.student_name), s.course, p.payment_date, p.invoice
         into v_student_name, v_course_name, v_issue_date, v_invoice
-      from public.payments p
-      left join public.students s on s.id = p.student_id
+      from public.payments as p
+      left join public.students as s on s.id = p.student_id
       where p.id::text = v_document.reference_id
          or p.invoice ilike v_document.reference_id
       limit 1;
@@ -57,6 +67,9 @@ begin
         v_course_name,
         v_issue_date,
         v_invoice;
+      return;
+    else
+      return query select 'Invalid'::text, null::text, null::text, null::text, null::date, null::text;
       return;
     end if;
   end if;
@@ -83,8 +96,8 @@ begin
   -- 3. Fallback: check payments table directly if code is an invoice number
   select coalesce(s.name, p.student_name), s.course, p.payment_date, p.invoice
     into v_student_name, v_course_name, v_issue_date, v_invoice
-  from public.payments p
-  left join public.students s on s.id = p.student_id
+  from public.payments as p
+  left join public.students as s on s.id = p.student_id
   where p.invoice ilike v_clean_code
      or p.id::text = v_clean_code
   limit 1;

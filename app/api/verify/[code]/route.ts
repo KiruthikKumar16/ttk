@@ -57,13 +57,16 @@ async function verifyDocument(requestId: string, rawCode: string) {
       .from('verifiable_documents')
       .select('*')
       .or(`verification_code.ilike.${code},reference_id.ilike.${code}`)
-      .eq('status', 'active')
-      .is('revoked_at', null)
       .limit(1)
 
     const vDoc = vDocs?.[0]
 
     if (vDoc) {
+      if (vDoc.status !== 'active' || vDoc.revoked_at !== null) {
+        logProductEvent('verification_hit', requestId, { valid: false })
+        return NextResponse.json({ data: invalid }, { headers })
+      }
+
       if (vDoc.doc_type === 'certificate') {
         const isUuid = UUID_REGEX.test(vDoc.reference_id)
         let certQuery = admin.from('certificates').select('id, certificate_id, student_name, course_name, issue_date')
