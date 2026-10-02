@@ -345,7 +345,7 @@ export function InvoicesManagerClient({
 
           <button
             type="submit"
-            className="px-3.5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-2xs transition-colors"
+            className="px-3.5 py-2 text-xs font-semibold bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl shadow-2xs transition-colors"
           >
             Apply Filter
           </button>
@@ -354,7 +354,7 @@ export function InvoicesManagerClient({
             <button
               type="button"
               onClick={handleClearFilters}
-              className="text-xs text-gray-500 hover:text-gray-800 font-medium px-2 py-1"
+              className="text-xs text-gray-600 hover:text-gray-900 font-medium px-2 py-1"
             >
               Reset
             </button>
@@ -363,7 +363,7 @@ export function InvoicesManagerClient({
 
         <div className="flex items-center gap-3 self-end md:self-auto">
           {/* Sort Selector */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 text-xs text-gray-600">
             <label htmlFor="invoices-sort-select" className="hidden sm:inline font-medium">
               Sort:
             </label>
