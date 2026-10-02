@@ -10,8 +10,18 @@ export default async function SkillsSettingsPage() {
   const skills = await listSkillTags()
 
   return (
-    <div className="max-w-4xl">
+    <main>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">SETTINGS</p>
+          <h1>Skill tags</h1>
+          <p className="subcopy">
+            Configure standardized technical skills, programming frameworks, and competency tags for learner profiles
+            and curriculum indexing.
+          </p>
+        </div>
+      </div>
       <SkillTagsManager initialSkills={skills} />
-    </div>
+    </main>
   )
 }
