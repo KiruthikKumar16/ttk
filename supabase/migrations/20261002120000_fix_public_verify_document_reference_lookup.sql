@@ -50,10 +50,10 @@ begin
          or c.certificate_id ilike v_document.reference_id
       limit 1;
     elsif v_document.doc_type = 'invoice' then
-      select coalesce(s.name, p.student_name), s.course, p.payment_date, p.invoice
+      select s.name, s.course, p.payment_date, p.invoice
         into v_student_name, v_course_name, v_issue_date, v_invoice
       from public.payments as p
-      left join public.students as s on s.id = p.student_id
+      join public.students as s on s.id = p.student_id
       where p.id::text = v_document.reference_id
          or p.invoice ilike v_document.reference_id
       limit 1;
@@ -94,10 +94,10 @@ begin
   end if;
 
   -- 3. Fallback: check payments table directly if code is an invoice number
-  select coalesce(s.name, p.student_name), s.course, p.payment_date, p.invoice
+  select s.name, s.course, p.payment_date, p.invoice
     into v_student_name, v_course_name, v_issue_date, v_invoice
   from public.payments as p
-  left join public.students as s on s.id = p.student_id
+  join public.students as s on s.id = p.student_id
   where p.invoice ilike v_clean_code
      or p.id::text = v_clean_code
   limit 1;
