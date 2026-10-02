@@ -158,3 +158,26 @@ export async function getStudentAcademicHistory(registerId: number) {
     }),
   }
 }
+
+export async function listStudentsForPayment() {
+  authorizeStudent((await getCurrentProfile()).role, 'read')
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, register_id, name, course, batch, total, paid, phone, email')
+    .order('register_id', { ascending: false })
+    .limit(500)
+
+  if (error) throw error
+  return (data ?? []).map((row: any) => ({
+    id: String(row.id),
+    registerId: Number(row.register_id),
+    name: String(row.name),
+    course: String(row.course),
+    batch: String(row.batch),
+    total: paiseToRupees(Number(row.total ?? 0)),
+    paid: paiseToRupees(Number(row.paid ?? 0)),
+    phone: String(row.phone ?? ''),
+    email: row.email ? String(row.email) : undefined,
+  }))
+}

@@ -162,7 +162,7 @@ export function InvoicesManagerClient({
 
         <div className="flex items-center gap-3">
           <Link
-            href="/students"
+            href="/invoices/record"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors shadow-2xs"
           >
             <Banknote size={15} className="text-gray-500" />

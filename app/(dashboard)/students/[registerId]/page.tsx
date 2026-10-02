@@ -18,7 +18,7 @@ export default async function StudentPage({ params }: PageProps<'/students/[regi
     getStudentDetail(registerId),
     getCachedGstCalculationSettings(),
     getCachedCourseOptions(),
-    isStaff ? getStudentAcademicHistory(registerId) : Promise.resolve({ attendance: [], assessments: [] }),
+    getStudentAcademicHistory(registerId),
   ])
   if (!result) notFound()
 
