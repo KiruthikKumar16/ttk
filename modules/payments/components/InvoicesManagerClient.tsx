@@ -146,7 +146,7 @@ export function InvoicesManagerClient({
             <TrendingUp size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               Page Collections Volume
             </span>
             <div className="text-xl font-bold text-emerald-700 leading-tight mt-0.5">{money(totalVolume)}</div>
@@ -158,7 +158,7 @@ export function InvoicesManagerClient({
             <Receipt size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               Total Invoices
             </span>
             <div className="text-xl font-bold text-gray-900 leading-tight mt-0.5">
@@ -172,7 +172,7 @@ export function InvoicesManagerClient({
             <CreditCard size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               Average Receipt
             </span>
             <div className="text-xl font-bold text-purple-700 leading-tight mt-0.5">{money(avgPayment)}</div>
@@ -344,7 +344,7 @@ export function InvoicesManagerClient({
                   </div>
 
                   <div className="pt-2 border-t border-gray-100">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                    <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider block">
                       Student
                     </span>
                     <h3 className="text-sm font-semibold text-gray-900 leading-snug">{p.student}</h3>
@@ -357,8 +357,8 @@ export function InvoicesManagerClient({
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-1 text-[11px] text-gray-500">
-                    <Calendar size={12} className="text-gray-400" />
+                  <div className="flex items-center gap-1 text-[11px] text-gray-600">
+                    <Calendar size={12} className="text-gray-500" />
                     <span>{p.date}</span>
                   </div>
                   <span className="text-emerald-600 group-hover:underline font-semibold text-[11px]">

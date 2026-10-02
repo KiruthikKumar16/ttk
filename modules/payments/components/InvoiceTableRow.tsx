@@ -60,7 +60,7 @@ export function InvoiceTableRow({
         {catName ? (
           <CategoryBadge categoryName={catName} />
         ) : (
-          <span className="text-xs text-slate-400 italic">Unassigned</span>
+          <span className="text-xs text-slate-600 italic">Unassigned</span>
         )}
       </td>
       <td className="text-slate-600">{payment.date}</td>

@@ -164,7 +164,7 @@ export function CertificatesManagerClient({
             <Award size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               Total Certificates
             </span>
             <div className="text-xl font-bold text-gray-900 leading-tight mt-0.5">
@@ -178,7 +178,7 @@ export function CertificatesManagerClient({
             <ShieldCheck size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               QR Verifiable Records
             </span>
             <div className="text-xl font-bold text-emerald-700 leading-tight mt-0.5">
@@ -192,7 +192,7 @@ export function CertificatesManagerClient({
             <BookOpen size={22} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
               Programs Represented
             </span>
             <div className="text-xl font-bold text-indigo-700 leading-tight mt-0.5">
@@ -378,14 +378,14 @@ export function CertificatesManagerClient({
                   {catName ? (
                     <CategoryBadge categoryName={catName} />
                   ) : (
-                    <span className="text-[10px] text-gray-400 uppercase font-semibold">Standard</span>
+                    <span className="text-[10px] text-gray-600 uppercase font-semibold">Standard</span>
                   )}
                 </div>
 
                 {/* Diploma Card Body */}
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                    <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider block">
                       Candidate
                     </span>
                     <h3 className="text-base font-bold text-gray-900 group-hover:text-amber-800 transition-colors mt-0.5 leading-snug">
@@ -394,7 +394,7 @@ export function CertificatesManagerClient({
                     <div className="text-xs text-gray-500 mt-1 font-medium">Student #{cert.student_register_id}</div>
 
                     <div className="mt-4 pt-3 border-t border-gray-100">
-                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                      <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider block">
                         Course Curriculum
                       </span>
                       <p className="text-xs font-semibold text-slate-800 mt-0.5 line-clamp-1">{cert.course_name}</p>
@@ -404,7 +404,7 @@ export function CertificatesManagerClient({
                   {/* Metadata Row */}
                   <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
                     <div className="flex items-center gap-1.5 text-gray-600 font-medium">
-                      <Calendar size={13} className="text-gray-400" />
+                      <Calendar size={13} className="text-gray-500" />
                       <span>{cert.issue_date}</span>
                     </div>
 
@@ -413,7 +413,7 @@ export function CertificatesManagerClient({
                         <ShieldCheck size={12} /> QR Verifiable
                       </span>
                     ) : (
-                      <span className="text-[11px] text-gray-400">Offline Record</span>
+                      <span className="text-[11px] text-gray-600">Offline Record</span>
                     )}
                   </div>
                 </div>
