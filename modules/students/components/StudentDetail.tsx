@@ -358,55 +358,65 @@ export function StudentDetail({
       </section>
 
       {/* Navigation Tab Bar */}
-      <div
-        role="tablist"
-        aria-label="Student management tabs"
-        className="flex items-center gap-2 border-b border-slate-200 pb-3 mb-6 overflow-x-auto"
-      >
-        {!isStaff && canRecordPayment && (
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/90 shadow-2xs">
+        <div
+          role="tablist"
+          aria-label="Student management tabs"
+          className="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/70 shadow-2xs gap-1.5 overflow-x-auto max-w-full"
+        >
+          {!isStaff && canRecordPayment && (
+            <button
+              type="button"
+              role="tab"
+              id="student-tab-payments"
+              aria-selected={activeTab === 'payments'}
+              aria-controls="student-panel-payments"
+              onClick={() => setActiveTab('payments')}
+              className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 min-h-[36px] ${
+                activeTab === 'payments'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <CreditCard
+                size={15}
+                className={`shrink-0 ${activeTab === 'payments' ? 'text-white' : 'text-slate-500'}`}
+              />
+              <span className="whitespace-nowrap">Record Payments & Fees</span>
+              {balance > 0 && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap leading-none shrink-0 ${
+                    activeTab === 'payments'
+                      ? 'bg-indigo-700 text-white'
+                      : 'bg-amber-100 text-amber-900 border border-amber-200/60'
+                  }`}
+                >
+                  Due: {money(balance)}
+                </span>
+              )}
+            </button>
+          )}
+
           <button
             type="button"
             role="tab"
-            id="student-tab-payments"
-            aria-selected={activeTab === 'payments'}
-            aria-controls="student-panel-payments"
-            onClick={() => setActiveTab('payments')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-              activeTab === 'payments'
+            id="student-tab-academics"
+            aria-selected={activeTab === 'academics'}
+            aria-controls="student-panel-academics"
+            onClick={() => setActiveTab('academics')}
+            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 min-h-[36px] ${
+              activeTab === 'academics'
                 ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-50'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
-            <CreditCard size={15} />
-            <span>Record Payments & Fees</span>
-            {balance > 0 && (
-              <span
-                className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeTab === 'payments' ? 'bg-indigo-700 text-indigo-100' : 'bg-amber-100 text-amber-800'
-                }`}
-              >
-                Due: {money(balance)}
-              </span>
-            )}
+            <GraduationCap
+              size={15}
+              className={`shrink-0 ${activeTab === 'academics' ? 'text-white' : 'text-slate-500'}`}
+            />
+            <span className="whitespace-nowrap">Attendance & Academic Progress</span>
           </button>
-        )}
-
-        <button
-          type="button"
-          role="tab"
-          id="student-tab-academics"
-          aria-selected={activeTab === 'academics'}
-          aria-controls="student-panel-academics"
-          onClick={() => setActiveTab('academics')}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-            activeTab === 'academics'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-50'
-          }`}
-        >
-          <GraduationCap size={15} />
-          <span>Attendance & Academic Progress</span>
-        </button>
+        </div>
       </div>
 
       {/* ─── TAB 1: RECORD PAYMENTS & FEES ─── */}
