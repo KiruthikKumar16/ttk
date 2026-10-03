@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
 import type { AuditEntry } from '@/modules/audit/service'
@@ -200,6 +200,41 @@ export function AuditLogView({
   const [actionFilter, setActionFilter] = useState(initialAction)
   const [userFilter, setUserFilter] = useState(initialUserName)
 
+  // Autocomplete state
+  const [userSuggestions, setUserSuggestions] = useState<{ id: string; full_name: string }[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const userSearchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Close suggestions if clicked outside
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userSearchRef.current && !userSearchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    // Debounced fetch for user autocomplete
+    const handler = setTimeout(() => {
+      if (!userFilter || userFilter === initialUserName) {
+        setUserSuggestions([])
+        return
+      }
+      fetch(`/api/admin/users/search?q=${encodeURIComponent(userFilter)}`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Search failed')
+          return res.json()
+        })
+        .then((data) => setUserSuggestions(data))
+        .catch(() => setUserSuggestions([]))
+    }, 300)
+
+    return () => clearTimeout(handler)
+  }, [userFilter, initialUserName])
+
   const buildHref = (overrides: {
     search?: string
     tableName?: string
@@ -310,23 +345,62 @@ export function AuditLogView({
             </form>
 
             {/* User Search */}
-            <form onSubmit={handleUserSearchSubmit} className="relative flex-1 min-w-[150px] max-w-[200px]">
+            <form
+              onSubmit={handleUserSearchSubmit}
+              className="relative flex-1 min-w-[150px] max-w-[200px]"
+              ref={userSearchRef}
+            >
               <input
                 type="text"
                 value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
+                onChange={(e) => {
+                  setUserFilter(e.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => {
+                  if (userFilter) setShowSuggestions(true)
+                }}
                 placeholder="Filter by user name…"
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
               />
               {userFilter && (
                 <button
                   type="button"
-                  onClick={handleClearUserSearch}
+                  onClick={() => {
+                    handleClearUserSearch()
+                    setShowSuggestions(false)
+                  }}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   aria-label="Clear user search"
                 >
                   <X size={14} />
                 </button>
+              )}
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && userSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+                  <ul className="py-1">
+                    {userSuggestions.map((user) => (
+                      <li key={user.id}>
+                        <button
+                          type="button"
+                          className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                          onMouseDown={(e) => {
+                            // Prevent input blur before click registers
+                            e.preventDefault()
+                          }}
+                          onClick={() => {
+                            setUserFilter(user.full_name)
+                            setShowSuggestions(false)
+                            applyFilters({ userName: user.full_name })
+                          }}
+                        >
+                          {user.full_name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </form>
 
