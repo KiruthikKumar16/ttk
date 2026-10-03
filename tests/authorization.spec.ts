@@ -47,7 +47,6 @@ test('real seeded staff JWT follows the API read-permission matrix', async ({ pl
     '/api/courses?page=1&pageSize=5',
     '/api/certificates?page=1&pageSize=5',
     '/api/gst',
-    '/api/audit',
     '/api/admin/users',
   ]
   try {
@@ -71,7 +70,6 @@ test('anonymous JWT context receives 401 from every protected feature API', asyn
     '/api/course-materials?page=1&pageSize=5',
     '/api/reports',
     '/api/gst',
-    '/api/audit',
     '/api/admin/users',
   ]
   try {

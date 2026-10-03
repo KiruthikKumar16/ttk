@@ -4418,3 +4418,157 @@ body:has(.login-page) {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* ═══════════════════════════════════════
+   AUDIT LOG
+   ═══════════════════════════════════════ */
+
+/* ── Action badge ── */
+.audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.3px;
+}
+.audit-action-insert {
+  color: #047857;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+}
+.audit-action-update {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+}
+.audit-action-delete {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+/* ── Table name pill ── */
+.audit-table-name {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  letter-spacing: 0.2px;
+}
+
+/* ── Timestamp column ── */
+.audit-timestamp {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Actor cell ── */
+.audit-actor {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.audit-actor-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+.audit-actor-role {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+/* ── Expand button ── */
+.audit-expand-cell {
+  width: 40px;
+  text-align: center;
+}
+.audit-expand-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.audit-expand-btn:hover {
+  background: #f1f5f9;
+  color: var(--ink);
+  border-color: #cbd5e1;
+}
+
+/* ── Expanded detail panel ── */
+.audit-detail-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #fafbfc;
+}
+.audit-detail-panel {
+  padding: 12px 20px 16px;
+  animation: auditSlideIn 0.15s ease;
+}
+@keyframes auditSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Change diff list ── */
+.audit-diff-list {
+  display: grid;
+  gap: 4px;
+}
+.audit-diff-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #f1f5f9;
+}
+.audit-diff-field {
+  font-weight: 600;
+  color: #64748b;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+.audit-diff-old {
+  color: #b91c1c;
+  text-decoration: line-through;
+  text-decoration-color: #fca5a5;
+}
+.audit-diff-arrow {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.audit-diff-new {
+  color: #047857;
+  font-weight: 500;
+}
+.audit-no-changes {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px 0;
+}

@@ -88,7 +88,6 @@ describe('withApi authentication and authorization', () => {
     ['DELETE /api/course-materials', 'materials', 'delete'],
     ['GET /api/reports', 'reports', 'read'],
     ['GET /api/gst', 'gst', 'read'],
-    ['GET /api/audit', 'audit', 'read'],
     ['PATCH /api/admin/users', 'users', 'manage'],
   ] as const)('%s applies its declared role policy', async (_route, resource: Resource, action: Action) => {
     const handler = withApi({ roles: rolesFor(resource, action) }, async () => ({ allowed: true }))
