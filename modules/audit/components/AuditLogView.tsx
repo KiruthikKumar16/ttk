@@ -123,10 +123,7 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
 
   return (
     <>
-      <tr
-        className={hasDetail ? 'clickable-row' : ''}
-        onClick={() => hasDetail && setExpanded((prev) => !prev)}
-      >
+      <tr className={hasDetail ? 'clickable-row' : ''} onClick={() => hasDetail && setExpanded((prev) => !prev)}>
         <td className="audit-timestamp">{formatDateTime(entry.changedAt)}</td>
         <td>
           <span className="audit-table-name">{entry.tableName}</span>
@@ -371,9 +368,7 @@ export function AuditLogView({
               {entries.length === 0 && (
                 <tr>
                   <td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--muted)' }}>
-                    {hasActiveFilters
-                      ? 'No audit records match your current filters.'
-                      : 'No audit records found.'}
+                    {hasActiveFilters ? 'No audit records match your current filters.' : 'No audit records found.'}
                   </td>
                 </tr>
               )}
@@ -402,7 +397,11 @@ export function AuditLogView({
               Previous
             </a>
             <a
-              href={hasNextPage && nextCursor ? buildHref({ page: page + 1, cursor: nextCursor, previousCursor: cursor }) : '#'}
+              href={
+                hasNextPage && nextCursor
+                  ? buildHref({ page: page + 1, cursor: nextCursor, previousCursor: cursor })
+                  : '#'
+              }
               aria-disabled={!hasNextPage}
               className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-colors ${
                 !hasNextPage
