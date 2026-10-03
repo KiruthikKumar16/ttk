@@ -203,7 +203,7 @@ export function AuditLogView({
   // Autocomplete state
   const [userSuggestions, setUserSuggestions] = useState<{ id: string; full_name: string }[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const userSearchRef = useRef<HTMLDivElement>(null)
+  const userSearchRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     // Close suggestions if clicked outside
