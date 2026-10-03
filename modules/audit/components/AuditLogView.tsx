@@ -176,6 +176,7 @@ export function AuditLogView({
   search: initialSearch,
   tableName: initialTableName,
   action: initialAction,
+  userName: initialUserName,
   hasNextPage,
   nextCursor,
   cursor,
@@ -187,6 +188,7 @@ export function AuditLogView({
   search: string
   tableName: string
   action: string
+  userName: string
   hasNextPage: boolean
   nextCursor: string | null
   cursor?: string
@@ -196,11 +198,13 @@ export function AuditLogView({
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [tableFilter, setTableFilter] = useState(initialTableName)
   const [actionFilter, setActionFilter] = useState(initialAction)
+  const [userFilter, setUserFilter] = useState(initialUserName)
 
   const buildHref = (overrides: {
     search?: string
     tableName?: string
     action?: string
+    userName?: string
     page?: number
     cursor?: string
     previousCursor?: string
@@ -209,10 +213,12 @@ export function AuditLogView({
     const s = overrides.search ?? searchTerm
     const t = overrides.tableName ?? tableFilter
     const a = overrides.action ?? actionFilter
+    const u = overrides.userName ?? userFilter
 
     if (s) params.set('search', s.trim())
     if (t) params.set('tableName', t)
     if (a) params.set('action', a)
+    if (u) params.set('userName', u.trim())
     params.set('page', String(overrides.page ?? 1))
     params.set('pageSize', String(pageSize))
     if (overrides.cursor) params.set('cursor', overrides.cursor)
@@ -220,7 +226,7 @@ export function AuditLogView({
     return `/audit-log?${params.toString()}`
   }
 
-  const applyFilters = (overrides: { search?: string; tableName?: string; action?: string }) => {
+  const applyFilters = (overrides: { search?: string; tableName?: string; action?: string; userName?: string }) => {
     router.push(buildHref({ ...overrides, page: 1 }))
   }
 
@@ -244,14 +250,25 @@ export function AuditLogView({
     applyFilters({ action: value })
   }
 
+  const handleUserSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    applyFilters({ userName: userFilter })
+  }
+
+  const handleClearUserSearch = () => {
+    setUserFilter('')
+    applyFilters({ userName: '' })
+  }
+
   const handleClearAll = () => {
     setSearchTerm('')
     setTableFilter('')
     setActionFilter('')
+    setUserFilter('')
     router.push(`/audit-log?page=1&pageSize=${pageSize}`)
   }
 
-  const hasActiveFilters = Boolean(searchTerm || tableFilter || actionFilter)
+  const hasActiveFilters = Boolean(searchTerm || tableFilter || actionFilter || userFilter)
 
   return (
     <>
@@ -286,6 +303,27 @@ export function AuditLogView({
                   onClick={handleClearSearch}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </form>
+
+            {/* User Search */}
+            <form onSubmit={handleUserSearchSubmit} className="relative flex-1 min-w-[150px] max-w-[200px]">
+              <input
+                type="text"
+                value={userFilter}
+                onChange={(e) => setUserFilter(e.target.value)}
+                placeholder="Filter by user name…"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+              />
+              {userFilter && (
+                <button
+                  type="button"
+                  onClick={handleClearUserSearch}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  aria-label="Clear user search"
                 >
                   <X size={14} />
                 </button>

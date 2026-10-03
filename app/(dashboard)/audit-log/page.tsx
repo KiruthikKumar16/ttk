@@ -9,6 +9,7 @@ export default async function AuditLogPage({ searchParams }: PageProps<'/audit-l
   const query = parseCursorListQuery(sp)
   const tableName = typeof sp.tableName === 'string' ? sp.tableName : ''
   const action = typeof sp.action === 'string' ? sp.action : ''
+  const userName = typeof sp.userName === 'string' ? sp.userName : ''
 
   const result = await listAuditPage({
     ...query,
@@ -17,6 +18,7 @@ export default async function AuditLogPage({ searchParams }: PageProps<'/audit-l
     cursor: query.cursor,
     tableName: tableName || undefined,
     action: action || undefined,
+    userName: userName || undefined,
   })
 
   return (
@@ -27,6 +29,7 @@ export default async function AuditLogPage({ searchParams }: PageProps<'/audit-l
       search={query.search}
       tableName={tableName}
       action={action}
+      userName={userName}
       hasNextPage={result.hasMore ?? false}
       nextCursor={result.nextCursor ?? null}
       cursor={query.cursor}

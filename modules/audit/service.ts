@@ -25,15 +25,16 @@ export async function listAuditPage(options: {
   cursor?: string
   tableName?: string
   action?: string
+  userName?: string
 }) {
   const supabase = await createClient()
   const offset = (options.page - 1) * options.pageSize
-  let query = supabase
-    .from('audit_log')
-    .select(
-      'id,table_name,record_id,action,changed_at,old_values,new_values,profiles(full_name,role)',
-      options.keyset ? undefined : { count: 'exact' },
-    )
+
+  const selectStr = options.userName
+    ? 'id,table_name,record_id,action,changed_at,old_values,new_values,profiles!inner(full_name,role)'
+    : 'id,table_name,record_id,action,changed_at,old_values,new_values,profiles(full_name,role)'
+
+  let query = supabase.from('audit_log').select(selectStr, options.keyset ? undefined : { count: 'exact' })
   const cursorSchema = z.object({ at: z.string().datetime({ offset: true }), id: z.number().int().positive() })
   if (options.keyset && options.cursor) {
     const cursor = decodeCursor(options.cursor, cursorSchema)
@@ -51,6 +52,10 @@ export async function listAuditPage(options: {
   }
   if (options.action) {
     query = query.eq('action', options.action)
+  }
+  if (options.userName) {
+    const nameTerm = options.userName.trim().replace(/[\\%_,()]/g, ' ')
+    query = query.ilike('profiles.full_name', `%${nameTerm}%`)
   }
   const orderedQuery = options.keyset
     ? query
