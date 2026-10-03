@@ -304,8 +304,19 @@ export function AuditLogView({
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer"
               >
                 <option value="">All Tables</option>
-                <option value="payments">Payments</option>
+                <option value="assessments">Assessments</option>
+                <option value="attendance">Attendance</option>
+                <option value="brand_settings">Brand Settings</option>
+                <option value="course_categories">Course Categories</option>
+                <option value="course_materials">Course Materials</option>
+                <option value="courses">Courses</option>
+                <option value="invite_codes">Invite Codes</option>
+                <option value="notifications">Notifications</option>
+                <option value="payments">Payments (Invoices)</option>
+                <option value="profiles">Profiles (Users)</option>
+                <option value="skill_tags">Skill Tags</option>
                 <option value="students">Students</option>
+                <option value="verifiable_documents">Verifiable Documents (Certificates)</option>
               </select>
             </div>
 
