@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { getCurrentProfile } from '@/lib/auth/current-profile'
 import { createClient } from '@/lib/supabase/server'
 import { UserSettingsView } from '@/modules/settings/components/UserSettingsView'
 import type { Role, UserContactDetails, UserMetadata } from '@/lib/types'
@@ -6,25 +6,14 @@ import type { Role, UserContactDetails, UserMetadata } from '@/lib/types'
 export const dynamic = 'force-dynamic'
 
 export default async function UserSettingsPage() {
+  const current = await getCurrentProfile()
   const supabase = await createClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    redirect('/login')
-  }
-
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from('profiles')
     .select('id, full_name, role, created_at, contact_details, metadata')
-    .eq('id', user.id)
-    .single()
-
-  if (error || !profile) {
-    redirect('/login')
-  }
+    .eq('id', current.id)
+    .maybeSingle()
 
   return (
     <main>
@@ -39,12 +28,12 @@ export default async function UserSettingsPage() {
       </div>
       <UserSettingsView
         initialProfile={{
-          id: profile.id,
-          fullName: profile.full_name || '',
-          role: profile.role as Role,
-          createdAt: profile.created_at,
-          contactDetails: (profile.contact_details as UserContactDetails) || {},
-          metadata: (profile.metadata as UserMetadata) || {},
+          id: current.id,
+          fullName: profile?.full_name ?? current.fullName ?? '',
+          role: (profile?.role as Role) || current.role,
+          createdAt: profile?.created_at ?? new Date().toISOString(),
+          contactDetails: (profile?.contact_details as UserContactDetails) || {},
+          metadata: (profile?.metadata as UserMetadata) || {},
         }}
       />
     </main>

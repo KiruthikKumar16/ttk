@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { Role, InviteCode, UserContactDetails, UserMetadata } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   Save,
   RotateCcw,
@@ -24,6 +26,9 @@ import {
   Phone,
   Mail,
   Building,
+  History,
+  UserMinus,
+  ShieldAlert,
 } from 'lucide-react'
 
 type UserProfile = {
@@ -104,6 +109,9 @@ export function UserRoles({
   const [editBio, setEditBio] = useState('')
   const [editCustomMeta, setEditCustomMeta] = useState<{ id: string; key: string; value: string }[]>([])
   const [savingDetails, setSavingDetails] = useState(false)
+  const [revokingUserId, setRevokingUserId] = useState<string | null>(null)
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<UserProfile | null>(null)
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
 
   const openEditModal = (user: UserProfile) => {
     setEditingUser(user)
@@ -216,6 +224,62 @@ export function UserRoles({
       setError(err instanceof Error ? err.message : 'Failed to update user settings.')
     } finally {
       setSavingDetails(false)
+    }
+  }
+
+  const handleRevokeUserAccess = async (userId: string) => {
+    setRevokingUserId(userId)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: 'pending' }),
+      })
+      const result = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(getErrorMessage(result, 'Failed to revoke user access.'))
+      }
+      setRows((current) => current.map((r) => (r.id === userId ? { ...r, role: 'pending' as Role } : r)))
+      setInitialRows((current) => current.map((r) => (r.id === userId ? { ...r, role: 'pending' as Role } : r)))
+      if (editingUser?.id === userId) {
+        setEditingUser((prev) => (prev ? { ...prev, role: 'pending' as Role } : null))
+      }
+      setSuccess('User access has been revoked. Account is now set to Pending approval.')
+      setTimeout(() => setSuccess(''), 5000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to revoke user access.')
+    } finally {
+      setRevokingUserId(null)
+    }
+  }
+
+  const handleRemoveUser = async () => {
+    if (!confirmDeleteUser) return
+    const userId = confirmDeleteUser.id
+    setDeletingUserId(userId)
+    setError('')
+    try {
+      const res = await fetch(`/api/admin/users?userId=${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(getErrorMessage(result, 'Failed to remove user account.'))
+      }
+      setRows((current) => current.filter((r) => r.id !== userId))
+      setInitialRows((current) => current.filter((r) => r.id !== userId))
+      if (editingUser?.id === userId) {
+        setEditingUser(null)
+      }
+      setSuccess(`User "${confirmDeleteUser.full_name || userId}" has been removed.`)
+      setConfirmDeleteUser(null)
+      setTimeout(() => setSuccess(''), 5000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove user.')
+    } finally {
+      setDeletingUserId(null)
     }
   }
 
@@ -1005,18 +1069,40 @@ export function UserRoles({
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-mono">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString('en-IN') : '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-1.5">
+                        <Link
+                          href={`/audit-log?userName=${encodeURIComponent(user.full_name || '')}&search=${encodeURIComponent(user.id)}`}
+                          className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-slate-700 hover:text-slate-900 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+                          title="View user activity and audit log"
+                        >
+                          <History size={13} className="mr-1 text-slate-500" />
+                          User Log
+                        </Link>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
                           onClick={() => openEditModal(user)}
-                          className="text-xs text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-50"
+                          className="text-xs text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-50 px-2.5 py-1"
                           title="Edit user settings, contact details & metadata"
                         >
                           <UserCog size={13} className="mr-1 text-slate-500" />
                           Settings & Info
                         </Button>
+                        {!isSelf && user.role !== 'pending' && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={saving || revokingUserId === user.id}
+                            onClick={() => handleRevokeUserAccess(user.id)}
+                            className="text-xs text-amber-700 hover:text-amber-900 hover:bg-amber-50 px-2 py-1"
+                            title="Revoke access immediately (demote to Pending)"
+                          >
+                            <UserMinus size={13} className="mr-1 text-amber-600" />
+                            {revokingUserId === user.id ? 'Revoking...' : 'Revoke'}
+                          </Button>
+                        )}
                         {isPending && (
                           <Button
                             type="button"
@@ -1291,15 +1377,25 @@ export function UserRoles({
               <X size={18} />
             </button>
 
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-teal-500" />
-                <span className="text-xs uppercase font-bold text-teal-700 tracking-wider">User Settings</span>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pr-8">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-teal-500" />
+                  <span className="text-xs uppercase font-bold text-teal-700 tracking-wider">User Settings</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Contact Details & Metadata for {editingUser.full_name || 'User'}
+                </h3>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {editingUser.id}</p>
               </div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Contact Details & Metadata for {editingUser.full_name || 'User'}
-              </h3>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {editingUser.id}</p>
+              <Link
+                href={`/audit-log?userName=${encodeURIComponent(editingUser.full_name || '')}&search=${encodeURIComponent(editingUser.id)}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors shrink-0"
+                title="View user activity & audit log"
+              >
+                <History size={14} className="text-slate-600" />
+                View User Log
+              </Link>
             </div>
 
             <form onSubmit={handleSaveUserDetails} className="space-y-6">
@@ -1492,6 +1588,54 @@ export function UserRoles({
                 </div>
               </div>
 
+              {/* Account Access & Danger Zone */}
+              {editingUser.id !== currentUserId && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert size={16} className="text-rose-600" />
+                    <h4 className="text-xs font-bold text-rose-950 uppercase tracking-wider">
+                      Account Access & Management
+                    </h4>
+                  </div>
+                  <p className="text-xs text-rose-700">
+                    Revoke access to immediately suspend this user from accessing the system, or permanently remove their account.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                    {editingUser.role !== 'pending' ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={savingDetails || revokingUserId === editingUser.id || deletingUserId === editingUser.id}
+                        onClick={() => handleRevokeUserAccess(editingUser.id)}
+                        className="text-xs font-semibold border-amber-300 text-amber-900 hover:bg-amber-100 bg-white"
+                        title="Demote to Pending approval"
+                      >
+                        <UserMinus size={14} className="mr-1.5 text-amber-700" />
+                        {revokingUserId === editingUser.id ? 'Revoking...' : 'Revoke Access (Set Pending)'}
+                      </Button>
+                    ) : (
+                      <span className="text-xs font-medium text-amber-800 bg-amber-100/70 px-2.5 py-1 rounded-md border border-amber-200">
+                        Access is currently revoked (Pending)
+                      </span>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      disabled={savingDetails || revokingUserId === editingUser.id || deletingUserId === editingUser.id}
+                      onClick={() => setConfirmDeleteUser(editingUser)}
+                      className="text-xs font-semibold shadow-xs"
+                      title="Permanently remove user account"
+                    >
+                      <Trash2 size={14} className="mr-1.5" />
+                      Remove User
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
                 <Button
                   type="button"
@@ -1514,6 +1658,19 @@ export function UserRoles({
             </form>
           </div>
         </div>
+      )}
+
+      {confirmDeleteUser && (
+        <ConfirmDialog
+          isOpen={true}
+          title={`Remove User "${confirmDeleteUser.full_name || confirmDeleteUser.id}"?`}
+          description="Are you sure you want to permanently delete this user account? This will immediately revoke all access and remove their profile. This action cannot be undone."
+          confirmText={deletingUserId ? 'Removing...' : 'Permanently Remove User'}
+          cancelText="Cancel"
+          destructive={true}
+          onConfirm={handleRemoveUser}
+          onCancel={() => !deletingUserId && setConfirmDeleteUser(null)}
+        />
       )}
     </section>
   )

@@ -26,6 +26,7 @@ export async function listAuditPage(options: {
   tableName?: string
   action?: string
   userName?: string
+  userId?: string
 }) {
   const supabase = await createClient()
   const offset = (options.page - 1) * options.pageSize
@@ -52,6 +53,9 @@ export async function listAuditPage(options: {
   }
   if (options.action) {
     query = query.eq('action', options.action)
+  }
+  if (options.userId) {
+    query = query.eq('changed_by', options.userId)
   }
   if (options.userName) {
     const nameTerm = options.userName.trim().replace(/[\\%_,()]/g, ' ')

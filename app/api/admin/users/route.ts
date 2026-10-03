@@ -100,3 +100,53 @@ export const POST = withApi({ roles: ['admin'], body: createUserSchema }, async 
   }
   return { invited: true, user: { id: data.user?.id, email: data.user?.email } }
 })
+
+const deleteUserQuerySchema = z.object({
+  userId: z.string().uuid(),
+})
+
+export const DELETE = withApi(
+  { roles: ['admin'], query: deleteUserQuerySchema },
+  async ({ query, user, requestId, supabase }) => {
+    if (query.userId === user?.id) {
+      return Response.json({ error: 'You cannot remove your own account.' }, { status: 400 })
+    }
+
+    const { data: targetProfile, error: targetError } = await supabase!
+      .from('profiles')
+      .select('id, role, full_name')
+      .eq('id', query.userId)
+      .maybeSingle()
+
+    if (targetError || !targetProfile) {
+      return Response.json({ error: 'User profile not found.' }, { status: 404 })
+    }
+
+    if (targetProfile.role === 'admin') {
+      const { count } = await supabase!
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin')
+
+      if ((count ?? 0) <= 1) {
+        return Response.json({ error: 'Cannot remove the last remaining admin account.' }, { status: 400 })
+      }
+    }
+
+    const adminClient = getSupabaseAdminClient(requestId)
+
+    // Unlink foreign keys from audit log to allow smooth cascade
+    await adminClient.from('audit_log').update({ changed_by: null }).eq('changed_by', query.userId)
+
+    // Delete user from Auth (cascades to profile)
+    const { error: deleteError } = await adminClient.auth.admin.deleteUser(query.userId)
+    if (deleteError) {
+      return Response.json({ error: deleteError.message }, { status: 400 })
+    }
+
+    // Explicitly ensure profile is deleted if cascade had any delay
+    await adminClient.from('profiles').delete().eq('id', query.userId)
+
+    return { deleted: true, userId: query.userId }
+  },
+)

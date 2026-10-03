@@ -9,12 +9,32 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
   const params = await searchParams
   const profile = await requirePermission('users', 'manage')
   const supabase = await createClient()
+  let userRows: Array<{
+    id: string
+    full_name: string | null
+    role: string
+    created_at: string | null
+    contact_details?: unknown
+    metadata?: unknown
+  }> = []
+
   const { data: users, error } = await supabase
     .from('profiles')
     .select('id,full_name,role,created_at,contact_details,metadata')
     .order('full_name')
     .limit(500)
-  if (error) throw error
+
+  if (error) {
+    const fallback = await supabase
+      .from('profiles')
+      .select('id,full_name,role,created_at')
+      .order('full_name')
+      .limit(500)
+    if (fallback.error) throw fallback.error
+    userRows = fallback.data ?? []
+  } else {
+    userRows = users ?? []
+  }
 
   return (
     <main>
@@ -26,7 +46,7 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
         </div>
       </div>
       <UserRoles
-        users={(users ?? []).map((user) => ({
+        users={userRows.map((user) => ({
           id: String(user.id),
           full_name: user.full_name,
           role: user.role as Role,
