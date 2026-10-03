@@ -3,7 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronRight, FileCheck2, FileText, LogOut, Menu, Receipt, Search, UserRound, Users, X } from 'lucide-react'
+import {
+  ChevronRight,
+  FileCheck2,
+  FileText,
+  LogOut,
+  Menu,
+  Receipt,
+  Search,
+  UserCog,
+  UserRound,
+  Users,
+  X,
+} from 'lucide-react'
 import type { Payment, Role, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { NotificationPanel } from '@/components/NotificationPanel'
@@ -219,6 +231,9 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
       if (parts[1] === 'brand') {
         return [...base, { label: 'Settings', href: '/settings/brand' }, { label: 'Brand information', bold: true }]
       }
+      if (parts[1] === 'user' || parts[1] === 'profile') {
+        return [...base, { label: 'Settings', href: '/settings/user' }, { label: 'User settings', bold: true }]
+      }
       return [...base, { label: 'Settings', bold: true }]
     }
 
@@ -391,6 +406,15 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
         </div>
 
         <NotificationPanel role={role} />
+
+        <Link
+          href="/settings/user"
+          className="btn-ghost inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900"
+          title="User settings"
+        >
+          <UserCog size={15} />
+          <span className="hidden sm:inline">Settings</span>
+        </Link>
 
         <button
           type="button"

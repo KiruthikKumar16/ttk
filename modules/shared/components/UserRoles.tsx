@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Role, InviteCode } from '@/lib/types'
+import type { Role, InviteCode, UserContactDetails, UserMetadata } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import {
   Save,
@@ -20,9 +20,20 @@ import {
   X,
   Sparkles,
   ExternalLink,
+  UserCog,
+  Phone,
+  Mail,
+  Building,
 } from 'lucide-react'
 
-type UserProfile = { id: string; full_name: string | null; role: Role; created_at: string | null }
+type UserProfile = {
+  id: string
+  full_name: string | null
+  role: Role
+  created_at: string | null
+  contact_details?: UserContactDetails
+  metadata?: UserMetadata
+}
 type FilterTab = 'all' | 'pending' | 'staff' | 'admin' | 'invites'
 
 function getErrorMessage(result: unknown, fallback: string): string {
@@ -77,6 +88,136 @@ export function UserRoles({
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null)
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
+
+  // Edit User Details & Metadata Modal State
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [editFullName, setEditFullName] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editAltPhone, setEditAltPhone] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editAddress, setEditAddress] = useState('')
+  const [editCity, setEditCity] = useState('')
+  const [editEmergency, setEditEmergency] = useState('')
+  const [editDepartment, setEditDepartment] = useState('')
+  const [editDesignation, setEditDesignation] = useState('')
+  const [editEmpId, setEditEmpId] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editCustomMeta, setEditCustomMeta] = useState<{ id: string; key: string; value: string }[]>([])
+  const [savingDetails, setSavingDetails] = useState(false)
+
+  const openEditModal = (user: UserProfile) => {
+    setEditingUser(user)
+    setEditFullName(user.full_name || '')
+    const contact = (user.contact_details as Record<string, unknown>) || {}
+    setEditPhone(String(contact.phone || ''))
+    setEditAltPhone(String(contact.altPhone || ''))
+    setEditEmail(String(contact.email || ''))
+    setEditAddress(String(contact.address || ''))
+    setEditCity(String(contact.city || ''))
+    setEditEmergency(String(contact.emergencyContact || ''))
+
+    const meta = (user.metadata as Record<string, unknown>) || {}
+    setEditDepartment(String(meta.department || ''))
+    setEditDesignation(String(meta.designation || ''))
+    setEditEmpId(String(meta.employeeId || ''))
+    setEditBio(String(meta.bio || ''))
+
+    const knownKeys = new Set(['department', 'designation', 'employeeId', 'bio', 'timezone'])
+    const custom = Object.entries(meta)
+      .filter(([k]) => !knownKeys.has(k))
+      .map(([k, v]) => ({
+        id: Math.random().toString(36).substring(2, 9),
+        key: k,
+        value: typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''),
+      }))
+    setEditCustomMeta(custom)
+  }
+
+  const handleSaveUserDetails = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
+    setSavingDetails(true)
+    setError('')
+    setSuccess('')
+
+    const compiledContact: Record<string, unknown> = {}
+    if (editPhone.trim()) compiledContact.phone = editPhone.trim()
+    if (editAltPhone.trim()) compiledContact.altPhone = editAltPhone.trim()
+    if (editEmail.trim()) compiledContact.email = editEmail.trim()
+    if (editAddress.trim()) compiledContact.address = editAddress.trim()
+    if (editCity.trim()) compiledContact.city = editCity.trim()
+    if (editEmergency.trim()) compiledContact.emergencyContact = editEmergency.trim()
+
+    const compiledMeta: Record<string, unknown> = {}
+    if (editDepartment.trim()) compiledMeta.department = editDepartment.trim()
+    if (editDesignation.trim()) compiledMeta.designation = editDesignation.trim()
+    if (editEmpId.trim()) compiledMeta.employeeId = editEmpId.trim()
+    if (editBio.trim()) compiledMeta.bio = editBio.trim()
+    for (const item of editCustomMeta) {
+      if (item.key.trim()) {
+        try {
+          if (item.value.startsWith('{') || item.value.startsWith('[')) {
+            compiledMeta[item.key.trim()] = JSON.parse(item.value)
+          } else {
+            compiledMeta[item.key.trim()] = item.value
+          }
+        } catch {
+          compiledMeta[item.key.trim()] = item.value
+        }
+      }
+    }
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: editingUser.id,
+          fullName: editFullName.trim(),
+          contactDetails: compiledContact,
+          metadata: compiledMeta,
+        }),
+      })
+
+      const result = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(getErrorMessage(result, 'Failed to update user settings.'))
+      }
+
+      setRows((current) =>
+        current.map((r) =>
+          r.id === editingUser.id
+            ? {
+                ...r,
+                full_name: editFullName.trim(),
+                contact_details: compiledContact as UserContactDetails,
+                metadata: compiledMeta as UserMetadata,
+              }
+            : r,
+        ),
+      )
+      setInitialRows((current) =>
+        current.map((r) =>
+          r.id === editingUser.id
+            ? {
+                ...r,
+                full_name: editFullName.trim(),
+                contact_details: compiledContact as UserContactDetails,
+                metadata: compiledMeta as UserMetadata,
+              }
+            : r,
+        ),
+      )
+
+      setSuccess(`Updated contact details and metadata for ${editFullName.trim() || editingUser.id}.`)
+      setEditingUser(null)
+      setTimeout(() => setSuccess(''), 5000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user settings.')
+    } finally {
+      setSavingDetails(false)
+    }
+  }
 
   const fetchInviteCodes = async () => {
     setLoadingInvites(true)
@@ -816,6 +957,28 @@ export function UserRoles({
                           )}
                         </div>
                         <span className="block mt-0.5 text-xs text-gray-400 font-mono">{user.id}</span>
+                        {(user.contact_details?.phone || user.contact_details?.email || user.metadata?.department) && (
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-slate-500">
+                            {user.contact_details?.phone && (
+                              <span className="inline-flex items-center gap-1 font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                                <Phone size={10} className="text-slate-400" />
+                                {user.contact_details.phone}
+                              </span>
+                            )}
+                            {user.contact_details?.email && (
+                              <span className="inline-flex items-center gap-1 text-slate-600">
+                                <Mail size={10} className="text-slate-400" />
+                                {user.contact_details.email}
+                              </span>
+                            )}
+                            {user.metadata?.department && (
+                              <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-800 px-1.5 py-0.5 rounded border border-teal-200 text-[10px] font-medium">
+                                <Building size={10} className="text-teal-600" />
+                                {user.metadata.department}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </th>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <label className="sr-only" htmlFor={`role-${user.id}`}>
@@ -842,8 +1005,19 @@ export function UserRoles({
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-mono">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString('en-IN') : '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        {isPending ? (
+                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditModal(user)}
+                          className="text-xs text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-50"
+                          title="Edit user settings, contact details & metadata"
+                        >
+                          <UserCog size={13} className="mr-1 text-slate-500" />
+                          Settings & Info
+                        </Button>
+                        {isPending && (
                           <Button
                             type="button"
                             size="sm"
@@ -857,12 +1031,10 @@ export function UserRoles({
                             ) : (
                               <>
                                 <UserCheck size={14} className="mr-1.5 text-amber-700" />
-                                Approve as Staff
+                                Approve
                               </>
                             )}
                           </Button>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
                         )}
                       </td>
                     </tr>
@@ -1103,6 +1275,243 @@ export function UserRoles({
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT USER SETTINGS, CONTACT DETAILS & METADATA */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-7 relative">
+            <button
+              type="button"
+              onClick={() => setEditingUser(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-teal-500" />
+                <span className="text-xs uppercase font-bold text-teal-700 tracking-wider">User Settings</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Contact Details & Metadata for {editingUser.full_name || 'User'}
+              </h3>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {editingUser.id}</p>
+            </div>
+
+            <form onSubmit={handleSaveUserDetails} className="space-y-6">
+              {/* Identity & Basic Info */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-1.5">
+                  Profile Name
+                </h4>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFullName}
+                    onChange={(e) => setEditFullName(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                  />
+                </div>
+              </div>
+
+              {/* Contact Details */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-1.5">
+                  Contact Details
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Primary Phone</label>
+                    <input
+                      type="tel"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Alternate Phone</label>
+                    <input
+                      type="tel"
+                      value={editAltPhone}
+                      onChange={(e) => setEditAltPhone(e.target.value)}
+                      placeholder="+91 91234 56789"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Contact Email</label>
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="user@example.com"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">City / Region</label>
+                    <input
+                      type="text"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      placeholder="Madurai, Tamil Nadu"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Office / Address</label>
+                    <input
+                      type="text"
+                      value={editAddress}
+                      onChange={(e) => setEditAddress(e.target.value)}
+                      placeholder="Branch location or residence address"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Emergency Contact</label>
+                    <input
+                      type="text"
+                      value={editEmergency}
+                      onChange={(e) => setEditEmergency(e.target.value)}
+                      placeholder="Contact Name & Number"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Metadata */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-1.5">
+                  Operational Metadata
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Department</label>
+                    <input
+                      type="text"
+                      value={editDepartment}
+                      onChange={(e) => setEditDepartment(e.target.value)}
+                      placeholder="Academics, Training, Accounts"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Designation</label>
+                    <input
+                      type="text"
+                      value={editDesignation}
+                      onChange={(e) => setEditDesignation(e.target.value)}
+                      placeholder="Instructor, Coordinator"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Employee / Staff ID</label>
+                    <input
+                      type="text"
+                      value={editEmpId}
+                      onChange={(e) => setEditEmpId(e.target.value)}
+                      placeholder="EMP-012"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 font-mono"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Bio / Notes</label>
+                    <textarea
+                      rows={2}
+                      value={editBio}
+                      onChange={(e) => setEditBio(e.target.value)}
+                      placeholder="Operational notes or user bio"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Custom Metadata Key-Values */}
+                <div className="pt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-600 uppercase">
+                      Custom Metadata Attributes
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditCustomMeta((prev) => [
+                          ...prev,
+                          { id: Math.random().toString(36).substring(2, 9), key: '', value: '' },
+                        ])
+                      }
+                      className="text-xs text-teal-600 hover:text-teal-700 font-medium inline-flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Add Attribute
+                    </button>
+                  </div>
+                  {editCustomMeta.map((item) => (
+                    <div key={item.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Key"
+                        value={item.key}
+                        onChange={(e) =>
+                          setEditCustomMeta((prev) =>
+                            prev.map((c) => (c.id === item.id ? { ...c, key: e.target.value } : c)),
+                          )
+                        }
+                        className="w-1/3 px-2.5 py-1 text-xs font-mono border border-slate-300 rounded-md"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value"
+                        value={item.value}
+                        onChange={(e) =>
+                          setEditCustomMeta((prev) =>
+                            prev.map((c) => (c.id === item.id ? { ...c, value: e.target.value } : c)),
+                          )
+                        }
+                        className="flex-1 px-2.5 py-1 text-xs border border-slate-300 rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditCustomMeta((prev) => prev.filter((c) => c.id !== item.id))}
+                        className="p-1 text-slate-400 hover:text-rose-600"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingUser(null)}
+                  className="text-xs text-slate-600"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={savingDetails}
+                  size="sm"
+                  className="text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white shadow-xs"
+                >
+                  {savingDetails ? 'Saving...' : 'Save User Details'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

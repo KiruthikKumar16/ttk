@@ -166,3 +166,32 @@ export type InviteCode = {
   usedAt?: string | null
   createdAt: string
 }
+
+export type UserContactDetails = {
+  phone?: string
+  altPhone?: string
+  email?: string
+  address?: string
+  city?: string
+  emergencyContact?: string
+  notes?: string
+  [key: string]: unknown
+}
+
+export type UserMetadata = {
+  department?: string
+  designation?: string
+  employeeId?: string
+  bio?: string
+  timezone?: string
+  [key: string]: unknown
+}
+
+export type UserProfile = {
+  id: string
+  full_name: string | null
+  role: Role
+  created_at: string | null
+  contact_details?: UserContactDetails
+  metadata?: UserMetadata
+}

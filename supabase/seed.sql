@@ -45,12 +45,16 @@ on conflict (provider_id, provider) do update set
   created_at = coalesce(auth.identities.created_at, excluded.created_at),
   updated_at = now();
 
-insert into public.profiles (id, role, full_name)
+insert into public.profiles (id, role, full_name, contact_details, metadata)
 values
-  ('00000000-0000-4000-8000-000000000001', 'admin', 'Local Admin'),
-  ('00000000-0000-4000-8000-000000000002', 'staff', 'Local Staff'),
-  ('00000000-0000-4000-8000-000000000003', 'staff', 'Local Trainer')
-on conflict (id) do update set role = excluded.role, full_name = excluded.full_name;
+  ('00000000-0000-4000-8000-000000000001', 'admin', 'Local Admin', '{"phone":"+91 98765 00001","email":"admin@thoorigai.test","city":"Madurai"}'::jsonb, '{"department":"Management","designation":"System Administrator"}'::jsonb),
+  ('00000000-0000-4000-8000-000000000002', 'staff', 'Local Staff', '{"phone":"+91 98765 00002","email":"staff@thoorigai.test","city":"Madurai"}'::jsonb, '{"department":"Admissions & Accounts","designation":"Staff Coordinator"}'::jsonb),
+  ('00000000-0000-4000-8000-000000000003', 'staff', 'Local Trainer', '{"phone":"+91 98765 00003","email":"trainer@thoorigai.test","city":"Madurai"}'::jsonb, '{"department":"Academics","designation":"Technical Trainer"}'::jsonb)
+on conflict (id) do update set
+  role = excluded.role,
+  full_name = excluded.full_name,
+  contact_details = excluded.contact_details,
+  metadata = excluded.metadata;
 
 insert into public.courses (id, name, fee, duration, description, gst_inclusive)
 values

@@ -11,7 +11,7 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
   const supabase = await createClient()
   const { data: users, error } = await supabase
     .from('profiles')
-    .select('id,full_name,role,created_at')
+    .select('id,full_name,role,created_at,contact_details,metadata')
     .order('full_name')
     .limit(500)
   if (error) throw error
@@ -31,6 +31,8 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
           full_name: user.full_name,
           role: user.role as Role,
           created_at: user.created_at,
+          contact_details: (user.contact_details as any) || {},
+          metadata: (user.metadata as any) || {},
         }))}
         currentUserId={profile.id}
         initialFilter={params?.filter}

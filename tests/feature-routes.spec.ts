@@ -6,6 +6,7 @@ const staffPages = [
   ['/assessments', 'Assessments'],
   ['/materials', 'Course materials'],
   ['/reports', 'Reports'],
+  ['/settings/user', 'User settings'],
 ] as const
 
 const adminOnlyPages = [

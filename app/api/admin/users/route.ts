@@ -2,9 +2,12 @@ import { z } from 'zod'
 import { withApi } from '@/lib/http/handler'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
-const roleSchema = z.object({
+const updateUserSchema = z.object({
   userId: z.string().uuid(),
-  role: z.enum(['admin', 'staff', 'pending']),
+  role: z.enum(['admin', 'staff', 'pending']).optional(),
+  fullName: z.string().min(1).max(200).optional(),
+  contactDetails: z.record(z.unknown()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 })
 
 const createUserSchema = z.object({
@@ -12,30 +15,46 @@ const createUserSchema = z.object({
   fullName: z.string().min(1).max(200),
   role: z.enum(['admin', 'staff', 'pending']).default('staff'),
   password: z.string().min(8).max(1024).optional(),
+  contactDetails: z.record(z.unknown()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 })
 
 export const GET = withApi({ roles: ['admin'] }, async ({ supabase }) => {
   const { data, error } = await supabase!
     .from('profiles')
-    .select('id,full_name,role,created_at')
+    .select('id,full_name,role,created_at,contact_details,metadata')
     .order('full_name')
     .limit(500)
   if (error) throw error
   return data ?? []
 })
 
-export const PATCH = withApi({ roles: ['admin'], body: roleSchema }, async ({ supabase, body }) => {
-  const { error } = await supabase!.rpc('admin_change_profile_role', {
-    p_user_id: body.userId,
-    p_role: body.role,
-  })
-  if (error) {
-    if (error.code === 'P0002') return Response.json({ error: 'User profile was not found.' }, { status: 404 })
-    if (error.code === '22023' || error.code === '23514')
-      return Response.json({ error: error.message }, { status: 409 })
-    if (error.code === '42501') return Response.json({ error: 'Admin access required.' }, { status: 403 })
-    throw error
+export const PATCH = withApi({ roles: ['admin'], body: updateUserSchema }, async ({ supabase, body }) => {
+  if (body.role) {
+    const { error } = await supabase!.rpc('admin_change_profile_role', {
+      p_user_id: body.userId,
+      p_role: body.role,
+    })
+    if (error) {
+      if (error.code === 'P0002') return Response.json({ error: 'User profile was not found.' }, { status: 404 })
+      if (error.code === '22023' || error.code === '23514')
+        return Response.json({ error: error.message }, { status: 409 })
+      if (error.code === '42501') return Response.json({ error: 'Admin access required.' }, { status: 403 })
+      throw error
+    }
   }
+
+  const profileUpdates: Record<string, unknown> = {}
+  if (body.fullName !== undefined) profileUpdates.full_name = body.fullName.trim()
+  if (body.contactDetails !== undefined) profileUpdates.contact_details = body.contactDetails
+  if (body.metadata !== undefined) profileUpdates.metadata = body.metadata
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { error: updateError } = await supabase!.from('profiles').update(profileUpdates).eq('id', body.userId)
+
+    if (updateError) throw updateError
+  }
+
   return { updated: true }
 })
 

@@ -18,6 +18,7 @@ import {
   Building2,
   Layers,
   Tags,
+  UserCog,
 } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { can, type Resource } from '@/lib/auth/permissions'
@@ -156,6 +157,18 @@ export function Sidebar({
           >
             <Building2 size={18} className="mr-2" />
             {!collapsed && <span className="flex-1 text-left">Brand information</span>}
+          </Link>
+        )}
+        {(role === 'admin' || role === 'staff') && (
+          <Link
+            href="/settings/user"
+            onClick={onNavigate}
+            aria-current={pathname.startsWith('/settings/user') ? 'page' : undefined}
+            className={`nav-item${pathname.startsWith('/settings/user') ? ' active' : ''}`}
+            title="User settings"
+          >
+            <UserCog size={18} className="mr-2" />
+            {!collapsed && <span className="flex-1 text-left">User settings</span>}
           </Link>
         )}
         <div className="account">
