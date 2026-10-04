@@ -99,6 +99,8 @@ export const assessmentSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }),
   maxScore: z.number().nonnegative({ message: 'Max score must be a non-negative number' }),
   assessmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be in YYYY-MM-DD format' }),
+  formUrl: z.string().optional().nullable(),
+  sheetUrl: z.string().optional().nullable(),
 })
 
 export const assessmentResultSchema = z.object({

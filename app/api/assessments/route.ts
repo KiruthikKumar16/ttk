@@ -40,6 +40,8 @@ async function getAssessments(req: NextRequest) {
         title,
         max_score,
         assessment_date,
+        form_url,
+        sheet_url,
         created_by,
         created_at,
         courses!assessments_course_id_fkey (id, name),
@@ -53,14 +55,44 @@ async function getAssessments(req: NextRequest) {
       query = query.eq('course_id', courseId)
     }
 
-    const { data, error, count } = await query
+    let data: any = null
+    let error: any = null
+    let count: any = 0
+    const initialRes = await query
       .order('assessment_date', { ascending: false })
       .range(pagination.offset, pagination.offset + pagination.limit - 1)
+    data = initialRes.data
+    error = initialRes.error
+    count = initialRes.count
+
+    if (error && (error.message?.includes('form_url') || error.code === '42703')) {
+      let fallbackQuery = supabase.from('assessments').select(
+        `
+          id,
+          course_id,
+          title,
+          max_score,
+          assessment_date,
+          created_by,
+          created_at,
+          courses!assessments_course_id_fkey (id, name),
+          profiles!assessments_created_by_fkey (id, full_name, role)
+        `,
+        { count: 'exact' },
+      )
+      if (courseId) fallbackQuery = fallbackQuery.eq('course_id', courseId)
+      const fallbackResult = await fallbackQuery
+        .order('assessment_date', { ascending: false })
+        .range(pagination.offset, pagination.offset + pagination.limit - 1)
+      data = fallbackResult.data
+      error = fallbackResult.error
+      count = fallbackResult.count
+    }
 
     if (error) throw error
 
     // Format the response for easier consumption
-    const formattedData = (data || []).map((record) => {
+    const formattedData = (data || []).map((record: any) => {
       const course = normalizeJoined(record.courses)
       const profile = normalizeJoined(record.profiles)
       return {
@@ -70,6 +102,8 @@ async function getAssessments(req: NextRequest) {
         title: record.title,
         maxScore: record.max_score,
         assessmentDate: record.assessment_date,
+        formUrl: record.form_url ?? null,
+        sheetUrl: record.sheet_url ?? null,
         createdBy: profile
           ? {
               id: profile.id,
@@ -126,7 +160,7 @@ async function postAssessment(req: NextRequest) {
     // Validate the request body with zod schema
     const parsedBody = assessmentSchema.parse(body)
 
-    const { courseId, title, maxScore, assessmentDate } = parsedBody
+    const { courseId, title, maxScore, assessmentDate, formUrl, sheetUrl } = parsedBody
 
     // Business logic validations
     // 1. Check if course exists
@@ -151,21 +185,34 @@ async function postAssessment(req: NextRequest) {
     }
 
     // Insert assessment record
-    const assessmentData = {
+    const assessmentData: Record<string, any> = {
       course_id: courseId,
       title,
       max_score: maxScore,
       assessment_date: assessmentDate,
       created_by: session.user.id,
     }
+    if (formUrl) assessmentData.form_url = formUrl
+    if (sheetUrl) assessmentData.sheet_url = sheetUrl
 
-    const { data: assessmentRecord, error: assessmentError } = await supabase
+    let assessmentRecord: any
+    let { data: inserted, error: assessmentError } = await supabase
       .from('assessments')
       .insert(assessmentData)
       .select()
       .single()
 
+    // Graceful fallback if database column form_url does not exist yet
+    if (assessmentError && (assessmentError.message?.includes('form_url') || assessmentError.code === '42703')) {
+      delete assessmentData.form_url
+      delete assessmentData.sheet_url
+      const retry = await supabase.from('assessments').insert(assessmentData).select().single()
+      inserted = retry.data
+      assessmentError = retry.error
+    }
+
     if (assessmentError) throw assessmentError
+    assessmentRecord = inserted
 
     // Format response
     const formattedRecord = {
@@ -175,6 +222,8 @@ async function postAssessment(req: NextRequest) {
       title: assessmentRecord.title,
       maxScore: assessmentRecord.max_score,
       assessmentDate: assessmentRecord.assessment_date,
+      formUrl: assessmentRecord.form_url ?? formUrl ?? null,
+      sheetUrl: assessmentRecord.sheet_url ?? sheetUrl ?? null,
       createdBy: {
         id: assessmentRecord.created_by,
         fullName: profile.full_name,

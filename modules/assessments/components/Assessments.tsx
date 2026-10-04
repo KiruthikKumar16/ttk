@@ -1,34 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table } from '@/components/ui/table'
-import { TableHeader } from '@/components/ui/table-header'
-import { TableBody } from '@/components/ui/table-body'
-import { TableRow } from '@/components/ui/table-row'
-import { TableCell } from '@/components/ui/table-cell'
-import { TableHead } from '@/components/ui/table-head'
 import {
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  Filter,
   Search,
-  User,
-  List,
-  Edit,
-  Trash2,
   Plus,
+  Trash2,
+  Edit,
+  ExternalLink,
+  QrCode,
+  FileSpreadsheet,
+  Download,
+  CalendarDays,
+  GraduationCap,
+  Sparkles,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  TrendingUp,
+  Award,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
   Check,
-  X,
+  ClipboardList,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { CourseCategory } from '@/lib/types'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { GoogleFormsImportModal } from './GoogleFormsImportModal'
+import { ClassroomQRModal } from './ClassroomQRModal'
 
 export type Assessment = {
   id: string
@@ -37,6 +43,8 @@ export type Assessment = {
   title: string
   maxScore: number
   assessmentDate: string
+  formUrl?: string | null
+  sheetUrl?: string | null
   createdBy: {
     id: string
     fullName: string
@@ -66,6 +74,31 @@ export type Course = {
   categoryName?: string | null
 }
 
+function formatDate(dateString: string) {
+  try {
+    const parts = dateString.split('-').map(Number)
+    if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2])
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    }
+    return format(parseISO(dateString), 'MMM d, yyyy')
+  } catch {
+    return dateString
+  }
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2 && parts[0] && parts[parts.length - 1]) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+  }
+  return (name.slice(0, 2) || 'ST').toUpperCase()
+}
+
 export function Assessments({
   initialAssessments = [],
   initialCourses = [],
@@ -89,29 +122,46 @@ export function Assessments({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+
   const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments)
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([])
   const [courses, setCourses] = useState<Course[]>(initialCourses)
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('')
-  const [students, setStudents] = useState<any[]>([]) // We'll fetch students for the selected course when needed
+  const [students, setStudents] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null)
   const [deleteResultId, setDeleteResultId] = useState<string | null>(null)
   const [editingResult, setEditingResult] = useState(false)
   const [notice, setNotice] = useState('')
+  const [activeTab, setActiveTab] = useState<'library' | 'create'>('library')
+
+  // Modals state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false)
+  const [copiedFormId, setCopiedFormId] = useState<string | null>(null)
+
+  // Creation form
   const [newAssessment, setNewAssessment] = useState({
     courseId: '',
     title: '',
-    maxScore: '',
-    assessmentDate: '',
+    maxScore: '30',
+    assessmentDate: new Date().toISOString().slice(0, 10),
+    formUrl: '',
+    sheetUrl: '',
   })
+
+  // Individual result form
   const [newResult, setNewResult] = useState({
     studentId: '',
     score: '',
     remarks: '',
   })
+
   const [bulkScores, setBulkScores] = useState<Record<string, string>>({})
+  const [resultsSearch, setResultsSearch] = useState('')
+  const [resultsFilter, setResultsFilter] = useState<'all' | 'graded' | 'unmarked'>('all')
+
   const [assessmentFilters, setAssessmentFilters] = useState({
     courseId: initialCourseId,
     pageSize: initialPageSize,
@@ -120,18 +170,31 @@ export function Assessments({
   const [assessmentTotalCount, setAssessmentTotalCount] = useState(initialTotalCount)
   const [assessmentHasMore, setAssessmentHasMore] = useState(initialTotalCount > initialPage * initialPageSize)
 
+  const selectedAssessment = useMemo(() => {
+    return assessments.find((a) => a.id === selectedAssessmentId) || null
+  }, [assessments, selectedAssessmentId])
+
+  // KPIs
+  const kpis = useMemo(() => {
+    const total = assessments.length
+    const withGoogleForms = assessments.filter((a) => !!a.formUrl).length
+    const uniqueCourses = new Set(assessments.map((a) => a.courseId)).size
+    return {
+      total,
+      withGoogleForms,
+      uniqueCourses,
+    }
+  }, [assessments])
+
   // Fetch courses for the dropdown
   const fetchCourses = async () => {
     try {
       const response = await fetch('/api/courses?page=1&pageSize=100')
-      if (!response.ok) {
-        throw new Error('Failed to fetch courses')
-      }
+      if (!response.ok) throw new Error('Failed to fetch courses')
       const data = await response.json()
       setCourses(data.data || [])
-    } catch (err) {
-      console.error('Assessment request failed.')
-      // Non-fatal: we can still proceed without courses, but the form will be empty
+    } catch {
+      // Non-fatal fallback
     }
   }
 
@@ -156,28 +219,24 @@ export function Assessments({
       setAssessmentHasMore(data.hasMore || false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error('Assessment request failed.')
     } finally {
       setLoading(false)
     }
   }
 
-  // Fetch students for a given course (used when selecting an assessment to enter results)
+  // Fetch students for selected course
   const fetchStudentsForCourse = async (courseId: string) => {
     try {
       const response = await fetch(`/api/students?course=${courseId}&page=1&pageSize=100`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch students')
-      }
+      if (!response.ok) throw new Error('Failed to fetch students')
       const data = await response.json()
       setStudents(data.data || [])
-    } catch (err) {
-      console.error('Assessment request failed.')
+    } catch {
       setStudents([])
     }
   }
 
-  // Fetch results for a given assessment
+  // Fetch results for an assessment
   const fetchAssessmentResults = async (assessmentId: string) => {
     try {
       const response = await fetch(`/api/assessments/${assessmentId}/results?page=1&pageSize=100`)
@@ -186,9 +245,16 @@ export function Assessments({
         throw new Error(errorData.error || 'Failed to fetch assessment results')
       }
       const data = await response.json()
-      setAssessmentResults(data.data || [])
-    } catch (err) {
-      console.error('Assessment request failed.')
+      const list: AssessmentResult[] = data.data || []
+      setAssessmentResults(list)
+
+      // Initialize bulk scores mapping
+      const initialBulk: Record<string, string> = {}
+      for (const item of list) {
+        initialBulk[String(item.studentId)] = String(item.score)
+      }
+      setBulkScores(initialBulk)
+    } catch {
       setAssessmentResults([])
     }
   }
@@ -196,23 +262,23 @@ export function Assessments({
   // Initial fetch
   useEffect(() => {
     if (!initialDataLoaded) {
-      fetchCourses()
-      fetchAssessments()
+      void fetchCourses()
+      void fetchAssessments()
     }
   }, [initialDataLoaded])
 
-  // When selected assessment changes, fetch its results and students for its course
+  // When selected assessment changes, fetch results and students
   useEffect(() => {
     if (selectedAssessmentId) {
-      // We need to get the course ID of the selected assessment to fetch students
-      const selectedAssessment = assessments.find((a) => a.id === selectedAssessmentId)
-      if (selectedAssessment) {
-        fetchStudentsForCourse(selectedAssessment.courseId)
-        fetchAssessmentResults(selectedAssessmentId)
+      const target = assessments.find((a) => a.id === selectedAssessmentId)
+      if (target) {
+        void fetchStudentsForCourse(target.courseId)
+        void fetchAssessmentResults(selectedAssessmentId)
       }
     } else {
       setAssessmentResults([])
       setStudents([])
+      setBulkScores({})
     }
   }, [selectedAssessmentId, assessments])
 
@@ -256,30 +322,24 @@ export function Assessments({
   }
 
   const handleCreateAssessment = async () => {
-    // Basic validation
     if (!newAssessment.courseId || !newAssessment.title || !newAssessment.maxScore || !newAssessment.assessmentDate) {
-      setError('Please fill in all fields')
+      setError('Please fill in all required fields.')
       return
     }
 
-    const maxScoreNum = parseFloat(newAssessment.maxScore)
-    if (isNaN(maxScoreNum) || maxScoreNum < 0) {
-      setError('Max score must be a non-negative number')
-      return
-    }
-
-    // We'll create the assessment via the API
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      setError(null)
       const response = await fetch('/api/assessments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseId: newAssessment.courseId,
           title: newAssessment.title,
-          maxScore: maxScoreNum,
+          maxScore: parseFloat(newAssessment.maxScore),
           assessmentDate: newAssessment.assessmentDate,
+          formUrl: newAssessment.formUrl || null,
+          sheetUrl: newAssessment.sheetUrl || null,
         }),
       })
 
@@ -288,735 +348,1095 @@ export function Assessments({
         throw new Error(errorData.error || 'Failed to create assessment')
       }
 
-      // Clear the form and refresh assessments
+      const data = await response.json()
+      setAssessments([data.data, ...assessments])
       setNewAssessment({
         courseId: '',
         title: '',
-        maxScore: '',
-        assessmentDate: '',
+        maxScore: '30',
+        assessmentDate: new Date().toISOString().slice(0, 10),
+        formUrl: '',
+        sheetUrl: '',
       })
-      await fetchAssessments()
+      setActiveTab('library')
+      setNotice('Assessment created successfully.')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error('Assessment request failed.')
+      setError(err instanceof Error ? err.message : 'An error occurred while creating assessment')
     } finally {
       setLoading(false)
     }
   }
 
   const handleCreateResult = async () => {
-    // Basic validation
-    if (!newResult.studentId || !newResult.score) {
-      setError('Please fill in student and score')
+    if (!newResult.studentId || !newResult.score || !selectedAssessmentId) {
+      setError('Please fill in all required result fields.')
       return
     }
 
-    const scoreNum = parseFloat(newResult.score)
-    if (isNaN(scoreNum) || scoreNum < 0) {
-      setError('Score must be a non-negative number')
-      return
-    }
-
-    // We'll create the result via the API
-    try {
-      setLoading(true)
-      setError(null)
-      const response = await fetch(`/api/assessments/${selectedAssessmentId}/results`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId: parseInt(newResult.studentId, 10),
-          score: scoreNum,
-          remarks: newResult.remarks,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to save assessment result')
-      }
-
-      // Clear the form and refresh results
-      setNewResult({
-        studentId: '',
-        score: '',
-        remarks: '',
-      })
-      setEditingResult(false)
-      setNotice(editingResult ? 'Result updated.' : 'Result saved.')
-      await fetchAssessmentResults(selectedAssessmentId!)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred')
-      console.error('Assessment request failed.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSaveBulkScores = async () => {
-    const entries = Object.entries(bulkScores).filter(([, score]) => score.trim() !== '')
-    const assessment = assessments.find((item) => item.id === selectedAssessmentId)
-    if (!selectedAssessmentId || !assessment || entries.length === 0) {
-      setError('Enter at least one score before saving the table.')
-      return
-    }
-    const results = entries.map(([studentId, score]) => ({ studentId: Number(studentId), score: Number(score) }))
-    if (
-      results.some((result) => !Number.isFinite(result.score) || result.score < 0 || result.score > assessment.maxScore)
-    ) {
-      setError(`Scores must be between 0 and ${assessment.maxScore}.`)
-      return
-    }
     setLoading(true)
     setError(null)
     try {
       const response = await fetch(`/api/assessments/${selectedAssessmentId}/results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ results }),
+        body: JSON.stringify({
+          studentId: parseInt(newResult.studentId, 10),
+          score: parseFloat(newResult.score),
+          remarks: newResult.remarks || undefined,
+        }),
       })
+
       if (!response.ok) {
-        const data = await response.json().catch(() => null)
-        throw new Error(data?.error?.message ?? data?.error ?? 'Unable to save the bulk scores.')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save result')
       }
-      setBulkScores({})
+
       await fetchAssessmentResults(selectedAssessmentId)
-      setNotice(`Saved ${results.length} scores.`)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to save the bulk scores.')
+      setNewResult({ studentId: '', score: '', remarks: '' })
+      setEditingResult(false)
+      setNotice('Result saved successfully.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while saving result')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveBulkScores = async () => {
+    if (!selectedAssessmentId) return
+
+    const entries = Object.entries(bulkScores)
+      .filter(([_, score]) => score.trim() !== '')
+      .map(([studentId, score]) => ({
+        studentId: parseInt(studentId, 10),
+        score: parseFloat(score),
+      }))
+
+    if (entries.length === 0) return
+
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/assessments/${selectedAssessmentId}/results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: entries }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save bulk scores')
+      }
+
+      await fetchAssessmentResults(selectedAssessmentId)
+      setNotice(`Saved ${entries.length} scores successfully.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save bulk scores')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const removeResult = async () => {
+    if (!deleteResultId || !selectedAssessmentId) return
+
+    try {
+      const response = await fetch(`/api/assessments/${selectedAssessmentId}/results/${deleteResultId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete result')
+
+      setAssessmentResults((prev) => prev.filter((r) => r.id !== deleteResultId))
+      setDeleteResultId(null)
+      setNotice('Assessment result deleted.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete result')
     }
   }
 
   const exportResults = () => {
-    const assessment = assessments.find((item) => item.id === selectedAssessmentId)
-    if (!assessment || assessmentResults.length === 0) return
-    const escapeCell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`
-    const rows = [
-      ['Student', 'Register ID', 'Score', 'Maximum score', 'Percentage', 'Remarks'],
-      ...assessmentResults.map((result) => [
-        result.studentName,
-        result.studentId,
-        result.score,
-        assessment.maxScore,
-        assessment.maxScore > 0 ? ((result.score / assessment.maxScore) * 100).toFixed(1) : '0.0',
-        result.remarks ?? '',
-      ]),
-    ]
-    const blob = new Blob([rows.map((row) => row.map(escapeCell).join(',')).join('\r\n')], {
-      type: 'text/csv;charset=utf-8',
-    })
+    if (assessmentResults.length === 0) return
+    const maxScore = selectedAssessment?.maxScore || 100
+    const headers = ['Student ID', 'Student Name', 'Score', 'Max Score', 'Percentage', 'Remarks', 'Graded At']
+    const rows = assessmentResults.map((r) => [
+      r.studentId,
+      `"${r.studentName.replace(/"/g, '""')}"`,
+      r.score,
+      maxScore,
+      `${((r.score / maxScore) * 100).toFixed(1)}%`,
+      `"${(r.remarks || '').replace(/"/g, '""')}"`,
+      r.gradedAt,
+    ])
+    const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `assessment-${assessment.id}-results.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `assessment-results-${selectedAssessmentId}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
-  const removeResult = async () => {
-    if (!selectedAssessmentId || !deleteResultId) return
-    setLoading(true)
+  const handleCopyLink = async (formUrl: string, id: string) => {
     try {
-      const response = await fetch(
-        `/api/assessments/${selectedAssessmentId}/results?resultId=${encodeURIComponent(deleteResultId)}`,
-        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } },
-      )
-      if (!response.ok) throw new Error('Could not delete this result. Please retry.')
-      setAssessmentResults((current) => current.filter((result) => result.id !== deleteResultId))
-      setDeleteResultId(null)
-      setNotice('Result deleted.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete this result.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSelectAssessment = (assessmentId: string) => {
-    setSelectedAssessmentId(assessmentId)
-  }
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = parseISO(dateString)
-      return format(date, 'PP')
+      await navigator.clipboard.writeText(formUrl)
+      setCopiedFormId(id)
+      setTimeout(() => setCopiedFormId(null), 2000)
     } catch {
-      return dateString
+      // Fallback
     }
   }
 
-  if (loading) return <div className="p-6">Loading...</div>
-  if (error) return <div className="p-6 bg-red-50 border border-red-200 text-red-800 rounded">Error: {error}</div>
+  // Filtered assessment results in Grading Studio
+  const filteredStudents = useMemo(() => {
+    let list = students
+    if (resultsFilter === 'graded') {
+      const gradedIds = new Set(assessmentResults.map((r) => r.studentId))
+      list = list.filter((s) => gradedIds.has(s.register_id))
+    } else if (resultsFilter === 'unmarked') {
+      const gradedIds = new Set(assessmentResults.map((r) => r.studentId))
+      list = list.filter((s) => !gradedIds.has(s.register_id))
+    }
+    if (!resultsSearch.trim()) return list
+    const q = resultsSearch.toLowerCase().trim()
+    return list.filter((s) => s.name.toLowerCase().includes(q) || String(s.register_id).includes(q))
+  }, [students, resultsFilter, resultsSearch, assessmentResults])
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-start mb-6">
+    <div className="space-y-6">
+      {/* 1. Page Header & KPI Summary */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Assessments</h1>
-          <p className="text-sm text-muted-foreground">Create and manage assessments for courses</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Assessments</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Create evaluations, distribute Google Forms quizzes, and import graded responses in seconds.
+          </p>
         </div>
-        <Button variant="outline" onClick={() => setSelectedAssessmentId(null)}>
-          <Plus size={16} className="mr-2" />
-          New Assessment
-        </Button>
+
+        {selectedAssessmentId ? (
+          <Button
+            variant="outline"
+            onClick={() => setSelectedAssessmentId(null)}
+            className="self-start md:self-auto cursor-pointer"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back to Assessments List
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button
+              variant={activeTab === 'library' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('library')}
+              className="text-xs sm:text-sm font-semibold cursor-pointer"
+            >
+              <ClipboardList size={15} className="mr-1.5" />
+              Assessments Library
+            </Button>
+            <Button
+              variant={activeTab === 'create' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('create')}
+              className="text-xs sm:text-sm font-semibold cursor-pointer"
+            >
+              <Plus size={15} className="mr-1.5" />
+              Create Assessment
+            </Button>
+          </div>
+        )}
       </div>
 
-      {!selectedAssessmentId ? (
-        // Assessment list and creation form
-        <>
-          {/* New Assessment Form */}
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-bold mb-4">Create New Assessment</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleCreateAssessment()
-              }}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Course</label>
-                  <Select
-                    value={newAssessment.courseId}
-                    onValueChange={(value) => handleNewAssessmentChange('courseId', value as string)}
-                    placeholder="Select a course"
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Title</label>
-                  <Input
-                    value={newAssessment.title}
-                    onChange={(e) => handleNewAssessmentChange('title', e.target.value)}
-                    placeholder="Enter assessment title"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Max Score</label>
-                  <Input
-                    value={newAssessment.maxScore}
-                    onChange={(e) => handleNewAssessmentChange('maxScore', e.target.value)}
-                    placeholder="Enter max score (e.g., 100)"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Assessment Date</label>
-                  <Input
-                    value={newAssessment.assessmentDate}
-                    onChange={(e) => handleNewAssessmentChange('assessmentDate', e.target.value)}
-                    placeholder="YYYY-MM-DD"
-                    type="date"
-                  />
-                </div>
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button variant="default" type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Assessment'}
-                <Plus size={16} className="mr-2" />
-              </Button>
-            </form>
+      {/* KPI Tiles (shown in library/create views) */}
+      {!selectedAssessmentId && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="panel p-4 flex items-center justify-between shadow-2xs">
+            <div>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Total Assessments
+              </span>
+              <div className="text-2xl font-bold text-slate-900 mt-1">{kpis.total}</div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <ClipboardList size={20} />
+            </div>
           </div>
 
-          {/* Assessments List */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Assessments List</h2>
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Category Tier</label>
-                  <Select
-                    value={selectedCategoryFilter}
-                    onValueChange={(value) => {
-                      const newCat = (value as string) || ''
-                      setSelectedCategoryFilter(newCat)
-                      if (newCat) {
-                        const currentCrs = courses.find((c) => c.id === assessmentFilters.courseId)
-                        if (currentCrs && currentCrs.categoryId !== newCat) {
-                          handleAssessmentFiltersChange({ courseId: '' })
-                        }
-                      }
-                    }}
-                    placeholder="All categories"
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All categories</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name} ({cat.duration})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className="panel p-4 flex items-center justify-between shadow-2xs">
+            <div>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Google Form Quizzes
+              </span>
+              <div className="text-2xl font-bold text-purple-700 mt-1 flex items-baseline gap-1.5">
+                <span>{kpis.withGoogleForms}</span>
+                <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  Integrated
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <FileSpreadsheet size={20} />
+            </div>
+          </div>
+
+          <div className="panel p-4 flex items-center justify-between shadow-2xs">
+            <div>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Batches Evaluated
+              </span>
+              <div className="text-2xl font-bold text-slate-900 mt-1">{kpis.uniqueCourses}</div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <GraduationCap size={20} />
+            </div>
+          </div>
+
+          <div className="panel p-4 flex items-center justify-between shadow-2xs">
+            <div>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Instant Grading
+              </span>
+              <div className="text-sm font-bold text-emerald-700 mt-1.5 flex items-center gap-1">
+                <CheckCircle2 size={16} />
+                <span>CSV / Sheets Ready</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Award size={20} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Main Viewport */}
+      {!selectedAssessmentId ? (
+        <>
+          {/* TAB 1: CREATE ASSESSMENT */}
+          {activeTab === 'create' && (
+            <section className="panel p-6 sm:p-8 shadow-xs border border-slate-200/90 space-y-6">
+              <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      <Sparkles size={12} />
+                      New Evaluation
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Create Assessment / Quiz</h2>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Set up an evaluation and attach a Google Form link for automatic student quiz distribution.
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-slate-600 block">Quick Template Presets:</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { title: 'AWS Cloud — Week 3 Assessment', max: '30' },
+                    { title: 'Full Stack — Module 2 Practical Exam', max: '50' },
+                    { title: 'Python Fundamentals Weekly Quiz', max: '25' },
+                    { title: 'Data Analytics Midterm Test', max: '100' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.title}
+                      type="button"
+                      onClick={() => {
+                        setNewAssessment((prev) => ({
+                          ...prev,
+                          title: preset.title,
+                          maxScore: preset.max,
+                        }))
+                      }}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-800 font-medium transition-all cursor-pointer shadow-2xs"
+                    >
+                      + {preset.title} ({preset.max} pts)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void handleCreateAssessment()
+                }}
+                className="space-y-5"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 mb-1.5 block">
+                      Course Curriculum <span className="text-rose-500">*</span>
+                    </label>
+                    <Select
+                      value={newAssessment.courseId}
+                      onValueChange={(value) => handleNewAssessmentChange('courseId', value as string)}
+                      placeholder="Select a course batch"
+                    >
+                      <SelectTrigger className="min-h-11 rounded-xl text-sm">
+                        <SelectValue placeholder="Select a course batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => {
+                          const catCourses = courses.filter((c) => c.categoryId === cat.id)
+                          if (!catCourses.length) return null
+                          return (
+                            <div key={cat.id}>
+                              <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                {cat.name} ({cat.duration})
+                              </div>
+                              {catCourses.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.name}
+                                </SelectItem>
+                              ))}
+                            </div>
+                          )
+                        })}
+                        {courses.some((c) => !c.categoryId) && (
+                          <div>
+                            <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                              Other Curricula
+                            </div>
+                            {courses
+                              .filter((c) => !c.categoryId)
+                              .map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.name}
+                                </SelectItem>
+                              ))}
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 mb-1.5 block">
+                      Assessment Title <span className="text-rose-500">*</span>
+                    </label>
+                    <Input
+                      value={newAssessment.title}
+                      onChange={(e) => handleNewAssessmentChange('title', e.target.value)}
+                      placeholder="e.g., AWS Cloud — Week 3 Assessment"
+                      className="min-h-11 rounded-xl text-sm"
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Course</label>
-                  <Select
-                    value={assessmentFilters.courseId}
-                    onValueChange={(value) => handleAssessmentFiltersChange({ courseId: value as string })}
-                    placeholder="All courses"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 mb-1.5 block">
+                      Max Score (Total Points) <span className="text-rose-500">*</span>
+                    </label>
+                    <Input
+                      value={newAssessment.maxScore}
+                      onChange={(e) => handleNewAssessmentChange('maxScore', e.target.value)}
+                      placeholder="e.g., 30"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      className="min-h-11 rounded-xl text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 mb-1.5 block">
+                      Assessment Date <span className="text-rose-500">*</span>
+                    </label>
+                    <Input
+                      value={newAssessment.assessmentDate}
+                      onChange={(e) => handleNewAssessmentChange('assessmentDate', e.target.value)}
+                      placeholder="YYYY-MM-DD"
+                      type="date"
+                      className="min-h-11 rounded-xl text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Google Forms Integration Card */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-50/70 via-indigo-50/40 to-slate-50 border border-purple-200/80 space-y-4">
+                  <div className="flex items-center gap-2 text-purple-900 font-bold text-sm">
+                    <FileSpreadsheet size={18} className="text-purple-700" />
+                    <span>Google Forms &amp; Sheets Integration (Optional)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-purple-900 mb-1 block">
+                        Google Form Student URL
+                      </label>
+                      <Input
+                        value={newAssessment.formUrl}
+                        onChange={(e) => handleNewAssessmentChange('formUrl', e.target.value)}
+                        placeholder="https://docs.google.com/forms/d/e/.../viewform"
+                        className="bg-white min-h-10 text-xs sm:text-sm rounded-xl border-purple-200"
+                      />
+                      <p className="text-[11px] text-purple-700/80 mt-1">
+                        Students can scan a classroom QR code or click to open this quiz.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-purple-900 mb-1 block">
+                        Google Sheets Response URL
+                      </label>
+                      <Input
+                        value={newAssessment.sheetUrl}
+                        onChange={(e) => handleNewAssessmentChange('sheetUrl', e.target.value)}
+                        placeholder="https://docs.google.com/spreadsheets/d/..."
+                        className="bg-white min-h-10 text-xs sm:text-sm rounded-xl border-purple-200"
+                      />
+                      <p className="text-[11px] text-purple-700/80 mt-1">
+                        One-click access to the live response sheet for grading and review.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+                    <AlertCircle size={15} />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveTab('library')}
+                    className="cursor-pointer"
                   >
-                    <SelectTrigger className="w-[240px]">
-                      <SelectValue placeholder="All courses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All courses</SelectItem>
-                      {courses
-                        .filter((c) => !selectedCategoryFilter || c.categoryId === selectedCategoryFilter)
-                        .map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
-                            {course.name}
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={loading} className="btn-primary min-h-11 px-6 cursor-pointer">
+                    {loading ? 'Creating...' : 'Create Assessment'}
+                    <Plus size={16} className="ml-1.5" />
+                  </Button>
+                </div>
+              </form>
+            </section>
+          )}
+
+          {/* TAB 2: ASSESSMENTS LIBRARY */}
+          {activeTab === 'library' && (
+            <section className="panel p-6 sm:p-7 shadow-xs border border-slate-200/90 space-y-6">
+              {/* Filter Toolbar */}
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="space-y-0.5">
+                  <h2 className="text-xl font-bold text-slate-900">Assessments Catalog</h2>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Filter by curriculum or category tier to review student evaluations and launch quizzes.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <div>
+                    <label className="sr-only" htmlFor="category-tier-filter">
+                      Category Tier Filter
+                    </label>
+                    <Select
+                      value={selectedCategoryFilter}
+                      onValueChange={(value) => {
+                        const newCat = (value as string) || ''
+                        setSelectedCategoryFilter(newCat)
+                        if (newCat) {
+                          const currentCrs = courses.find((c) => c.id === assessmentFilters.courseId)
+                          if (currentCrs && currentCrs.categoryId !== newCat) {
+                            handleAssessmentFiltersChange({ courseId: '' })
+                          }
+                        }
+                      }}
+                      placeholder="All Categories"
+                    >
+                      <SelectTrigger className="w-[180px] min-h-10 text-xs font-medium">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Categories</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name} ({cat.duration})
                           </SelectItem>
                         ))}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="sr-only">Course Batch Filter</label>
+                    <Select
+                      value={assessmentFilters.courseId}
+                      onValueChange={(value) => handleAssessmentFiltersChange({ courseId: value as string })}
+                      placeholder="All Curricula"
+                    >
+                      <SelectTrigger className="w-[220px] min-h-10 text-xs font-medium">
+                        <SelectValue placeholder="All Curricula" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Curricula</SelectItem>
+                        {courses
+                          .filter((c) => !selectedCategoryFilter || c.categoryId === selectedCategoryFilter)
+                          .map((course) => (
+                            <SelectItem key={course.id} value={course.id}>
+                              {course.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-20">Date</TableHead>
-                    <TableHead className="w-20">Course</TableHead>
-                    <TableHead className="w-36">Title</TableHead>
-                    <TableHead className="w-16">Max Score</TableHead>
-                    <TableHead className="w-20">Created By</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assessments.map((assessment) => (
-                    <TableRow
-                      key={assessment.id}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSelectAssessment(assessment.id)}
-                    >
-                      <TableCell>{formatDate(assessment.assessmentDate)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col items-start gap-1">
-                          <strong className="text-xs font-semibold text-slate-900">{assessment.courseName}</strong>
-                          {(() => {
-                            const crs = courses.find(
-                              (c) => c.id === assessment.courseId || c.name === assessment.courseName,
-                            )
-                            const catName = crs?.categoryName
-                            if (!catName) return null
-                            return <CategoryBadge categoryName={catName} />
-                          })()}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-left">{assessment.title}</TableCell>
-                      <TableCell className="text-right">{assessment.maxScore}</TableCell>
-                      <TableCell>
-                        {assessment.createdBy ? (
-                          <div className="text-sm space-y-1">
-                            <div className="font-medium">{assessment.createdBy.fullName}</div>
-                            <div className="text-xs text-muted-foreground">{assessment.createdBy.role}</div>
+              {/* Assessment Table / Cards */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
+                <table className="w-full min-w-[700px] text-left">
+                  <thead className="bg-slate-50/90 border-b border-slate-200">
+                    <tr>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-28">
+                        Date
+                      </th>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-48">
+                        Curriculum
+                      </th>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">
+                        Assessment Title
+                      </th>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-24 text-center">
+                        Max Score
+                      </th>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
+                        Google Form
+                      </th>
+                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider text-right w-36">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {assessments.map((assessment) => (
+                      <tr
+                        key={assessment.id}
+                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                        onClick={() => setSelectedAssessmentId(assessment.id)}
+                      >
+                        <td className="p-4 text-xs font-medium text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <CalendarDays size={13} className="text-slate-400" />
+                            <span>{formatDate(assessment.assessmentDate)}</span>
                           </div>
-                        ) : (
-                          <span className="text-muted-italic">System</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm space-x-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title="View Results"
-                          aria-label={`View results for ${assessment.title}`}
-                          onClick={() => handleSelectAssessment(assessment.id)}
-                        >
-                          <List size={14} />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {assessments.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4">
-                        No assessments match the current filters
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex justify-between items-center mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {assessments.length} of {assessmentTotalCount} assessments
+                        </td>
+
+                        <td className="p-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-xs sm:text-sm font-semibold text-slate-900 line-clamp-1">
+                              {assessment.courseName}
+                            </span>
+                            {(() => {
+                              const crs = courses.find(
+                                (c) => c.id === assessment.courseId || c.name === assessment.courseName,
+                              )
+                              const catName = crs?.categoryName
+                              if (!catName) return null
+                              return <CategoryBadge categoryName={catName} />
+                            })()}
+                          </div>
+                        </td>
+
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors text-sm sm:text-base">
+                              {assessment.title}
+                            </span>
+                            {assessment.createdBy && (
+                              <p className="text-[11px] text-slate-400">
+                                Created by {assessment.createdBy.fullName} ({assessment.createdBy.role})
+                              </p>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="p-4 text-center">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200/80">
+                            {assessment.maxScore} pts
+                          </span>
+                        </td>
+
+                        <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                          {assessment.formUrl ? (
+                            <div className="flex items-center gap-1.5">
+                              <a
+                                href={assessment.formUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-all"
+                                title="Open Google Form Quiz"
+                              >
+                                <FileSpreadsheet size={13} />
+                                <span>Quiz</span>
+                                <ExternalLink size={11} />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLink(assessment.formUrl!, assessment.id)}
+                                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all"
+                                title="Copy student quiz link"
+                              >
+                                {copiedFormId === assessment.id ? (
+                                  <Check size={13} className="text-emerald-600" />
+                                ) : (
+                                  <Copy size={13} />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">None linked</span>
+                          )}
+                        </td>
+
+                        <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            aria-label={`View results for ${assessment.title}`}
+                            onClick={() => setSelectedAssessmentId(assessment.id)}
+                            className="text-xs font-semibold cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
+                          >
+                            <span>Open Studio</span>
+                            <ArrowRight size={13} className="ml-1" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {assessments.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-12 text-slate-500 space-y-2">
+                          <ClipboardList size={32} className="mx-auto text-slate-300" />
+                          <p className="text-sm font-semibold text-slate-700">No assessments match current filters</p>
+                          <p className="text-xs text-slate-400">
+                            Create a new assessment above or choose another curriculum.
+                          </p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              {assessmentHasMore && (
-                <Button variant="outline" onClick={handleLoadMoreAssessments} className="text-sm">
-                  Load More
-                </Button>
-              )}
-            </div>
-          </div>
+
+              {/* Pagination / Load More */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                <div className="text-xs text-slate-500">
+                  Showing {assessments.length} of {assessmentTotalCount} assessments
+                </div>
+                {assessmentHasMore && (
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMoreAssessments}
+                    className="text-xs font-semibold cursor-pointer"
+                  >
+                    Load More Assessments
+                  </Button>
+                )}
+              </div>
+            </section>
+          )}
         </>
       ) : (
-        // Assessment Results View
-        <>
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">Assessment Results</h1>
-              <p className="text-sm text-muted-foreground">Enter and view results for the selected assessment</p>
-            </div>
-            <div className="flex space-x-3">
-              <Button variant="outline" onClick={() => setSelectedAssessmentId(null)}>
-                <ArrowLeft size={16} className="mr-2" />
-                Back to Assessments
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // Refresh results
-                  if (selectedAssessmentId) {
-                    fetchAssessmentResults(selectedAssessmentId)
-                  }
-                }}
-              >
-                <RefreshCw size={16} className="mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-
-          {/* Assessment Info */}
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-bold mb-4">Assessment Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Title</p>
-                <p className="text-lg font-semibold">
-                  {assessments.find((a) => a.id === selectedAssessmentId)?.title || ''}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Course</p>
-                <p className="text-lg font-semibold">
-                  {assessments.find((a) => a.id === selectedAssessmentId)?.courseName || ''}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Max Score</p>
-                <p className="text-lg font-semibold">
-                  {assessments.find((a) => a.id === selectedAssessmentId)?.maxScore || ''}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Date</p>
-                <p className="text-lg font-semibold">
-                  {formatDate(assessments.find((a) => a.id === selectedAssessmentId)?.assessmentDate || '')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* New Result Form */}
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-bold mb-4">{editingResult ? 'Edit result' : 'Enter Result for Student'}</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleCreateResult()
-              }}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Student</label>
-                  <Select
-                    value={newResult.studentId}
-                    onValueChange={(value) => handleNewResultChange('studentId', value as string)}
-                    placeholder="Select a student"
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a student" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students.map((student) => (
-                        <SelectItem key={student.register_id} value={student.register_id.toString()}>
-                          {student.name} (TAI-{student.register_id})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Score</label>
-                  <Input
-                    value={newResult.score}
-                    onChange={(e) => handleNewResultChange('score', e.target.value)}
-                    placeholder="Enter score"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                  />
-                </div>
-              </div>
+        /* 3. GRADING & RESULTS STUDIO */
+        <div className="space-y-6">
+          {/* Assessment Hero Card */}
+          <section className="panel p-6 sm:p-7 shadow-xs border border-slate-200/90 space-y-5">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 border-b border-slate-100">
               <div className="space-y-2">
-                <label className="text-sm font-medium mb-2 block">Remarks (optional)</label>
-                <Input
-                  value={newResult.remarks}
-                  onChange={(e) => handleNewResultChange('remarks', e.target.value)}
-                  placeholder="Enter any remarks"
-                />
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button variant="default" type="submit" disabled={loading}>
-                {loading ? 'Saving...' : editingResult ? 'Update Result' : 'Save Result'}
-                <Plus size={16} className="mr-2" />
-              </Button>
-            </form>
-          </div>
-
-          <section className="bg-white p-6 rounded-lg shadow mb-6" aria-labelledby="bulk-score-heading">
-            <h2 id="bulk-score-heading" className="text-xl font-bold mb-2">
-              Bulk score entry
-            </h2>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Enter scores for any students below. Existing scores for those students will be updated together.
-            </p>
-            {students.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No enrolled students were found for this course.</p>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <caption className="sr-only">Enter assessment scores for enrolled students</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col" className="p-2">
-                          Student
-                        </th>
-                        <th scope="col" className="p-2">
-                          Score
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((student) => (
-                        <tr key={student.register_id} className="border-t">
-                          <th scope="row" className="p-2 font-medium">
-                            {student.name}
-                            <span className="ml-2 text-xs text-muted-foreground">#{student.register_id}</span>
-                          </th>
-                          <td className="p-2">
-                            <label className="sr-only" htmlFor={`bulk-score-${student.register_id}`}>
-                              Score for {student.name}
-                            </label>
-                            <Input
-                              id={`bulk-score-${student.register_id}`}
-                              type="number"
-                              min={0}
-                              max={assessments.find((a) => a.id === selectedAssessmentId)?.maxScore}
-                              step="0.01"
-                              inputMode="decimal"
-                              value={bulkScores[String(student.register_id)] ?? ''}
-                              onChange={(event) =>
-                                setBulkScores((current) => ({
-                                  ...current,
-                                  [String(student.register_id)]: event.target.value,
-                                }))
-                              }
-                              className="max-w-40"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-2xs">
+                    <GraduationCap size={13} />
+                    {selectedAssessment?.courseName}
+                  </span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    Max Score: {selectedAssessment?.maxScore} pts
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-1">
+                    <CalendarDays size={14} className="text-slate-400" />
+                    {formatDate(selectedAssessment?.assessmentDate || '')}
+                  </span>
                 </div>
+
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                  {selectedAssessment?.title}
+                </h2>
+              </div>
+
+              {/* Action Buttons Toolbar */}
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedAssessment?.formUrl && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsQRModalOpen(true)}
+                      className="text-xs font-semibold cursor-pointer hover:bg-indigo-50 hover:text-indigo-700"
+                      title="Project QR code for classroom"
+                    >
+                      <QrCode size={14} className="mr-1.5" />
+                      Classroom QR
+                    </Button>
+
+                    <a
+                      href={selectedAssessment.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100 shadow-2xs transition-all cursor-pointer"
+                      title="Open Google Form Quiz"
+                    >
+                      <FileSpreadsheet size={14} className="text-purple-700" />
+                      <span>Launch Form</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  </>
+                )}
+
+                {selectedAssessment?.sheetUrl && (
+                  <a
+                    href={selectedAssessment.sheetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 shadow-2xs transition-all cursor-pointer"
+                    title="Open Google Sheets Response Table"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Response Sheet</span>
+                  </a>
+                )}
+
+                {/* The Google Forms Import Button */}
                 <Button
                   type="button"
-                  className="mt-4 min-h-10"
-                  disabled={loading || Object.values(bulkScores).every((score) => score.trim() === '')}
-                  onClick={() => void handleSaveBulkScores()}
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="btn-primary text-xs font-semibold px-4 cursor-pointer shadow-sm"
                 >
-                  {loading ? 'Saving scores…' : 'Save all scores'}
+                  <FileSpreadsheet size={15} className="mr-1.5" />
+                  Import Google Form Responses
                 </Button>
-              </>
-            )}
-          </section>
 
-          {(() => {
-            const maxScore = assessments.find((item) => item.id === selectedAssessmentId)?.maxScore ?? 0
-            const bands = [
-              { label: '0–49%', min: 0, max: 50 },
-              { label: '50–69%', min: 50, max: 70 },
-              { label: '70–84%', min: 70, max: 85 },
-              { label: '85–100%', min: 85, max: 101 },
-            ]
-            const counts = bands.map(
-              (band) =>
-                assessmentResults.filter((result) => {
-                  const percent = maxScore > 0 ? (result.score / maxScore) * 100 : 0
-                  return percent >= band.min && percent < band.max
-                }).length,
-            )
-            const maxCount = Math.max(1, ...counts)
-            return (
-              <section className="bg-white p-6 rounded-lg shadow mb-6" aria-labelledby="grade-distribution-heading">
-                <h2 id="grade-distribution-heading" className="text-xl font-bold mb-4">
-                  Grade distribution
-                </h2>
-                {assessmentResults.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Scores will appear here after grading.</p>
-                ) : (
-                  <div
-                    role="img"
-                    aria-label={`Grade distribution across ${assessmentResults.length} results`}
-                    className="grid gap-3 sm:grid-cols-4"
-                  >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedAssessmentId) void fetchAssessmentResults(selectedAssessmentId)
+                  }}
+                  className="text-xs font-semibold cursor-pointer"
+                  title="Refresh results"
+                >
+                  <RefreshCw size={14} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Performance Distribution Strip */}
+            {(() => {
+              const maxScore = selectedAssessment?.maxScore ?? 0
+              const bands = [
+                { label: '0–49%', min: 0, max: 50, color: 'bg-rose-500' },
+                { label: '50–69%', min: 50, max: 70, color: 'bg-amber-500' },
+                { label: '70–84%', min: 70, max: 85, color: 'bg-indigo-500' },
+                { label: '85–100%', min: 85, max: 101, color: 'bg-emerald-500' },
+              ]
+              const counts = bands.map(
+                (band) =>
+                  assessmentResults.filter((result) => {
+                    const percent = maxScore > 0 ? (result.score / maxScore) * 100 : 0
+                    return percent >= band.min && percent < band.max
+                  }).length,
+              )
+              const maxCount = Math.max(1, ...counts)
+              const gradedCount = assessmentResults.length
+              const averageScore =
+                gradedCount > 0
+                  ? (assessmentResults.reduce((acc, r) => acc + r.score, 0) / gradedCount).toFixed(1)
+                  : '0'
+              const avgPct = maxScore > 0 ? ((Number(averageScore) / maxScore) * 100).toFixed(1) : '0'
+
+              return (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between text-xs text-slate-700">
+                    <span className="font-bold uppercase tracking-wider text-slate-500">Grade Distribution</span>
+                    <div className="flex items-center gap-3 font-semibold">
+                      <span>
+                        Graded: <strong>{gradedCount} / {students.length}</strong>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        Class Average: <strong className="text-indigo-600">{averageScore} / {maxScore} ({avgPct}%)</strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-4">
                     {bands.map((band, index) => (
-                      <div key={band.label} className="rounded border p-3">
-                        <div className="flex justify-between text-sm">
-                          <span>{band.label}</span>
-                          <strong>{counts[index]}</strong>
+                      <div key={band.label} className="rounded-xl border border-slate-200/90 p-3 bg-slate-50/60 shadow-2xs">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-medium text-slate-600">{band.label}</span>
+                          <strong className="font-bold text-slate-900">{counts[index]} students</strong>
                         </div>
-                        <div className="mt-2 h-2 rounded bg-muted">
+                        <div className="mt-2 h-2 rounded-full bg-slate-200/80 overflow-hidden">
                           <div
-                            className="h-2 rounded bg-primary"
+                            className={`h-full rounded-full transition-all ${band.color}`}
                             style={{ width: `${(counts[index] / maxCount) * 100}%` }}
                           />
                         </div>
                       </div>
                     ))}
                   </div>
-                )}
-              </section>
-            )
-          })()}
+                </div>
+              )
+            })()}
+          </section>
 
-          {/* Results List */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-bold">Results List</h2>
-              <Button type="button" variant="outline" disabled={assessmentResults.length === 0} onClick={exportResults}>
-                Export CSV
-              </Button>
+          {/* Student Roster & Live Scoring Table */}
+          <section className="panel p-6 sm:p-7 shadow-xs border border-slate-200/90 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="relative w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <Input
+                    type="text"
+                    placeholder="Search student or ID..."
+                    value={resultsSearch}
+                    onChange={(e) => setResultsSearch(e.target.value)}
+                    className="pl-8.5 py-1.5 text-xs w-full min-h-9 rounded-xl"
+                  />
+                </div>
+
+                {/* Filter Chips */}
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setResultsFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
+                      resultsFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    All ({students.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResultsFilter('graded')}
+                    className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
+                      resultsFilter === 'graded' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Graded ({assessmentResults.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResultsFilter('unmarked')}
+                    className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
+                      resultsFilter === 'unmarked' ? 'bg-white text-rose-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Unmarked ({Math.max(0, students.length - assessmentResults.length)})
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={assessmentResults.length === 0}
+                  onClick={exportResults}
+                  className="text-xs font-semibold cursor-pointer"
+                >
+                  <Download size={13} className="mr-1.5" />
+                  Export CSV
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void handleSaveBulkScores()}
+                  disabled={loading}
+                  className="btn-primary text-xs font-semibold cursor-pointer shadow-sm"
+                >
+                  {loading ? 'Saving...' : 'Save All Scores'}
+                </Button>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-20">Student</TableHead>
-                    <TableHead className="w-20">Score</TableHead>
-                    <TableHead className="w-20">Max Score</TableHead>
-                    <TableHead className="w-20">Percentage</TableHead>
-                    <TableHead className="w-20">Remarks</TableHead>
-                    <TableHead className="w-20">Graded By</TableHead>
-                    <TableHead className="w-20">Graded At</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assessmentResults.map((result) => {
-                    const assessment = assessments.find((a) => a.id === selectedAssessmentId)
-                    const maxScore = assessment?.maxScore || 0
-                    const percentage = maxScore > 0 ? ((result.score / maxScore) * 100).toFixed(1) + '%' : '0%'
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
+              <table className="w-full min-w-[720px] text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50/90 border-b border-slate-200">
+                  <tr>
+                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-40 text-center">
+                      Score ({selectedAssessment?.maxScore} pts)
+                    </th>
+                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-28 text-center">
+                      Percentage
+                    </th>
+                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider">
+                      Remarks / Notes
+                    </th>
+                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-20 text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredStudents.map((student) => {
+                    const existing = assessmentResults.find((r) => r.studentId === student.register_id)
+                    const maxScore = selectedAssessment?.maxScore || 100
+                    const currentScoreStr = bulkScores[String(student.register_id)] ?? (existing ? String(existing.score) : '')
+                    const numericScore = parseFloat(currentScoreStr)
+                    const percentage = !isNaN(numericScore) && maxScore > 0
+                      ? ((numericScore / maxScore) * 100).toFixed(1)
+                      : null
+
                     return (
-                      <TableRow key={result.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                              {result.studentName
-                                .split(' ')
-                                .map((x) => x[0])
-                                .join('')}
+                      <tr key={student.register_id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/10 to-indigo-600/20 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200/60 shadow-2xs">
+                              {getInitials(student.name)}
                             </div>
                             <div>
-                              <div className="font-medium">{result.studentName}</div>
-                              <div className="text-xs text-muted-foreground">TAI-{result.studentId}</div>
+                              <div className="flex items-center gap-2">
+                                <Link
+                                  href={`/students/${student.register_id}`}
+                                  className="font-semibold text-slate-900 hover:text-indigo-600 text-xs sm:text-sm hover:underline"
+                                >
+                                  {student.name}
+                                </Link>
+                                <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  #{student.register_id}
+                                </span>
+                              </div>
+                              {existing && (
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                  Graded: {formatDate(existing.gradedAt)}
+                                </p>
+                              )}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-right">{result.score}</TableCell>
-                        <TableCell className="text-right">{maxScore}</TableCell>
-                        <TableCell className="text-right">{percentage}</TableCell>
-                        <TableCell>{result.remarks ?? '-'}</TableCell>
-                        <TableCell>
-                          {result.gradedBy ? (
-                            <div className="text-sm space-y-1">
-                              <div className="font-medium">{result.gradedBy.fullName}</div>
-                              <div className="text-xs text-muted-foreground">{result.gradedBy.role}</div>
-                            </div>
+                        </td>
+
+                        <td className="p-3.5 text-center">
+                          <div className="inline-flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={selectedAssessment?.maxScore}
+                              step="0.01"
+                              placeholder="Score"
+                              value={currentScoreStr}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                setBulkScores((prev) => ({
+                                  ...prev,
+                                  [String(student.register_id)]: val,
+                                }))
+                              }}
+                              className="w-24 text-center font-bold min-h-9 rounded-xl text-xs sm:text-sm"
+                            />
+                            <span className="text-xs text-slate-400">/ {selectedAssessment?.maxScore}</span>
+                          </div>
+                        </td>
+
+                        <td className="p-3.5 text-center">
+                          {percentage !== null ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                Number(percentage) >= 70
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : Number(percentage) >= 50
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              }`}
+                            >
+                              {percentage}%
+                            </span>
                           ) : (
-                            <span className="text-muted-italic">System</span>
+                            <span className="text-xs text-slate-400 italic">Pending</span>
                           )}
-                        </TableCell>
-                        <TableCell>{formatDate(result.gradedAt)}</TableCell>
-                        <TableCell className="text-sm space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Edit"
-                            aria-label={`Edit result for ${result.studentName}`}
-                            onClick={() => {
-                              setNewResult({
-                                studentId: String(result.studentId),
-                                score: String(result.score),
-                                remarks: result.remarks ?? '',
-                              })
-                              setEditingResult(true)
-                              document.querySelector('form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                            }}
-                          >
-                            <Edit size={14} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Delete"
-                            aria-label={`Delete result for ${result.studentName}`}
-                            className="ml-2"
-                            onClick={() => setDeleteResultId(result.id)}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+
+                        <td className="p-3.5">
+                          <span className="text-xs text-slate-600 line-clamp-1">
+                            {existing?.remarks || '-'}
+                          </span>
+                        </td>
+
+                        <td className="p-3.5 text-center">
+                          {existing ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Delete result"
+                              aria-label={`Delete result for ${student.name}`}
+                              onClick={() => setDeleteResultId(existing.id)}
+                              className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
+                        </td>
+                      </tr>
                     )
                   })}
-                  {assessmentResults.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        No results have been entered for this assessment yet.
-                      </TableCell>
-                    </TableRow>
+
+                  {filteredStudents.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center py-8 text-slate-500">
+                        No enrolled students match current query.
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
-          </div>
-        </>
+          </section>
+        </div>
       )}
+
+      {/* Global Modals & Live Region */}
+      <GoogleFormsImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        assessmentId={selectedAssessmentId || ''}
+        assessmentTitle={selectedAssessment?.title || ''}
+        maxScore={selectedAssessment?.maxScore || 100}
+        enrolledStudents={students}
+        existingResults={assessmentResults}
+        onImportSuccess={() => {
+          if (selectedAssessmentId) void fetchAssessmentResults(selectedAssessmentId)
+          setNotice('Google Forms responses imported successfully.')
+        }}
+      />
+
+      <ClassroomQRModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        formUrl={selectedAssessment?.formUrl || ''}
+        title={selectedAssessment?.title || ''}
+        courseName={selectedAssessment?.courseName || ''}
+      />
+
       <p role="status" aria-live="polite" className="sr-only">
         {notice}
       </p>
+
       <ConfirmDialog
         isOpen={deleteResultId !== null}
         title="Delete assessment result?"
@@ -1029,16 +1449,3 @@ export function Assessments({
     </div>
   )
 }
-
-// Helper icon components (since lucide-icons might not have all these, using alternatives)
-const ArrowLeft = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M19 12H5M12 5l-7 7 7 7" />
-  </svg>
-)
-
-const RefreshCw = ({ size, ...props }: { size: number } & React.SVGProps<SVGSVGElement>) => (
-  <svg width={size} height={size} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M3 12a9 9 0 1 0 17.36 5.74M13.26 4.74a3 3 0 0 1 4.24 0l1.46 1.46a3 3 0 0 1 0 4.24l-1.46 1.46a3 3 0 0 1-4.24 0" />
-  </svg>
-)
