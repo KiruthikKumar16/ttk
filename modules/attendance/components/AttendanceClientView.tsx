@@ -23,6 +23,8 @@ import {
   TrendingUp,
   UserCheck,
   Building,
+  CalendarCheck,
+  Sparkles,
 } from 'lucide-react'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { AttendanceMarking } from './AttendanceMarking'
@@ -121,12 +123,40 @@ export function AttendanceClientView({
     }
   }, [courseReports])
 
-  // Quick date change handlers
+  const selectedCourseObj = useMemo(() => {
+    return courses.find((c) => c.id === (courseInput || selectedCourseId))
+  }, [courses, courseInput, selectedCourseId])
+
+  const formattedDateLabel = useMemo(() => {
+    try {
+      const parts = (dateInput || selectedDate).split('-').map(Number)
+      if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+        const d = new Date(parts[0], parts[1] - 1, parts[2])
+        return d.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      }
+    } catch {}
+    return dateInput || selectedDate
+  }, [dateInput, selectedDate])
+
+  const isTodaySelected = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    return (dateInput || selectedDate) === today
+  }, [dateInput, selectedDate])
+
+  // Quick date change handlers (timezone-safe)
   const handleDateShift = (deltaDays: number) => {
     try {
-      const current = new Date(dateInput || new Date())
-      current.setDate(current.getDate() + deltaDays)
-      const nextDate = current.toISOString().slice(0, 10)
+      const parts = (dateInput || new Date().toISOString().slice(0, 10)).split('-').map(Number)
+      const current = new Date(parts[0], parts[1] - 1, parts[2] + deltaDays)
+      const y = current.getFullYear()
+      const m = String(current.getMonth() + 1).padStart(2, '0')
+      const d = String(current.getDate()).padStart(2, '0')
+      const nextDate = `${y}-${m}-${d}`
       setDateInput(nextDate)
       navigateWithParams(courseInput, nextDate)
     } catch {
@@ -389,30 +419,49 @@ export function AttendanceClientView({
       {/* Panel 1: Daily Marking View */}
       {activeTab === 'marking' && (
         <div id="panel-marking" role="tabpanel" aria-labelledby="tab-marking" className="space-y-6">
-          <section className="panel p-4 sm:p-6 shadow-xs border border-slate-200/90">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Mark attendance</h2>
-                <p className="text-xs text-slate-500">
-                  Choose a course batch and session date to load the live student roster.
-                </p>
+          <section className="panel p-5 sm:p-7 shadow-xs border border-slate-200/90 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-slate-100">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                  <CalendarCheck size={22} className="text-indigo-600" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Mark attendance</h2>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      Live Roster
+                    </span>
+                    {isTodaySelected && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                        Today&apos;s Session
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Choose a course curriculum batch and session date to load the live student roster.
+                  </p>
+                </div>
               </div>
 
               {/* Quick Date Switcher Controls */}
-              <div className="inline-flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/70 text-xs">
+              <div className="flex items-center gap-1.5 bg-slate-50/90 p-1.5 rounded-xl border border-slate-200/80 text-xs shadow-2xs shrink-0 self-start md:self-auto">
                 <button
                   type="button"
                   onClick={() => handleDateShift(-1)}
-                  className="px-2 py-1 rounded-md text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-2xs transition-all flex items-center gap-1 cursor-pointer font-medium"
+                  className="px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-slate-900 hover:shadow-2xs transition-all flex items-center gap-1 cursor-pointer font-medium"
                   title="Previous Day"
                 >
-                  <ChevronLeft size={13} />
+                  <ChevronLeft size={15} />
                   <span>Prev</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleSetToday}
-                  className="px-2.5 py-1 rounded-md bg-white text-indigo-600 font-semibold shadow-2xs border border-slate-200/80 hover:bg-indigo-50/50 transition-all cursor-pointer"
+                  className={`px-3 py-1.5 rounded-lg font-semibold shadow-2xs border transition-all cursor-pointer ${
+                    isTodaySelected
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-white text-indigo-700 border-slate-200/90 hover:bg-indigo-50/80'
+                  }`}
                   title="Jump to Today"
                 >
                   Today
@@ -420,27 +469,42 @@ export function AttendanceClientView({
                 <button
                   type="button"
                   onClick={() => handleDateShift(1)}
-                  className="px-2 py-1 rounded-md text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-2xs transition-all flex items-center gap-1 cursor-pointer font-medium"
+                  className="px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-slate-900 hover:shadow-2xs transition-all flex items-center gap-1 cursor-pointer font-medium"
                   title="Next Day"
                 >
                   <span>Next</span>
-                  <ChevronRight size={13} />
+                  <ChevronRight size={15} />
                 </button>
               </div>
             </div>
 
             {/* Selection Form */}
-            <form action="/attendance" className="grid grid-cols-1 gap-3.5 sm:grid-cols-[1.5fr_1fr_auto] sm:items-end">
-              <label className="grid gap-1.5 text-xs font-semibold text-slate-700">
-                Course Curriculum
+            <form
+              action="/attendance"
+              onSubmit={(e) => {
+                e.preventDefault()
+                navigateWithParams(courseInput, dateInput)
+              }}
+              className="p-5 rounded-2xl bg-gradient-to-b from-slate-50/80 via-slate-50/50 to-white border border-slate-200/80 shadow-2xs grid grid-cols-1 md:grid-cols-[1.6fr_1.2fr_auto] gap-4 items-end"
+            >
+              <label className="grid gap-2 text-sm font-semibold text-slate-800">
+                <span className="flex items-center gap-2">
+                  <GraduationCap size={16} className="text-indigo-600" />
+                  Course Curriculum
+                </span>
                 <select
                   name="courseId"
                   required
                   value={courseInput}
-                  onChange={(e) => setCourseInput(e.target.value)}
-                  className="input text-sm"
+                  onChange={(e) => {
+                    setCourseInput(e.target.value)
+                    if (e.target.value) {
+                      navigateWithParams(e.target.value, dateInput)
+                    }
+                  }}
+                  className="w-full min-h-12 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm font-medium shadow-2xs hover:border-slate-400 focus:outline-hidden focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 transition-all cursor-pointer"
                 >
-                  <option value="">Choose a course</option>
+                  <option value="">Choose a course batch...</option>
                   {categories.map((cat) => {
                     const catCourses = courses.filter((c) => c.categoryId === cat.id)
                     if (!catCourses.length) return null
@@ -468,31 +532,110 @@ export function AttendanceClientView({
                 </select>
               </label>
 
-              <label className="grid gap-1.5 text-xs font-semibold text-slate-700">
-                Session Date
+              <label className="grid gap-2 text-sm font-semibold text-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays size={16} className="text-indigo-600" />
+                    Session Date
+                  </span>
+                  <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                    {formattedDateLabel}
+                  </span>
+                </div>
                 <input
                   name="date"
                   type="date"
                   required
                   value={dateInput}
-                  onChange={(e) => setDateInput(e.target.value)}
-                  className="input text-sm"
+                  onChange={(e) => {
+                    setDateInput(e.target.value)
+                    if (courseInput && e.target.value) {
+                      navigateWithParams(courseInput, e.target.value)
+                    }
+                  }}
+                  className="w-full min-h-12 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm font-medium shadow-2xs hover:border-slate-400 focus:outline-hidden focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 transition-all cursor-pointer"
                 />
               </label>
 
-              <button className="btn-primary min-h-10 text-xs font-semibold px-5 cursor-pointer">Load roster</button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="btn-primary min-h-12 px-6 rounded-xl text-sm font-semibold shadow-sm hover:shadow transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isPending ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Loading…</span>
+                  </>
+                ) : (
+                  <>
+                    <Users size={16} />
+                    <span>Load roster</span>
+                  </>
+                )}
+              </button>
             </form>
 
             {/* Attendance Marking Table */}
             {selectedCourseId && selectedDate ? (
-              <AttendanceMarking courseId={selectedCourseId} sessionDate={selectedDate} roster={roster} />
+              <AttendanceMarking
+                courseId={selectedCourseId}
+                sessionDate={selectedDate}
+                roster={roster}
+                courseName={selectedCourseObj?.name}
+                categoryName={selectedCourseObj?.categoryName || courseCategoryMap[selectedCourseId]}
+                duration={selectedCourseObj?.duration}
+              />
             ) : (
-              <div className="mt-6 rounded-xl border border-dashed border-slate-200 p-8 text-center bg-slate-50/50">
-                <Users size={28} className="mx-auto text-slate-400 mb-2" />
-                <p className="text-sm font-semibold text-slate-700">Select a course to view and mark attendance</p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Pick a course batch from the dropdown above and click &ldquo;Load roster&rdquo;.
-                </p>
+              <div className="rounded-2xl border-2 border-dashed border-slate-200/90 p-8 sm:p-12 text-center bg-slate-50/50 space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+                  <Users size={28} />
+                </div>
+                <div className="max-w-md mx-auto space-y-1">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-800">
+                    Select a course to view and mark attendance
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Pick a course batch from the dropdown above or quick-select an active curriculum below.
+                  </p>
+                </div>
+
+                {courses.length > 0 && (
+                  <div className="pt-6 border-t border-slate-200/70 text-left max-w-3xl mx-auto">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-indigo-600" />
+                      Quick Select Active Curriculum
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {courses.slice(0, 6).map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setCourseInput(c.id)
+                            navigateWithParams(c.id, dateInput)
+                          }}
+                          className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-xs transition-all text-left group cursor-pointer flex flex-col justify-between gap-2"
+                        >
+                          <div>
+                            <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block mb-1.5">
+                              {c.categoryName || 'Course'}
+                            </span>
+                            <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-1">
+                              {c.name}
+                            </h4>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+                            <span>{c.duration || 'Standard'}</span>
+                            <span className="font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5">
+                              Select &rarr;
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
