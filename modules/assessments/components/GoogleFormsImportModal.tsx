@@ -300,7 +300,7 @@ export function GoogleFormsImportModal({
                       <tr key={index} className="hover:bg-slate-50/80 transition-colors">
                         <td className="p-2.5 font-medium text-slate-900">
                           <div>{row.rawName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{row.rawScore}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{row.rawScore}</div>
                         </td>
                         <td className="p-2.5 font-semibold text-slate-800">
                           {row.score} / {maxScore}{' '}
@@ -310,7 +310,7 @@ export function GoogleFormsImportModal({
                           {row.matched && row.studentId !== null ? (
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-indigo-700">{row.studentName}</span>
-                              <span className="font-mono text-[11px] text-slate-400">#{row.studentId}</span>
+                              <span className="font-mono text-[11px] text-slate-500">#{row.studentId}</span>
                             </div>
                           ) : (
                             <select

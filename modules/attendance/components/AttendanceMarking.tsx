@@ -609,7 +609,7 @@ export function AttendanceMarking({
           </kbd>
           <span>for instant status.</span>
         </span>
-        <span className="text-[11px] text-slate-400">All changes save automatically</span>
+        <span className="text-[11px] text-slate-500">All changes save automatically</span>
       </div>
     </div>
   )

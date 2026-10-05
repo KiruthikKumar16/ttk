@@ -681,7 +681,7 @@ export function Assessments({
                           if (!catCourses.length) return null
                           return (
                             <div key={cat.id}>
-                              <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                              <div className="px-2 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                 {cat.name} ({cat.duration})
                               </div>
                               {catCourses.map((c) => (
@@ -694,7 +694,7 @@ export function Assessments({
                         })}
                         {courses.some((c) => !c.categoryId) && (
                           <div>
-                            <div className="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <div className="px-2 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                               Other Curricula
                             </div>
                             {courses
@@ -957,7 +957,7 @@ export function Assessments({
                               {assessment.title}
                             </span>
                             {assessment.createdBy && (
-                              <p className="text-[11px] text-slate-400">
+                              <p className="text-[11px] text-slate-500">
                                 Created by {assessment.createdBy.fullName} ({assessment.createdBy.role})
                               </p>
                             )}
@@ -998,7 +998,7 @@ export function Assessments({
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400 italic">None linked</span>
+                            <span className="text-xs text-slate-500 italic">None linked</span>
                           )}
                         </td>
 
@@ -1021,9 +1021,9 @@ export function Assessments({
                     {assessments.length === 0 && (
                       <tr>
                         <td colSpan={6} className="text-center py-12 text-slate-500 space-y-2">
-                          <ClipboardList size={32} className="mx-auto text-slate-300" />
+                          <ClipboardList size={32} className="mx-auto text-slate-400" />
                           <p className="text-sm font-semibold text-slate-700">No assessments match current filters</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-500">
                             Create a new assessment above or choose another curriculum.
                           </p>
                         </td>
@@ -1355,7 +1355,7 @@ export function Assessments({
                                 </span>
                               </div>
                               {existing && (
-                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                <p className="text-[11px] text-slate-500 mt-0.5">
                                   Graded: {formatDate(existing.gradedAt)}
                                 </p>
                               )}
@@ -1381,7 +1381,7 @@ export function Assessments({
                               }}
                               className="w-24 text-center font-bold min-h-9 rounded-xl text-xs sm:text-sm"
                             />
-                            <span className="text-xs text-slate-400">/ {selectedAssessment?.maxScore}</span>
+                            <span className="text-xs text-slate-500">/ {selectedAssessment?.maxScore}</span>
                           </div>
                         </td>
 
@@ -1399,7 +1399,7 @@ export function Assessments({
                               {percentage}%
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-400 italic">Pending</span>
+                            <span className="text-xs text-slate-500 italic">Pending</span>
                           )}
                         </td>
 
@@ -1415,12 +1415,12 @@ export function Assessments({
                               title="Delete result"
                               aria-label={`Delete result for ${student.name}`}
                               onClick={() => setDeleteResultId(existing.id)}
-                              className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                              className="text-slate-500 hover:text-rose-600 cursor-pointer"
                             >
                               <Trash2 size={14} />
                             </Button>
                           ) : (
-                            <span className="text-xs text-slate-400">-</span>
+                            <span className="text-xs text-slate-500">-</span>
                           )}
                         </td>
                       </tr>

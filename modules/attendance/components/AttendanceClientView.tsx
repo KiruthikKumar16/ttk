@@ -697,7 +697,7 @@ export function AttendanceClientView({
                           {categoryName ? (
                             <CategoryBadge categoryName={categoryName} />
                           ) : (
-                            <span className="text-xs text-slate-400 italic">Standard</span>
+                            <span className="text-xs text-slate-500 italic">Standard</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-center font-medium text-slate-700">{row.students}</td>
