@@ -1313,15 +1313,63 @@ export function UserRoles({
 
                 <div className="space-y-3 pt-2">
                   <div>
-                    <label htmlFor="invite-role-select" className="block text-xs font-semibold text-slate-700 mb-1">
-                      Assigned Role
-                    </label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Assigned Role</label>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setGenRole('staff')}
+                        className={`flex items-start gap-2 p-2.5 rounded-xl border text-left transition-all ${
+                          genRole === 'staff'
+                            ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <UserCheck
+                          size={16}
+                          className={`mt-0.5 shrink-0 ${genRole === 'staff' ? 'text-indigo-600' : 'text-slate-400'}`}
+                        />
+                        <div>
+                          <span
+                            className={`block text-xs font-bold ${genRole === 'staff' ? 'text-indigo-950' : 'text-slate-700'}`}
+                          >
+                            Staff Access
+                          </span>
+                          <span className="block text-[10px] text-slate-500 font-mono mt-0.5">Code: STAFF-XXXX</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setGenRole('admin')}
+                        className={`flex items-start gap-2 p-2.5 rounded-xl border text-left transition-all ${
+                          genRole === 'admin'
+                            ? 'bg-purple-50/90 border-purple-300 ring-2 ring-purple-500/20 shadow-xs'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Shield
+                          size={16}
+                          className={`mt-0.5 shrink-0 ${genRole === 'admin' ? 'text-purple-600' : 'text-slate-400'}`}
+                        />
+                        <div>
+                          <span
+                            className={`block text-xs font-bold ${genRole === 'admin' ? 'text-purple-950' : 'text-slate-700'}`}
+                          >
+                            Admin Access
+                          </span>
+                          <span className="block text-[10px] text-purple-600 font-mono font-medium mt-0.5">
+                            Code: ADMIN-XXXX
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+
                     <select
                       id="invite-role-select"
                       aria-label="Assigned Role"
                       value={genRole}
                       onChange={(e) => setGenRole(e.target.value as 'staff' | 'admin')}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                      className="sr-only"
                     >
                       <option value="staff">Staff (Standard Academy Access)</option>
                       <option value="admin">Admin (Full System Privilege)</option>
@@ -1377,9 +1425,11 @@ export function UserRoles({
                     type="submit"
                     disabled={generating}
                     size="sm"
-                    className="text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                    className={`text-xs font-semibold text-white shadow-xs ${
+                      genRole === 'admin' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                   >
-                    {generating ? 'Generating...' : 'Generate Code'}
+                    {generating ? 'Generating...' : `Generate ${genRole === 'admin' ? 'Admin' : 'Staff'} Code`}
                   </Button>
                 </div>
               </form>
