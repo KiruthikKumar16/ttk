@@ -44,7 +44,7 @@ async function postSignup(request: Request, requestId: string) {
     let validInviteId: string | null = null
 
     if (passcode && passcode.trim()) {
-      const trimmedCode = passcode.trim().toUpperCase()
+      const trimmedCode = passcode.trim().toUpperCase().replace(/\s+/g, '-')
       const expectedStatic = (process.env.STAFF_INVITE_PASSCODE || 'THOORIGAI-STAFF').toUpperCase()
 
       if (trimmedCode === expectedStatic) {
@@ -75,7 +75,7 @@ async function postSignup(request: Request, requestId: string) {
             { status: 400, headers: { 'x-request-id': requestId } },
           )
         }
-        if (invite.recipient_email && invite.recipient_email.toLowerCase() !== email.toLowerCase().trim()) {
+        if (invite.recipient_email && invite.recipient_email.toLowerCase().trim() !== email.toLowerCase().trim()) {
           return NextResponse.json(
             { error: `This invite code is reserved for ${invite.recipient_email}.` },
             { status: 400, headers: { 'x-request-id': requestId } },
@@ -99,6 +99,59 @@ async function postSignup(request: Request, requestId: string) {
     if (authError) {
       const msg = authError.message.toLowerCase()
       if (msg.includes('already') || msg.includes('exists') || msg.includes('unique')) {
+        // If account exists and a valid invite code was supplied, allow activating the pending account
+        if (validInviteId && (assignedRole === 'staff' || assignedRole === 'admin')) {
+          const { data: usersList } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 })
+          const existingUser = (usersList?.users || []).find((u) => u.email?.toLowerCase() === email.toLowerCase())
+
+          if (existingUser) {
+            const { data: existingProfile } = await adminClient
+              .from('profiles')
+              .select('id, role')
+              .eq('id', existingUser.id)
+              .maybeSingle()
+
+            if (existingProfile?.role === 'pending') {
+              await adminClient.auth.admin.updateUserById(existingUser.id, {
+                password,
+                user_metadata: { full_name: fullName },
+                app_metadata: { role: assignedRole },
+              })
+
+              await adminClient
+                .from('profiles')
+                .update({ role: assignedRole, full_name: fullName })
+                .eq('id', existingUser.id)
+
+              await adminClient
+                .from('invite_codes')
+                .update({
+                  is_used: true,
+                  used_by_user_id: existingUser.id,
+                  used_at: new Date().toISOString(),
+                })
+                .eq('id', validInviteId)
+
+              logger.info(
+                { requestId, role: assignedRole, userId: existingUser.id },
+                'Pending user activated via invite code',
+              )
+
+              return NextResponse.json(
+                {
+                  data: {
+                    userId: existingUser.id,
+                    role: assignedRole,
+                    status: 'active',
+                    message: `Account activated as ${assignedRole.toUpperCase()}. You can now sign in.`,
+                  },
+                },
+                { status: 200, headers: { 'x-request-id': requestId } },
+              )
+            }
+          }
+        }
+
         return NextResponse.json(
           { error: 'An account with this email address already exists. Please sign in instead.' },
           { status: 400, headers: { 'x-request-id': requestId } },
@@ -108,11 +161,20 @@ async function postSignup(request: Request, requestId: string) {
     }
 
     if (authData?.user) {
+      // Explicitly set app_metadata to eliminate any GoTrue insert trigger race conditions
+      await adminClient.auth.admin.updateUserById(authData.user.id, {
+        app_metadata: { role: assignedRole },
+      })
+
+      // Upsert profile record with confirmed assigned role
       await adminClient.from('profiles').upsert({
         id: authData.user.id,
         role: assignedRole,
         full_name: fullName,
       })
+
+      // Ensure profile role is definitively applied
+      await adminClient.from('profiles').update({ role: assignedRole, full_name: fullName }).eq('id', authData.user.id)
 
       if (validInviteId) {
         await adminClient

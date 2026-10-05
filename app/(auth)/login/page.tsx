@@ -129,19 +129,21 @@ export default function LoginPage() {
             />
           </div>
           {isPendingApproval && (
-            <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+            <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
               <div className="font-semibold flex items-center gap-1.5 text-amber-800">
                 <Clock size={15} /> Account Awaiting Approval
               </div>
               <p className="text-[11px] text-amber-700">
-                Your staff registration has been received and is waiting for administrator authorization.
+                Your registration has been received and is waiting for administrator authorization.
               </p>
-              <Link
-                href="/pending-approval"
-                className="inline-block text-[11px] text-indigo-600 font-semibold hover:underline mt-1"
-              >
-                View status & instructions &rarr;
-              </Link>
+              <div className="pt-1">
+                <Link
+                  href={`/pending-approval?email=${encodeURIComponent(email)}`}
+                  className="text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1 text-[11px]"
+                >
+                  Have an invite code or OTP? Activate now &rarr;
+                </Link>
+              </div>
             </div>
           )}
           {error && (

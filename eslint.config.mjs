@@ -48,6 +48,8 @@ export default [
       'app/api/ready/route.ts',
       'app/api/admin/users/route.ts',
       'app/api/auth/signup/route.ts',
+      'app/api/auth/verify-invite/route.ts',
+      'app/api/auth/redeem-invite/route.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', adminDataRestriction],

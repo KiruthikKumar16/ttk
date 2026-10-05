@@ -31,6 +31,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submittedStatus, setSubmittedStatus] = useState<'pending' | 'active' | null>(null)
+  const [registeredRole, setRegisteredRole] = useState<'staff' | 'admin' | null>(null)
+  const [verifiedCode, setVerifiedCode] = useState<{
+    valid: boolean
+    role?: 'staff' | 'admin'
+    recipientEmail?: string | null
+    error?: string
+  } | null>(null)
+  const [verifyingCode, setVerifyingCode] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -44,11 +52,39 @@ export default function SignupPage() {
     }
   }, [])
 
+  // Live invite code verification
+  useEffect(() => {
+    const trimmed = passcode.trim()
+    if (!trimmed || trimmed.length < 3) {
+      setVerifiedCode(null)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setVerifyingCode(true)
+      try {
+        const res = await fetch(`/api/auth/verify-invite?code=${encodeURIComponent(trimmed)}`)
+        const data = await res.json().catch(() => null)
+        if (data) {
+          setVerifiedCode(data)
+        }
+      } catch {
+        // Ignore network check failure silently
+      } finally {
+        setVerifyingCode(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [passcode])
+
   // Password rule checks
   const hasMinLength = password.length >= 8
   const hasLetter = /[A-Za-z]/.test(password)
   const hasNumber = /[0-9]/.test(password)
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
+
+  const isDetectedAdmin = verifiedCode?.role === 'admin' || passcode.trim().toUpperCase().startsWith('ADMIN-')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,6 +131,7 @@ export default function SignupPage() {
       }
 
       const role = result?.data?.role
+      setRegisteredRole(role === 'admin' ? 'admin' : role === 'staff' ? 'staff' : null)
       setSubmittedStatus(role === 'staff' || role === 'admin' ? 'active' : 'pending')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unable to complete registration. Please try again.')
@@ -121,7 +158,7 @@ export default function SignupPage() {
           </h1>
 
           <p className="text-xs text-slate-600 mb-5 leading-relaxed">
-            Thank you, <strong className="text-slate-900">{fullName}</strong>. Your staff registration for{' '}
+            Thank you, <strong className="text-slate-900">{fullName}</strong>. Your registration for{' '}
             <strong className="text-slate-900">{email}</strong> has been submitted.
           </p>
 
@@ -149,28 +186,44 @@ export default function SignupPage() {
 
   // 2. Success State: Instant Passcode Authorization
   if (submittedStatus === 'active') {
+    const isAdmin = registeredRole === 'admin'
+
     return (
       <main className="login-page">
         <section className="login-card text-center" aria-labelledby="approved-title">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
+          <div
+            className={`w-14 h-14 rounded-2xl border flex items-center justify-center mx-auto mb-4 shadow-xs ${
+              isAdmin
+                ? 'bg-purple-50 border-purple-200 text-purple-600'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-600'
+            }`}
+          >
             <CheckCircle2 size={28} />
           </div>
 
-          <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider mb-2">
-            Verified & Approved
+          <span
+            className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2 ${
+              isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
+            }`}
+          >
+            {isAdmin ? 'Administrator Verified' : 'Verified & Approved'}
           </span>
 
           <h1 id="approved-title" className="text-xl font-bold text-slate-900 mb-2">
-            Staff Access Granted
+            {isAdmin ? 'Administrator Access Granted' : 'Staff Access Granted'}
           </h1>
 
           <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-            Your academy invite code was verified. Your staff account is active and ready for immediate use.
+            {isAdmin
+              ? 'Your administrator invite code was verified. Your administrative account is active and ready for immediate use.'
+              : 'Your academy invite code was verified. Your staff account is active and ready for immediate use.'}
           </p>
 
           <Link
             href="/login"
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors"
+            className={`w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-white text-xs font-semibold shadow-xs transition-colors ${
+              isAdmin ? 'bg-purple-600 hover:bg-purple-700' : 'bg-indigo-600 hover:bg-indigo-700'
+            }`}
           >
             Sign In Now <ArrowRight size={14} />
           </Link>
@@ -194,7 +247,11 @@ export default function SignupPage() {
         />
         <p className="login-brand">{brand.displayName}</p>
         <h1 id="signup-title" className="login-title">
-          Request Staff Access
+          {isDetectedAdmin
+            ? 'Administrator Registration'
+            : (showPasscode || isFromUrl) && passcode.trim()
+              ? 'Activate Academy Access'
+              : 'Request Staff Access'}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -346,7 +403,7 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Optional One-Time Staff Invite Code */}
+          {/* Optional One-Time Invite Code / OTP */}
           <div className="pt-1">
             {!showPasscode ? (
               <button
@@ -354,16 +411,23 @@ export default function SignupPage() {
                 onClick={() => setShowPasscode(true)}
                 className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium"
               >
-                <KeyRound size={12} /> Have a one-time staff invite code?
+                <KeyRound size={12} /> Have an invite code or OTP?
               </button>
             ) : (
-              <div className="p-3 rounded-lg bg-indigo-50/60 border border-indigo-200/80">
+              <div
+                className={`p-3 rounded-lg border transition-all ${
+                  isDetectedAdmin ? 'bg-purple-50/70 border-purple-200' : 'bg-indigo-50/60 border-indigo-200/80'
+                }`}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <label
                     htmlFor="passcode"
-                    className="text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5"
+                    className={`text-[11px] font-semibold flex items-center gap-1.5 ${
+                      isDetectedAdmin ? 'text-purple-900' : 'text-indigo-900'
+                    }`}
                   >
-                    <KeyRound size={12} className="text-indigo-600" /> One-Time Staff Invite Code
+                    <KeyRound size={12} className={isDetectedAdmin ? 'text-purple-600' : 'text-indigo-600'} />
+                    {isDetectedAdmin ? 'Administrator Invite Code' : 'One-Time Invite Code (OTP)'}
                     {isFromUrl && (
                       <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-300">
                         <Sparkles size={9} className="text-emerald-600" /> Link Applied
@@ -376,8 +440,9 @@ export default function SignupPage() {
                       onClick={() => {
                         setShowPasscode(false)
                         setPasscode('')
+                        setVerifiedCode(null)
                       }}
-                      className="text-[10px] text-indigo-500 hover:underline"
+                      className="text-[10px] text-slate-500 hover:underline"
                     >
                       Hide
                     </button>
@@ -386,14 +451,39 @@ export default function SignupPage() {
                 <input
                   id="passcode"
                   type="text"
-                  placeholder="e.g. STAFF-8392-WP4K"
+                  placeholder="e.g. ADMIN-8392-WP4K or STAFF-8392-WP4K"
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value.toUpperCase())}
-                  className="w-full px-2.5 py-1.5 border border-indigo-200 rounded text-xs font-mono font-medium text-slate-900 placeholder:text-indigo-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 uppercase"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs font-mono font-medium text-slate-900 placeholder:text-slate-400 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 uppercase"
                 />
-                <span className="text-[10px] text-indigo-700 mt-1 block">
-                  One-time invite codes grant immediate access without waiting for administrator review.
-                </span>
+
+                {/* Real-time verification badge */}
+                {verifyingCode && <span className="text-[10px] text-slate-500 mt-1 block">Verifying code...</span>}
+                {verifiedCode && !verifyingCode && (
+                  <div className="mt-1.5">
+                    {verifiedCode.valid ? (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                          verifiedCode.role === 'admin' ? 'text-purple-700' : 'text-emerald-700'
+                        }`}
+                      >
+                        <Check size={12} />
+                        Valid {verifiedCode.role === 'admin' ? 'Administrator' : 'Staff'} Code — Instant access granted
+                        without admin review.
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600">
+                        <AlertCircle size={12} />
+                        {verifiedCode.error || 'Invalid code.'}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {!verifiedCode && !verifyingCode && (
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Invite codes grant immediate authorized access without waiting for administrator review.
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -412,9 +502,19 @@ export default function SignupPage() {
             type="submit"
             disabled={loading}
             aria-busy={loading}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-xs text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+            className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-xs text-xs font-semibold text-white focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${
+              isDetectedAdmin
+                ? 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
+                : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+            }`}
           >
-            {loading ? 'Submitting request...' : 'Request Staff Access'}
+            {loading
+              ? 'Submitting request...'
+              : isDetectedAdmin
+                ? 'Register as Administrator'
+                : (showPasscode || isFromUrl) && passcode.trim()
+                  ? 'Activate & Register'
+                  : 'Request Staff Access'}
           </button>
         </form>
 

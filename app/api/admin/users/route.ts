@@ -29,7 +29,7 @@ export const GET = withApi({ roles: ['admin'] }, async ({ supabase }) => {
   return data ?? []
 })
 
-export const PATCH = withApi({ roles: ['admin'], body: updateUserSchema }, async ({ supabase, body }) => {
+export const PATCH = withApi({ roles: ['admin'], body: updateUserSchema }, async ({ supabase, body, requestId }) => {
   if (body.role) {
     const { error } = await supabase!.rpc('admin_change_profile_role', {
       p_user_id: body.userId,
@@ -41,6 +41,15 @@ export const PATCH = withApi({ roles: ['admin'], body: updateUserSchema }, async
         return Response.json({ error: error.message }, { status: 409 })
       if (error.code === '42501') return Response.json({ error: 'Admin access required.' }, { status: 403 })
       throw error
+    }
+
+    try {
+      const adminClient = getSupabaseAdminClient(requestId)
+      await adminClient.auth.admin.updateUserById(body.userId, {
+        app_metadata: { role: body.role },
+      })
+    } catch {
+      // Non-fatal if auth record update encounters an internal delay
     }
   }
 

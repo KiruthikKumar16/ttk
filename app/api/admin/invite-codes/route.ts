@@ -26,53 +26,30 @@ function generateRandomCode(role: 'staff' | 'admin'): string {
 }
 
 export const GET = withApi({ roles: ['admin'] }, async ({ supabase }) => {
-  const { data, error } = await supabase!
+  const { data: codes, error } = await supabase!
     .from('invite_codes')
-    .select(
-      `
-      id,
-      code,
-      role,
-      recipient_email,
-      expires_at,
-      is_used,
-      used_at,
-      created_at,
-      created_by,
-      used_by_user_id,
-      creator:profiles!invite_codes_created_by_fkey(full_name),
-      used_by:profiles!invite_codes_used_by_user_id_fkey(full_name)
-    `,
-    )
+    .select('id,code,role,recipient_email,expires_at,is_used,used_at,created_at,created_by,used_by_user_id')
     .order('created_at', { ascending: false })
     .limit(100)
 
-  if (error) {
-    // If the join relation doesn't exist yet, fallback to raw select
-    const fallback = await supabase!
-      .from('invite_codes')
-      .select('id,code,role,recipient_email,expires_at,is_used,used_at,created_at,created_by,used_by_user_id')
-      .order('created_at', { ascending: false })
-      .limit(100)
-
-    if (fallback.error) {
-      return []
-    }
-    return (fallback.data ?? []).map((row) => ({
-      id: row.id,
-      code: row.code,
-      role: row.role,
-      recipientEmail: row.recipient_email,
-      expiresAt: row.expires_at,
-      isUsed: row.is_used,
-      usedAt: row.used_at,
-      createdAt: row.created_at,
-      createdBy: row.created_by,
-      usedByUserId: row.used_by_user_id,
-    }))
+  if (error || !codes) {
+    return []
   }
 
-  return (data ?? []).map((row: any) => ({
+  const userIds = Array.from(
+    new Set(codes.flatMap((c) => [c.created_by, c.used_by_user_id]).filter((id): id is string => Boolean(id))),
+  )
+
+  let nameMap = new Map<string, string>()
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase!.from('profiles').select('id, full_name').in('id', userIds)
+
+    if (profiles) {
+      nameMap = new Map(profiles.map((p) => [p.id, p.full_name || '']))
+    }
+  }
+
+  return codes.map((row) => ({
     id: row.id,
     code: row.code,
     role: row.role,
@@ -82,9 +59,9 @@ export const GET = withApi({ roles: ['admin'] }, async ({ supabase }) => {
     usedAt: row.used_at,
     createdAt: row.created_at,
     createdBy: row.created_by,
-    createdByName: row.creator?.full_name ?? null,
+    createdByName: row.created_by ? (nameMap.get(row.created_by) ?? null) : null,
     usedByUserId: row.used_by_user_id,
-    usedByUserName: row.used_by?.full_name ?? null,
+    usedByUserName: row.used_by_user_id ? (nameMap.get(row.used_by_user_id) ?? null) : null,
   }))
 })
 
