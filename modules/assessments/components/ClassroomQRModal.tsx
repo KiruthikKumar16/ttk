@@ -39,6 +39,7 @@ export function ClassroomQRModal({ isOpen, onClose, formUrl, title, courseName }
           onClick={onClose}
           className="absolute right-4 top-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
           title="Close modal"
+          aria-label="Close modal"
         >
           <X size={18} />
         </button>

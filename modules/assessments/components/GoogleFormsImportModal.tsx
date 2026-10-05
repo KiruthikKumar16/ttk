@@ -13,11 +13,7 @@ import {
   ArrowRight,
   RefreshCw,
 } from 'lucide-react'
-import {
-  parseGoogleFormResponses,
-  type ParsedScoreRow,
-  type StudentOption,
-} from '../utils/google-form-parser'
+import { parseGoogleFormResponses, type ParsedScoreRow, type StudentOption } from '../utils/google-form-parser'
 
 interface GoogleFormsImportModalProps {
   isOpen: boolean
@@ -169,6 +165,7 @@ export function GoogleFormsImportModal({
             onClick={onClose}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all cursor-pointer text-white/90 hover:text-white"
             title="Close modal"
+            aria-label="Close modal"
           >
             <X size={18} />
           </button>

@@ -12,7 +12,7 @@ returns trigger language plpgsql security definer
 set search_path = ''
 as $$
 begin
-  if old.role is distinct from new.role and not (select public.is_current_user_admin()) then
+  if (select auth.uid()) is not null and old.role is distinct from new.role and not (select public.is_current_user_admin()) then
     raise exception 'Non-admin users cannot modify their role' using errcode = '42501';
   end if;
   return new;

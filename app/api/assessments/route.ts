@@ -55,39 +55,9 @@ async function getAssessments(req: NextRequest) {
       query = query.eq('course_id', courseId)
     }
 
-    let data: any = null
-    let error: any = null
-    let count: any = 0
-    const initialRes = await query
+    const { data, error, count } = await query
       .order('assessment_date', { ascending: false })
       .range(pagination.offset, pagination.offset + pagination.limit - 1)
-    data = initialRes.data
-    error = initialRes.error
-    count = initialRes.count
-
-    if (error && (error.message?.includes('form_url') || error.code === '42703')) {
-      let fallbackQuery = supabase.from('assessments').select(
-        `
-          id,
-          course_id,
-          title,
-          max_score,
-          assessment_date,
-          created_by,
-          created_at,
-          courses!assessments_course_id_fkey (id, name),
-          profiles!assessments_created_by_fkey (id, full_name, role)
-        `,
-        { count: 'exact' },
-      )
-      if (courseId) fallbackQuery = fallbackQuery.eq('course_id', courseId)
-      const fallbackResult = await fallbackQuery
-        .order('assessment_date', { ascending: false })
-        .range(pagination.offset, pagination.offset + pagination.limit - 1)
-      data = fallbackResult.data
-      error = fallbackResult.error
-      count = fallbackResult.count
-    }
 
     if (error) throw error
 
@@ -195,24 +165,14 @@ async function postAssessment(req: NextRequest) {
     if (formUrl) assessmentData.form_url = formUrl
     if (sheetUrl) assessmentData.sheet_url = sheetUrl
 
-    let assessmentRecord: any
-    let { data: inserted, error: assessmentError } = await supabase
+    const { data: inserted, error: assessmentError } = await supabase
       .from('assessments')
       .insert(assessmentData)
       .select()
       .single()
 
-    // Graceful fallback if database column form_url does not exist yet
-    if (assessmentError && (assessmentError.message?.includes('form_url') || assessmentError.code === '42703')) {
-      delete assessmentData.form_url
-      delete assessmentData.sheet_url
-      const retry = await supabase.from('assessments').insert(assessmentData).select().single()
-      inserted = retry.data
-      assessmentError = retry.error
-    }
-
     if (assessmentError) throw assessmentError
-    assessmentRecord = inserted
+    const assessmentRecord = inserted
 
     // Format response
     const formattedRecord = {

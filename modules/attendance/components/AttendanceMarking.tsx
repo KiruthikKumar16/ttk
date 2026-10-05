@@ -70,7 +70,9 @@ export function AttendanceMarking({
   const [saving, setSaving] = useState<number[]>([])
   const [message, setMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Late' | 'Excused'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Late' | 'Excused'>(
+    'all',
+  )
 
   // Compute real-time session statistics
   const presentCount = rows.filter((r) => r.status === 'Present').length
@@ -245,7 +247,10 @@ export function AttendanceMarking({
             Total: <strong>{rows.length}</strong>
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200 shadow-2xs">
-            Present: <strong>{presentCount} ({presentPct}%)</strong>
+            Present:{' '}
+            <strong>
+              {presentCount} ({presentPct}%)
+            </strong>
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 text-rose-800 font-semibold border border-rose-200 shadow-2xs">
             Absent: <strong>{absentCount}</strong>
@@ -273,7 +278,10 @@ export function AttendanceMarking({
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
           {/* Search Input */}
           <div className="relative w-full sm:w-72">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
             <input
               type="text"
               placeholder="Search student or ID..."
@@ -587,10 +595,18 @@ export function AttendanceMarking({
         <span className="flex items-center gap-1.5">
           <span className="font-semibold text-slate-700">💡 Fast Marking:</span>
           <span>Use Arrow keys to navigate rows. Press</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">P</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">A</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">L</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">E</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
+            P
+          </kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
+            A
+          </kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
+            L
+          </kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
+            E
+          </kbd>
           <span>for instant status.</span>
         </span>
         <span className="text-[11px] text-slate-400">All changes save automatically</span>

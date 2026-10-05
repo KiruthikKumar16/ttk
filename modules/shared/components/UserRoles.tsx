@@ -1598,7 +1598,8 @@ export function UserRoles({
                     </h4>
                   </div>
                   <p className="text-xs text-rose-700">
-                    Revoke access to immediately suspend this user from accessing the system, or permanently remove their account.
+                    Revoke access to immediately suspend this user from accessing the system, or permanently remove
+                    their account.
                   </p>
                   <div className="flex flex-wrap items-center gap-2.5 pt-1">
                     {editingUser.role !== 'pending' ? (
@@ -1606,7 +1607,9 @@ export function UserRoles({
                         type="button"
                         variant="outline"
                         size="sm"
-                        disabled={savingDetails || revokingUserId === editingUser.id || deletingUserId === editingUser.id}
+                        disabled={
+                          savingDetails || revokingUserId === editingUser.id || deletingUserId === editingUser.id
+                        }
                         onClick={() => handleRevokeUserAccess(editingUser.id)}
                         className="text-xs font-semibold border-amber-300 text-amber-900 hover:bg-amber-100 bg-white"
                         title="Demote to Pending approval"

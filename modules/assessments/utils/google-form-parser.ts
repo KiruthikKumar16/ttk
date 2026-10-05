@@ -80,7 +80,7 @@ export function extractNumericScore(rawScore: string, maxScore: number): number 
   if (pctMatch) {
     const pct = parseFloat(pctMatch[1])
     if (!isNaN(pct)) {
-      return Math.min(maxScore, Math.max(0, Math.round(((pct / 100) * maxScore) * 100) / 100))
+      return Math.min(maxScore, Math.max(0, Math.round((pct / 100) * maxScore * 100) / 100))
     }
   }
 
@@ -114,15 +114,28 @@ export function parseGoogleFormResponses(
     const row = table[r].map((h) => h.toLowerCase())
     for (let c = 0; c < row.length; c++) {
       const cell = row[c]
-      if (scoreCol === -1 && (cell.includes('score') || cell.includes('marks') || cell.includes('points') || cell.includes('total'))) {
+      if (
+        scoreCol === -1 &&
+        (cell.includes('score') || cell.includes('marks') || cell.includes('points') || cell.includes('total'))
+      ) {
         scoreCol = c
         headerIndex = r
       }
-      if (nameCol === -1 && (cell.includes('student name') || cell === 'name' || cell.includes('full name') || cell.includes('candidate'))) {
+      if (
+        nameCol === -1 &&
+        (cell.includes('student name') || cell === 'name' || cell.includes('full name') || cell.includes('candidate'))
+      ) {
         nameCol = c
         headerIndex = r
       }
-      if (idCol === -1 && (cell.includes('register') || cell.includes('student id') || cell.includes('roll') || cell === 'id' || cell.includes('tai-'))) {
+      if (
+        idCol === -1 &&
+        (cell.includes('register') ||
+          cell.includes('student id') ||
+          cell.includes('roll') ||
+          cell === 'id' ||
+          cell.includes('tai-'))
+      ) {
         idCol = c
         headerIndex = r
       }
@@ -150,9 +163,7 @@ export function parseGoogleFormResponses(
     scoreCol = 1
   }
 
-  const rowsToProcess = headerIndex >= 0 && (nameCol !== -1 || scoreCol !== -1)
-    ? table.slice(headerIndex + 1)
-    : table
+  const rowsToProcess = headerIndex >= 0 && (nameCol !== -1 || scoreCol !== -1) ? table.slice(headerIndex + 1) : table
 
   const parsedResults: ParsedScoreRow[] = []
 
@@ -192,11 +203,20 @@ export function parseGoogleFormResponses(
 
     // 2. Try exact name match (case-insensitive, trimmed)
     if (!matchedStudent && rawName) {
-      const cleanRaw = rawName.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
-      matchedStudent = enrolledStudents.find((s) => {
-        const cleanS = s.name.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
-        return cleanS === cleanRaw
-      }) || null
+      const cleanRaw = rawName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      matchedStudent =
+        enrolledStudents.find((s) => {
+          const cleanS = s.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+          return cleanS === cleanRaw
+        }) || null
       if (matchedStudent) matchType = 'name-exact'
     }
 
@@ -204,17 +224,18 @@ export function parseGoogleFormResponses(
     if (!matchedStudent && rawName) {
       const rawWords = rawName.toLowerCase().split(/\s+/).filter(Boolean)
       if (rawWords.length > 0) {
-        matchedStudent = enrolledStudents.find((s) => {
-          const sWords = s.name.toLowerCase().split(/\s+/).filter(Boolean)
-          // Match if first names match and last initial matches
-          return sWords[0] === rawWords[0]
-        }) || null
+        matchedStudent =
+          enrolledStudents.find((s) => {
+            const sWords = s.name.toLowerCase().split(/\s+/).filter(Boolean)
+            // Match if first names match and last initial matches
+            return sWords[0] === rawWords[0]
+          }) || null
         if (matchedStudent) matchType = 'name-fuzzy'
       }
     }
 
     const percentage = maxScore > 0 ? Math.round((numericScore / maxScore) * 1000) / 10 : 0
-    const existingScore = matchedStudent ? existingResultsMap.get(matchedStudent.register_id) ?? null : null
+    const existingScore = matchedStudent ? (existingResultsMap.get(matchedStudent.register_id) ?? null) : null
 
     parsedResults.push({
       studentId: matchedStudent ? matchedStudent.register_id : null,

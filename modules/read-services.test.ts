@@ -238,6 +238,33 @@ describe('read-only domain services', () => {
     await expect(listAuditPage({ page: 1, pageSize: 5, search: 'student', direction: 'asc' })).resolves.toMatchObject({
       data: [{ tableName: 'students', actor: expect.any(String) }],
     })
+    setResults('audit_log', {
+      count: 1,
+      data: [
+        {
+          id: 2,
+          table_name: 'students',
+          record_id: '4',
+          action: 'update',
+          changed_at: 'now',
+          profiles: { full_name: 'Admin', role: 'admin' },
+        },
+      ],
+    })
+    await expect(
+      listAuditPage({
+        page: 1,
+        pageSize: 5,
+        search: '',
+        direction: 'desc',
+        tableName: 'students',
+        action: 'update',
+        userId: '00000000-0000-4000-8000-000000000001',
+        userName: 'Admin',
+      }),
+    ).resolves.toMatchObject({
+      data: [{ tableName: 'students', actor: 'Admin', actorRole: 'admin', action: 'update' }],
+    })
     setResults('attendance', { error: new Error('database') })
     await expect(listAttendancePage({ ...opts })).rejects.toThrow('database')
   })

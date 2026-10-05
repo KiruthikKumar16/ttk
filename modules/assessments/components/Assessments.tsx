@@ -904,13 +904,19 @@ export function Assessments({
                       <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">
                         Assessment Title
                       </th>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-24 text-center">
+                      <th
+                        scope="col"
+                        className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-24 text-center"
+                      >
                         Max Score
                       </th>
                       <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
                         Google Form
                       </th>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider text-right w-36">
+                      <th
+                        scope="col"
+                        className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider text-right w-36"
+                      >
                         Actions
                       </th>
                     </tr>
@@ -1169,18 +1175,27 @@ export function Assessments({
                     <span className="font-bold uppercase tracking-wider text-slate-500">Grade Distribution</span>
                     <div className="flex items-center gap-3 font-semibold">
                       <span>
-                        Graded: <strong>{gradedCount} / {students.length}</strong>
+                        Graded:{' '}
+                        <strong>
+                          {gradedCount} / {students.length}
+                        </strong>
                       </span>
                       <span>•</span>
                       <span>
-                        Class Average: <strong className="text-indigo-600">{averageScore} / {maxScore} ({avgPct}%)</strong>
+                        Class Average:{' '}
+                        <strong className="text-indigo-600">
+                          {averageScore} / {maxScore} ({avgPct}%)
+                        </strong>
                       </span>
                     </div>
                   </div>
 
                   <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-4">
                     {bands.map((band, index) => (
-                      <div key={band.label} className="rounded-xl border border-slate-200/90 p-3 bg-slate-50/60 shadow-2xs">
+                      <div
+                        key={band.label}
+                        className="rounded-xl border border-slate-200/90 p-3 bg-slate-50/60 shadow-2xs"
+                      >
                         <div className="flex justify-between text-xs">
                           <span className="font-medium text-slate-600">{band.label}</span>
                           <strong className="font-bold text-slate-900">{counts[index]} students</strong>
@@ -1204,7 +1219,10 @@ export function Assessments({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="relative w-64">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  />
                   <Input
                     type="text"
                     placeholder="Search student or ID..."
@@ -1220,7 +1238,9 @@ export function Assessments({
                     type="button"
                     onClick={() => setResultsFilter('all')}
                     className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
-                      resultsFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                      resultsFilter === 'all'
+                        ? 'bg-white text-slate-900 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     All ({students.length})
@@ -1229,7 +1249,9 @@ export function Assessments({
                     type="button"
                     onClick={() => setResultsFilter('graded')}
                     className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
-                      resultsFilter === 'graded' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                      resultsFilter === 'graded'
+                        ? 'bg-white text-emerald-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Graded ({assessmentResults.length})
@@ -1238,7 +1260,9 @@ export function Assessments({
                     type="button"
                     onClick={() => setResultsFilter('unmarked')}
                     className={`px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
-                      resultsFilter === 'unmarked' ? 'bg-white text-rose-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                      resultsFilter === 'unmarked'
+                        ? 'bg-white text-rose-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Unmarked ({Math.max(0, students.length - assessmentResults.length)})
@@ -1278,16 +1302,25 @@ export function Assessments({
                     <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider">
                       Student
                     </th>
-                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-40 text-center">
+                    <th
+                      scope="col"
+                      className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-40 text-center"
+                    >
                       Score ({selectedAssessment?.maxScore} pts)
                     </th>
-                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-28 text-center">
+                    <th
+                      scope="col"
+                      className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-28 text-center"
+                    >
                       Percentage
                     </th>
                     <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider">
                       Remarks / Notes
                     </th>
-                    <th scope="col" className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-20 text-center">
+                    <th
+                      scope="col"
+                      className="p-3.5 font-bold text-slate-700 text-xs uppercase tracking-wider w-20 text-center"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -1296,11 +1329,11 @@ export function Assessments({
                   {filteredStudents.map((student) => {
                     const existing = assessmentResults.find((r) => r.studentId === student.register_id)
                     const maxScore = selectedAssessment?.maxScore || 100
-                    const currentScoreStr = bulkScores[String(student.register_id)] ?? (existing ? String(existing.score) : '')
+                    const currentScoreStr =
+                      bulkScores[String(student.register_id)] ?? (existing ? String(existing.score) : '')
                     const numericScore = parseFloat(currentScoreStr)
-                    const percentage = !isNaN(numericScore) && maxScore > 0
-                      ? ((numericScore / maxScore) * 100).toFixed(1)
-                      : null
+                    const percentage =
+                      !isNaN(numericScore) && maxScore > 0 ? ((numericScore / maxScore) * 100).toFixed(1) : null
 
                     return (
                       <tr key={student.register_id} className="hover:bg-slate-50/80 transition-colors">
@@ -1371,9 +1404,7 @@ export function Assessments({
                         </td>
 
                         <td className="p-3.5">
-                          <span className="text-xs text-slate-600 line-clamp-1">
-                            {existing?.remarks || '-'}
-                          </span>
+                          <span className="text-xs text-slate-600 line-clamp-1">{existing?.remarks || '-'}</span>
                         </td>
 
                         <td className="p-3.5 text-center">

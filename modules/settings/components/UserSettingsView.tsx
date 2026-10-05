@@ -333,7 +333,7 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="e.g. staff.contact@elysium.academy"
+                  placeholder="e.g. staff.contact@thoorigai.infotech"
                   className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
                 />
               </div>
@@ -365,7 +365,7 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="e.g. Branch Office, Elysium Academy, Bye-pass Road"
+                placeholder="e.g. Branch Office, Thoorigai Infotech, Bye-pass Road"
                 className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
               />
             </div>
