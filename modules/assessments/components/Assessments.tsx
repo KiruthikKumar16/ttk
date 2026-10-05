@@ -441,9 +441,12 @@ export function Assessments({
     if (!deleteResultId || !selectedAssessmentId) return
 
     try {
-      const response = await fetch(`/api/assessments/${selectedAssessmentId}/results/${deleteResultId}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(
+        `/api/assessments/${selectedAssessmentId}/results?resultId=${encodeURIComponent(deleteResultId)}`,
+        {
+          method: 'DELETE',
+        },
+      )
       if (!response.ok) throw new Error('Failed to delete result')
 
       setAssessmentResults((prev) => prev.filter((r) => r.id !== deleteResultId))

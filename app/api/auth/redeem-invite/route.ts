@@ -68,20 +68,7 @@ async function postRedeemInvite(request: Request, requestId: string) {
       )
     }
 
-    if (profile.role !== 'pending') {
-      return NextResponse.json(
-        {
-          data: {
-            role: profile.role,
-            alreadyActive: true,
-            message: `Your account is already active with the ${profile.role.toUpperCase()} role. You can sign in directly.`,
-          },
-        },
-        { status: 200, headers: { 'x-request-id': requestId } },
-      )
-    }
-
-    // 3. Validate invite code / OTP
+    // 2. Validate invite code / OTP first to determine target role
     let targetRole: 'admin' | 'staff' = 'staff'
     let inviteId: string | null = null
 
@@ -127,7 +114,21 @@ async function postRedeemInvite(request: Request, requestId: string) {
       inviteId = invite.id
     }
 
-    // 4. Activate the pending account
+    // 3. Check current profile role and eligibility
+    if (profile.role === targetRole || (profile.role === 'admin' && targetRole === 'staff')) {
+      return NextResponse.json(
+        {
+          data: {
+            role: profile.role,
+            alreadyActive: true,
+            message: `Your account is already active with the ${profile.role.toUpperCase()} role. You can sign in directly.`,
+          },
+        },
+        { status: 200, headers: { 'x-request-id': requestId } },
+      )
+    }
+
+    // 4. Activate or upgrade the account
     await adminClient.auth.admin.updateUserById(userId, {
       app_metadata: { role: targetRole },
     })
@@ -155,6 +156,9 @@ async function postRedeemInvite(request: Request, requestId: string) {
     }
 
     logger.info({ requestId, role: targetRole, userId }, 'Account successfully activated via invite code')
+
+    // Clear the temporary sign-in cookie used for credential verification
+    await supabase.auth.signOut().catch(() => {})
 
     return NextResponse.json(
       {

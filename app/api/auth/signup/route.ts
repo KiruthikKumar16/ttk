@@ -111,7 +111,10 @@ async function postSignup(request: Request, requestId: string) {
               .eq('id', existingUser.id)
               .maybeSingle()
 
-            if (existingProfile?.role === 'pending') {
+            if (
+              existingProfile?.role === 'pending' ||
+              (existingProfile?.role === 'staff' && assignedRole === 'admin')
+            ) {
               await adminClient.auth.admin.updateUserById(existingUser.id, {
                 password,
                 user_metadata: { full_name: fullName },
@@ -134,7 +137,7 @@ async function postSignup(request: Request, requestId: string) {
 
               logger.info(
                 { requestId, role: assignedRole, userId: existingUser.id },
-                'Pending user activated via invite code',
+                'Existing user activated or upgraded via invite code',
               )
 
               return NextResponse.json(

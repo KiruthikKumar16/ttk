@@ -90,7 +90,9 @@ async function getAssessments(req: NextRequest) {
       // Resilient fallback query if specific joined foreign keys or optional columns fail
       let fbQuery = supabase
         .from('assessments')
-        .select('id, course_id, title, max_score, assessment_date, created_by, created_at', { count: 'exact' })
+        .select('id, course_id, title, max_score, assessment_date, created_by, created_at, form_url, sheet_url', {
+          count: 'exact',
+        })
       if (courseId) {
         fbQuery = fbQuery.eq('course_id', courseId)
       }
@@ -129,8 +131,8 @@ async function getAssessments(req: NextRequest) {
         title: record.title,
         maxScore: record.max_score,
         assessmentDate: record.assessment_date,
-        formUrl: null,
-        sheetUrl: null,
+        formUrl: record.form_url ?? null,
+        sheetUrl: record.sheet_url ?? null,
         createdBy: profileMap.get(String(record.created_by)) ?? null,
         createdAt: record.created_at,
       }))

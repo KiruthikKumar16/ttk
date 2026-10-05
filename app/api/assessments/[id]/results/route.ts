@@ -184,13 +184,20 @@ async function postAssessmentResult(req: NextRequest, { params }: { params: Prom
         )
       }
       const [{ data: course, error: courseError }, { data: students, error: studentsError }] = await Promise.all([
-        supabase.from('courses').select('name').eq('id', assessmentData.course_id).single(),
+        supabase.from('courses').select('id, name').eq('id', assessmentData.course_id).single(),
         supabase.from('students').select('id,register_id,name,course').in('register_id', studentIds),
       ])
       if (courseError) throw courseError
       if (studentsError) throw studentsError
       const studentByRegisterId = new Map((students ?? []).map((student) => [student.register_id, student]))
-      if (entries.some((entry) => studentByRegisterId.get(entry.studentId)?.course !== course.name)) {
+      const isEnrolled = (studentCourse: string | null | undefined) => {
+        if (!studentCourse) return false
+        const s = studentCourse.trim().toLowerCase()
+        const cName = (course?.name || '').trim().toLowerCase()
+        const cId = (course?.id || '').trim().toLowerCase()
+        return s === cName || s === cId || s.includes(cName) || cName.includes(s)
+      }
+      if (entries.some((entry) => !isEnrolled(studentByRegisterId.get(entry.studentId)?.course))) {
         return NextResponse.json(
           { error: 'Every student must be enrolled in this assessment course.' },
           { status: 400 },
@@ -226,11 +233,18 @@ async function postAssessmentResult(req: NextRequest, { params }: { params: Prom
     if (studentError) throw studentError
     const { data: assessmentCourse, error: courseError } = await supabase
       .from('courses')
-      .select('name')
+      .select('id, name')
       .eq('id', assessmentData.course_id)
       .single()
     if (courseError) throw courseError
-    if (studentData.course !== assessmentCourse.name) {
+    const isSingleEnrolled = (studentCourse: string | null | undefined) => {
+      if (!studentCourse) return false
+      const s = studentCourse.trim().toLowerCase()
+      const cName = (assessmentCourse?.name || '').trim().toLowerCase()
+      const cId = (assessmentCourse?.id || '').trim().toLowerCase()
+      return s === cName || s === cId || s.includes(cName) || cName.includes(s)
+    }
+    if (!isSingleEnrolled(studentData.course)) {
       return NextResponse.json({ error: 'Student is not enrolled in this assessment course.' }, { status: 400 })
     }
 

@@ -329,7 +329,7 @@ export function UserRoles({
   const handleQuickApprove = async (userId: string, targetRole?: Role) => {
     const selectedUser = rows.find((r) => r.id === userId)
     const roleToApply: Role =
-      (selectedUser && selectedUser.role !== 'pending' ? selectedUser.role : targetRole) || 'staff'
+      targetRole || (selectedUser && selectedUser.role !== 'pending' ? selectedUser.role : 'staff')
 
     setApprovingId(userId)
     setError('')
@@ -1113,33 +1113,36 @@ export function UserRoles({
                               size="sm"
                               variant="outline"
                               disabled={saving || isApproving}
-                              onClick={() => handleQuickApprove(user.id, user.role !== 'pending' ? user.role : 'staff')}
+                              onClick={() => handleQuickApprove(user.id, user.role === 'admin' ? 'admin' : 'staff')}
                               className="text-xs font-semibold border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:border-amber-400 shadow-2xs"
-                              title={`Approve immediately as ${user.role !== 'pending' ? user.role.toUpperCase() : 'Staff'}`}
+                              title="Approve user with Staff privileges"
                             >
                               {isApproving ? (
                                 'Approving...'
                               ) : (
                                 <>
                                   <UserCheck size={14} className="mr-1 text-amber-700" />
-                                  Approve {user.role !== 'pending' ? `(${user.role.toUpperCase()})` : 'as Staff'}
+                                  Approve as Staff
                                 </>
                               )}
                             </Button>
-                            {user.role === 'pending' && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                disabled={saving || isApproving}
-                                onClick={() => handleQuickApprove(user.id, 'admin')}
-                                className="text-[11px] font-semibold text-purple-700 hover:bg-purple-50 hover:text-purple-900 px-2 py-1"
-                                title="Approve immediately with Administrator privileges"
-                              >
-                                <Shield size={12} className="mr-1 text-purple-600" />
-                                Approve as Admin
-                              </Button>
-                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={saving || isApproving}
+                              onClick={() => handleQuickApprove(user.id, 'admin')}
+                              className="text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-2xs px-2.5 py-1"
+                              title="Approve user with Administrator privileges"
+                            >
+                              {isApproving ? (
+                                'Approving...'
+                              ) : (
+                                <>
+                                  <Shield size={13} className="mr-1 text-purple-200" />
+                                  Approve as Admin
+                                </>
+                              )}
+                            </Button>
                           </div>
                         )}
                       </td>

@@ -112,7 +112,19 @@ export async function listStudents(
   }
 
   if (options.course && options.course.trim()) {
-    query = query.eq('course', options.course.trim())
+    const courseQueryVal = options.course.trim()
+    const { data: matchedCourses } = await supabaseClient
+      .from('courses')
+      .select('id, name')
+      .or(`id.eq.${courseQueryVal},name.ilike.%${courseQueryVal}%`)
+    const courseTerms = new Set<string>([courseQueryVal])
+    if (matchedCourses && matchedCourses.length > 0) {
+      for (const mc of matchedCourses) {
+        if (mc.name) courseTerms.add(mc.name)
+        if (mc.id) courseTerms.add(mc.id)
+      }
+    }
+    query = query.in('course', Array.from(courseTerms))
   } else if (options.categoryId && options.categoryId.trim()) {
     const { data: coursesInCategory, error: catError } = await supabaseClient
       .from('courses')

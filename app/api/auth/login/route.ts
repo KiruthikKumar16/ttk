@@ -42,9 +42,19 @@ async function postLogin(request: Request, requestId: string) {
       )
     }
     if (authData?.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).maybeSingle()
+      // Query profiles table via adminClient to avoid RLS limitations and stale JWT claims
+      const { getSupabaseAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = getSupabaseAdminClient(requestId)
+      const { data: profile } = await adminClient
+        .from('profiles')
+        .select('role')
+        .eq('id', authData.user.id)
+        .maybeSingle()
 
-      if (profile?.role === 'pending') {
+      const currentRole = profile?.role || (authData.user.app_metadata?.role as string | undefined)?.toLowerCase()
+
+      // If user's profile is still pending, block access
+      if (currentRole === 'pending') {
         await supabase.auth.signOut()
         return NextResponse.json(
           {
@@ -53,6 +63,16 @@ async function postLogin(request: Request, requestId: string) {
           },
           { status: 403, headers: { 'x-request-id': requestId } },
         )
+      }
+
+      // If user is active in profiles (admin or staff), ensure app_metadata is synchronized
+      const metaRole = (authData.user.app_metadata?.role as string | undefined)?.toLowerCase()
+      if (profile?.role && profile.role !== metaRole && (profile.role === 'admin' || profile.role === 'staff')) {
+        await adminClient.auth.admin
+          .updateUserById(authData.user.id, {
+            app_metadata: { role: profile.role },
+          })
+          .catch(() => {})
       }
     }
 

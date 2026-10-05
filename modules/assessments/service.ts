@@ -16,7 +16,7 @@ export async function listAssessmentPage(options: {
     let query = supabase
       .from('assessments')
       .select(
-        'id,course_id,title,max_score,assessment_date,created_by,created_at,form_url,sheet_url,courses(id,name),profiles(id,full_name,role)',
+        'id,course_id,title,max_score,assessment_date,created_by,created_at,form_url,sheet_url,courses!assessments_course_id_fkey(id,name),profiles!assessments_created_by_fkey(id,full_name,role)',
         { count: 'exact' },
       )
     if (options.courseId) query = query.eq('course_id', options.courseId)
@@ -58,11 +58,13 @@ export async function listAssessmentPage(options: {
     console.warn('[listAssessmentPage] Primary query failed, attempting resilient fallback:', err)
   }
 
-  // 2. Resilient fallback query: core columns only
+  // 2. Resilient fallback query: core columns + Google Form links
   try {
     let fallbackQuery = supabase
       .from('assessments')
-      .select('id,course_id,title,max_score,assessment_date,created_by,created_at', { count: 'exact' })
+      .select('id,course_id,title,max_score,assessment_date,created_by,created_at,form_url,sheet_url', {
+        count: 'exact',
+      })
     if (options.courseId) fallbackQuery = fallbackQuery.eq('course_id', options.courseId)
     if (options.search) {
       const term = options.search
@@ -110,8 +112,8 @@ export async function listAssessmentPage(options: {
         title: String(row.title),
         maxScore: Number(row.max_score),
         assessmentDate: String(row.assessment_date),
-        formUrl: null,
-        sheetUrl: null,
+        formUrl: row.form_url ? String(row.form_url) : null,
+        sheetUrl: row.sheet_url ? String(row.sheet_url) : null,
         createdAt: String(row.created_at),
         createdBy: profileMap.get(String(row.created_by)) ?? null,
       })),
