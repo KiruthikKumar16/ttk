@@ -50,7 +50,13 @@ export default function PendingApprovalPage() {
 
       const result = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(result?.error || 'Failed to activate account. Please check your credentials.')
+        const message =
+          typeof result?.error === 'string'
+            ? result.error
+            : typeof result?.error === 'object' && result?.error !== null
+              ? result.error.message
+              : 'Failed to activate account. Please check your credentials.'
+        throw new Error(message || 'Failed to activate account. Please check your credentials.')
       }
 
       const role = result?.data?.role

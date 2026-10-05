@@ -49,6 +49,8 @@ export async function updateSession(request: NextRequest) {
     pathname === '/pending-approval' ||
     pathname === '/api/auth/login' ||
     pathname === '/api/auth/signup' ||
+    pathname === '/api/auth/verify-invite' ||
+    pathname === '/api/auth/redeem-invite' ||
     pathname === '/api/health' ||
     pathname === '/api/ready' ||
     pathname.startsWith('/verify/') ||

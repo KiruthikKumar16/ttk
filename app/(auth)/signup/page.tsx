@@ -66,7 +66,19 @@ export default function SignupPage() {
         const res = await fetch(`/api/auth/verify-invite?code=${encodeURIComponent(trimmed)}`)
         const data = await res.json().catch(() => null)
         if (data) {
-          setVerifiedCode(data)
+          const errorMessage =
+            typeof data.error === 'string'
+              ? data.error
+              : typeof data.error === 'object' && data.error !== null
+                ? data.error.message || 'Invalid code.'
+                : undefined
+
+          setVerifiedCode({
+            valid: Boolean(data.valid),
+            role: data.role,
+            recipientEmail: data.recipientEmail,
+            error: errorMessage,
+          })
         }
       } catch {
         // Ignore network check failure silently
@@ -127,7 +139,13 @@ export default function SignupPage() {
       const result = await response.json().catch(() => null)
 
       if (!response.ok) {
-        throw new Error(result?.error || 'Unable to complete registration. Please try again.')
+        const message =
+          typeof result?.error === 'string'
+            ? result.error
+            : typeof result?.error === 'object' && result?.error !== null
+              ? result.error.message
+              : 'Unable to complete registration. Please try again.'
+        throw new Error(message || 'Unable to complete registration. Please try again.')
       }
 
       const role = result?.data?.role
@@ -474,7 +492,7 @@ export default function SignupPage() {
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600">
                         <AlertCircle size={12} />
-                        {verifiedCode.error || 'Invalid code.'}
+                        {typeof verifiedCode.error === 'string' ? verifiedCode.error : 'Invalid code.'}
                       </span>
                     )}
                   </div>

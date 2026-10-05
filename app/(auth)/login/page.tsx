@@ -69,7 +69,13 @@ export default function LoginPage() {
           setIsPendingApproval(true)
           return
         }
-        throw new Error(body?.error || 'Unable to sign in. Please try again.')
+        const message =
+          typeof body?.error === 'string'
+            ? body.error
+            : typeof body?.error === 'object' && body?.error !== null
+              ? body.error.message
+              : 'Unable to sign in. Please try again.'
+        throw new Error(message || 'Unable to sign in. Please try again.')
       }
 
       // Sign in successful, redirect to home
