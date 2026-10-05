@@ -2,7 +2,6 @@ import { chromium } from 'playwright'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const BASE_URL = 'http://localhost:3005'
 const MANUALS_DIR = path.resolve('docs/manuals')
 const ADMIN_IMG_DIR = path.resolve('docs/manuals/screenshots/admin')
 const STAFF_IMG_DIR = path.resolve('docs/manuals/screenshots/staff')
@@ -19,111 +18,10 @@ function getBase64Img(filePath) {
   return `data:image/${ext};base64,${b64}`
 }
 
-async function captureModal() {
-  console.log('Capturing invite modal screenshot...')
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
-  const page = await context.newPage()
-
-  try {
-    await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' })
-    await page.locator('input[type="email"]').fill('admin@thoorigai.test')
-    await page.locator('input[type="password"]').fill('ThoorigaiLocal123!')
-    await page.locator('button[type="submit"]').click()
-    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 })
-    
-    await page.goto(`${BASE_URL}/settings/users`, { waitUntil: 'networkidle' })
-    await page.waitForTimeout(1000)
-
-    const genBtn = page.locator('button:has-text("Generate Invite Code"), button:has-text("New Code")').first()
-    if (await genBtn.isVisible()) {
-      await genBtn.click()
-      await page.locator('h3:has-text("Generate Invite Code")').waitFor({ timeout: 5000 })
-      await page.waitForTimeout(600)
-
-      // Annotate inside modal
-      const targets = [
-        { selector: 'button:has-text("Staff Access")', step: 1, label: 'Staff Access (STAFF-XXXX)' },
-        { selector: 'button:has-text("Admin Access")', step: 2, label: 'Admin Access (ADMIN-XXXX)' },
-        { selector: 'select#invite-expiry-select', step: 3, label: 'Expiration Window' },
-        { selector: 'input[placeholder*="rajesh@"]', step: 4, label: 'Email Restriction (Optional)' },
-        { selector: 'button[type="submit"]:has-text("Generate")', step: 5, label: 'Generate & Copy Code' },
-      ]
-
-      for (const { selector, step, label } of targets) {
-        try {
-          const loc = page.locator(selector).first()
-          if (await loc.isVisible()) {
-            const box = await loc.boundingBox()
-            if (box) {
-              await loc.evaluate((el) => {
-                el.style.outline = '3px solid #e11d48'
-                el.style.outlineOffset = '2px'
-              })
-              await page.evaluate(({ top, left, step, label }) => {
-                const wrapper = document.createElement('div')
-                wrapper.className = 'doc-step-marker'
-                wrapper.innerHTML = `
-                  <div style="
-                    position: absolute;
-                    top: ${top - 12 + window.scrollY}px;
-                    left: ${left - 12 + window.scrollX}px;
-                    z-index: 9999999;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    pointer-events: none;
-                    font-family: system-ui, -apple-system, sans-serif;
-                  ">
-                    <div style="
-                      background: #e11d48;
-                      color: #ffffff;
-                      font-size: 13px;
-                      font-weight: 800;
-                      width: 26px;
-                      height: 26px;
-                      border-radius: 50%;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      box-shadow: 0 0 0 3px #ffffff, 0 3px 8px rgba(0,0,0,0.5);
-                      border: 2px solid #be123c;
-                    ">${step}</div>
-                    <div style="
-                      background: #0f172a;
-                      color: #f8fafc;
-                      font-size: 11px;
-                      font-weight: 700;
-                      padding: 3px 7px;
-                      border-radius: 5px;
-                      border: 1px solid rgba(255,255,255,0.25);
-                      white-space: nowrap;
-                      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-                    ">${label}</div>
-                  </div>
-                `
-                document.body.appendChild(wrapper)
-              }, { top: box.y, left: box.x, step, label })
-            }
-          }
-        } catch (e) {}
-      }
-
-      await page.screenshot({ path: path.join(ADMIN_IMG_DIR, '04_invite_modal.png') })
-      console.log('✓ Successfully recaptured 04_invite_modal.png with open modal!')
-    }
-  } catch (err) {
-    console.warn('Could not recapture modal:', err.message)
-  } finally {
-    await browser.close()
-  }
-}
-
-// Global stylesheet for publication-grade PDF
 const sharedCss = `
   @page {
     size: A4 portrait;
-    margin: 14mm 14mm 16mm 14mm;
+    margin: 12mm 12mm 14mm 12mm;
     @bottom-right {
       content: counter(page);
     }
@@ -137,8 +35,8 @@ const sharedCss = `
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
     background: #ffffff;
-    line-height: 1.55;
-    font-size: 13px;
+    line-height: 1.5;
+    font-size: 12px;
     margin: 0;
     padding: 0;
   }
@@ -151,14 +49,14 @@ const sharedCss = `
   
   /* Cover Page */
   .cover {
-    min-height: 92vh;
+    min-height: 94vh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 40px 20px;
-    border: 1px solid #e2e8f0;
+    padding: 40px 30px;
+    border: 1px solid #cbd5e1;
     border-radius: 12px;
-    background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
   }
   .cover-header {
     display: flex;
@@ -170,43 +68,43 @@ const sharedCss = `
     color: #ffffff;
     padding: 10px 18px;
     font-weight: 900;
-    font-size: 20px;
+    font-size: 22px;
     letter-spacing: 2px;
     border-radius: 8px;
   }
   .cover-title-group {
-    margin-top: 60px;
+    margin-top: 50px;
   }
   .cover-tag {
     display: inline-block;
     padding: 4px 12px;
     background: #dbeafe;
     color: #1d4ed8;
-    font-weight: 700;
-    font-size: 12px;
+    font-weight: 800;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1px;
     border-radius: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .cover h1 {
-    font-size: 34px;
+    font-size: 32px;
     font-weight: 800;
     color: #0f172a;
     line-height: 1.2;
     margin: 0 0 16px 0;
   }
   .cover-subtitle {
-    font-size: 16px;
+    font-size: 15px;
     color: #475569;
-    max-width: 600px;
+    max-width: 620px;
     line-height: 1.5;
   }
   .cover-meta {
-    margin-top: 40px;
+    margin-top: 36px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 14px;
     background: #ffffff;
     padding: 20px;
     border-radius: 10px;
@@ -214,13 +112,13 @@ const sharedCss = `
   }
   .meta-item strong {
     display: block;
-    font-size: 11px;
+    font-size: 10.5px;
     text-transform: uppercase;
     color: #64748b;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
   .meta-item span {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #1e293b;
   }
@@ -233,13 +131,13 @@ const sharedCss = `
     justify-content: space-between;
   }
 
-  /* Headings & Sections */
+  /* Headings & Section Styling */
   h2.section-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
     color: #0f172a;
-    margin: 32px 0 8px 0;
-    padding-bottom: 8px;
+    margin: 28px 0 8px 0;
+    padding-bottom: 6px;
     border-bottom: 2px solid #e2e8f0;
     display: flex;
     align-items: center;
@@ -248,22 +146,22 @@ const sharedCss = `
   .section-num {
     background: #2563eb;
     color: #ffffff;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
+    padding: 2px 7px;
+    border-radius: 5px;
   }
   h3.flow-title {
-    font-size: 16px;
+    font-size: 14.5px;
     font-weight: 700;
     color: #1e293b;
-    margin: 20px 0 8px 0;
+    margin: 18px 0 6px 0;
   }
   p.desc {
     color: #475569;
     margin-top: 0;
-    margin-bottom: 14px;
-    font-size: 13px;
+    margin-bottom: 12px;
+    font-size: 12px;
   }
   .route-pill {
     display: inline-block;
@@ -271,20 +169,20 @@ const sharedCss = `
     border: 1px solid #cbd5e1;
     color: #334155;
     font-family: monospace;
-    font-size: 11px;
-    padding: 2px 8px;
+    font-size: 10.5px;
+    padding: 2px 7px;
     border-radius: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   /* Screenshot Figure */
   .screenshot-box {
-    margin: 16px 0;
+    margin: 14px 0;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     overflow: hidden;
     background: #f8fafc;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
   }
   .screenshot-box img {
     width: 100%;
@@ -292,10 +190,10 @@ const sharedCss = `
     display: block;
   }
   .screenshot-caption {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #475569;
-    padding: 8px 14px;
+    padding: 7px 12px;
     background: #f1f5f9;
     border-top: 1px solid #e2e8f0;
   }
@@ -304,19 +202,19 @@ const sharedCss = `
   table.steps-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 14px 0;
-    font-size: 12px;
+    margin: 12px 0;
+    font-size: 11.5px;
   }
   table.steps-table th {
     background: #f1f5f9;
     color: #334155;
     text-align: left;
-    padding: 8px 12px;
+    padding: 7px 10px;
     border: 1px solid #cbd5e1;
     font-weight: 700;
   }
   table.steps-table td {
-    padding: 9px 12px;
+    padding: 8px 10px;
     border: 1px solid #e2e8f0;
     vertical-align: top;
   }
@@ -327,14 +225,14 @@ const sharedCss = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     background: #e11d48;
     color: #ffffff;
     border-radius: 50%;
     font-weight: 800;
-    font-size: 12px;
-    margin-right: 6px;
+    font-size: 11px;
+    margin-right: 5px;
     box-shadow: 0 2px 4px rgba(225,29,72,0.3);
   }
   .btn-name {
@@ -344,10 +242,10 @@ const sharedCss = `
 
   /* Callout Boxes */
   .callout-box {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin: 14px 0;
-    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 12px 0;
+    font-size: 11.5px;
   }
   .callout-tip {
     background: #f0fdf4;
@@ -366,64 +264,75 @@ const sharedCss = `
   }
   .callout-title {
     font-weight: 700;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
   /* Sitemap Cards */
   .sitemap-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 18px 0;
+    gap: 10px;
+    margin: 14px 0;
   }
   .sitemap-node {
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 6px;
+    padding: 10px;
     background: #f8fafc;
   }
   .sitemap-node-header {
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     color: #1e3a8a;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     display: flex;
     justify-content: space-between;
   }
   .sitemap-node-path {
     font-family: monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: #64748b;
   }
   .sitemap-node ul {
-    margin: 8px 0 0 16px;
+    margin: 6px 0 0 14px;
     padding: 0;
-    font-size: 11.5px;
+    font-size: 10.5px;
     color: #334155;
   }
 `
 
 async function buildAdminManual() {
-  console.log('Generating HTML for Admin Manual...')
+  console.log('Assembling Full Comprehensive Admin Manual...')
   
   const imgLogin = getBase64Img(path.join(ADMIN_IMG_DIR, '01_login.png'))
   const imgDash = getBase64Img(path.join(ADMIN_IMG_DIR, '02_executive_dashboard.png'))
-  const imgUsers = getBase64Img(path.join(ADMIN_IMG_DIR, '03_users_and_roles.png'))
-  const imgModal = getBase64Img(path.join(ADMIN_IMG_DIR, '04_invite_modal.png'))
-  const imgStudents = getBase64Img(path.join(ADMIN_IMG_DIR, '05_students_directory.png'))
-  const imgInvoices = getBase64Img(path.join(ADMIN_IMG_DIR, '06_invoices_ledger.png'))
-  const imgCourses = getBase64Img(path.join(ADMIN_IMG_DIR, '07_courses_management.png'))
-  const imgMaterials = getBase64Img(path.join(ADMIN_IMG_DIR, '08_course_materials.png'))
-  const imgAttendance = getBase64Img(path.join(ADMIN_IMG_DIR, '09_attendance_tracker.png'))
-  const imgAssessments = getBase64Img(path.join(ADMIN_IMG_DIR, '10_assessments_studio.png'))
-  const imgCerts = getBase64Img(path.join(ADMIN_IMG_DIR, '11_certificates_issuance.png'))
-  const imgReports = getBase64Img(path.join(ADMIN_IMG_DIR, '12_reports_analytics.png'))
-  const imgAudit = getBase64Img(path.join(ADMIN_IMG_DIR, '13_audit_log.png'))
-  const imgGst = getBase64Img(path.join(ADMIN_IMG_DIR, '14_gst_settings.png'))
-  const imgBrand = getBase64Img(path.join(ADMIN_IMG_DIR, '15_brand_settings.png'))
+  const imgDashAcad = getBase64Img(path.join(ADMIN_IMG_DIR, '03_dashboard_academic_tab.png'))
+  const imgTopbar = getBase64Img(path.join(ADMIN_IMG_DIR, '29_topbar_notifications.png'))
+  const imgUsers = getBase64Img(path.join(ADMIN_IMG_DIR, '04_users_and_roles.png'))
+  const imgModal = getBase64Img(path.join(ADMIN_IMG_DIR, '05_invite_modal.png'))
+  const imgUserEdit = getBase64Img(path.join(ADMIN_IMG_DIR, '06_user_edit_modal.png'))
+  const imgStudents = getBase64Img(path.join(ADMIN_IMG_DIR, '07_students_directory.png'))
+  const imgAddStudent = getBase64Img(path.join(ADMIN_IMG_DIR, '08_add_student_modal.png'))
+  const imgInvoices = getBase64Img(path.join(ADMIN_IMG_DIR, '09_invoices_ledger.png'))
+  const imgRecordPay = getBase64Img(path.join(ADMIN_IMG_DIR, '10_record_payment_modal.png'))
+  const imgCourses = getBase64Img(path.join(ADMIN_IMG_DIR, '11_courses_catalog.png'))
+  const imgMaterials = getBase64Img(path.join(ADMIN_IMG_DIR, '13_course_materials.png'))
+  const imgAttendance = getBase64Img(path.join(ADMIN_IMG_DIR, '14_attendance_tracker.png'))
+  const imgAssessments = getBase64Img(path.join(ADMIN_IMG_DIR, '15_assessments_studio.png'))
+  const imgCerts = getBase64Img(path.join(ADMIN_IMG_DIR, '18_certificates_issuance.png'))
+  const imgVerify = getBase64Img(path.join(ADMIN_IMG_DIR, '19_verify_public_portal.png'))
+  const imgReportsFin = getBase64Img(path.join(ADMIN_IMG_DIR, '20_reports_financial.png'))
+  const imgReportsAcad = getBase64Img(path.join(ADMIN_IMG_DIR, '21_reports_academic.png'))
+  const imgAudit = getBase64Img(path.join(ADMIN_IMG_DIR, '22_audit_log.png'))
+  const imgGst = getBase64Img(path.join(ADMIN_IMG_DIR, '23_gst_settings.png'))
+  const imgBrand = getBase64Img(path.join(ADMIN_IMG_DIR, '24_brand_settings.png'))
+  const imgTrainers = getBase64Img(path.join(ADMIN_IMG_DIR, '25_instructor_assignments.png'))
+  const imgCats = getBase64Img(path.join(ADMIN_IMG_DIR, '26_course_categories.png'))
+  const imgSkills = getBase64Img(path.join(ADMIN_IMG_DIR, '27_skill_tags.png'))
+  const imgSettings = getBase64Img(path.join(ADMIN_IMG_DIR, '28_user_settings.png'))
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -440,758 +349,1023 @@ async function buildAdminManual() {
       <div class="cover-header">
         <div class="logo-badge">THOORIGAI</div>
         <div>
-          <strong style="display:block; font-size: 15px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
-          <span style="font-size: 12px; color: #64748b;">Enterprise Academy Administration & Operations</span>
+          <strong style="display:block; font-size: 16px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
+          <span style="font-size: 12px; color: #64748b;">Enterprise Academy Administration & Operating System</span>
         </div>
       </div>
 
       <div class="cover-title-group">
-        <span class="cover-tag">Executive Systems Guide</span>
-        <h1>ADMINISTRATOR OPERATIONS MANUAL</h1>
+        <span class="cover-tag">Executive Operations Handbook</span>
+        <h1>ADMINISTRATOR COMPLETE OPERATIONS MANUAL</h1>
         <p class="cover-subtitle">
-          Complete, end-to-end visual operating handbook for Executive Administrators. Details every system workflow, button action, financial ledger procedure, OTP invitation management, student enrollment, and compliance audit trail.
+          An exhaustive, screen-by-screen, button-by-button manual covering 100% of academy features: onboarding, role security, student admissions, fee invoicing, attendance tracking, assessment grading, certification, financial reporting, and compliance audit trail.
         </p>
       </div>
 
       <div class="cover-meta">
         <div class="meta-item">
-          <strong>Document Classification</strong>
-          <span>Internal Operations / Executive</span>
+          <strong>Document Scope</strong>
+          <span>Complete A-to-Z Feature Reference</span>
         </div>
         <div class="meta-item">
           <strong>Software Version</strong>
-          <span>Thoorigai Core v1.0.0 (Next.js 16)</span>
+          <span>Thoorigai Core Production v1.0.0</span>
         </div>
         <div class="meta-item">
           <strong>Authorized Roles</strong>
           <span>Executive Administrator (role='admin')</span>
         </div>
         <div class="meta-item">
-          <strong>Effective Date</strong>
-          <span>October 2026 (Live Release)</span>
+          <strong>Verification Standard</strong>
+          <span>E2E Playwright Audited & Verified</span>
         </div>
       </div>
     </div>
 
     <div class="cover-footer">
       <span>ThoorigAI Infotech LLP &bull; Confidential & Proprietary</span>
-      <span>Document Ref: THOOR-ADM-MAN-2026-v1</span>
+      <span>Document Ref: THOOR-ADM-EXP-2026-v2</span>
     </div>
   </div>
 
-  <!-- TABLE OF CONTENTS & SITEMAP -->
+  <!-- SITEMAP & ARCHITECTURE -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">00</span> Complete Administrator Sitemap & Route Hierarchy</h2>
+  <h2 class="section-title"><span class="section-num">00</span> Complete Administrator Sitemap & Route Directory</h2>
   <p class="desc">
-    Administrators possess complete read, write, update, and deletion permissions across all financial, user access, and academic tables. The table below illustrates the administrative sitemap.
+    Below is the complete architectural layout of every accessible administrative view, URL, and operational capability in the system.
   </p>
 
   <div class="sitemap-grid">
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Executive Command</span>
+        <span>1. Executive Dashboard</span>
         <span class="route-pill">/</span>
       </div>
-      <div class="sitemap-node-path">Overview dashboard & KPI analytics</div>
+      <div class="sitemap-node-path">Central command & financial overview</div>
       <ul>
-        <li>Gross & Net tuition collections</li>
-        <li>GST liabilities & pending dues</li>
-        <li>Active student & batch count</li>
-        <li>Direct enrollment shortcuts</li>
+        <li>8 Real-time KPI Metric cards</li>
+        <li>Financial Overview vs Academic View toggle</li>
+        <li>Course mix table & active batch counter</li>
+        <li>Add Student executive quick-action</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Student Directory</span>
+        <span>2. Students Directory</span>
         <span class="route-pill">/students</span>
       </div>
-      <div class="sitemap-node-path">Learner lifecycle management</div>
+      <div class="sitemap-node-path">Comprehensive learner registry</div>
       <ul>
-        <li>Add student & enrollment registration</li>
-        <li>Fee concession & installment allocation</li>
-        <li>Batch transfer & status modification</li>
-        <li>Direct invoice & attendance linkages</li>
+        <li>Filter tabs: All, Active, Completed, Paused</li>
+        <li>Add student multi-step modal</li>
+        <li>Tuition fee concession calculator</li>
+        <li>Installment schedule & balance tracking</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Invoices & Billing</span>
+        <span>3. Invoices & Billing</span>
         <span class="route-pill">/invoices</span>
       </div>
-      <div class="sitemap-node-path">Tax compliant billing ledger</div>
+      <div class="sitemap-node-path">Tax-compliant billing ledger</div>
       <ul>
-        <li>Paid, partial & overdue ledgers</li>
-        <li>Offline fee payment recording (UPI/Cash)</li>
-        <li>Digital GST invoice PDF generation</li>
-        <li>Automated tax calculation (9% CGST+SGST)</li>
+        <li>Paid, Partially Paid & Overdue filters</li>
+        <li>Record offline payment modal (UPI/Cash/NEFT)</li>
+        <li>Download official GST PDF invoices</li>
+        <li>Automated CGST/SGST/IGST calculation</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Curriculum & Courses</span>
+        <span>4. Courses & Curriculum</span>
         <span class="route-pill">/courses</span>
       </div>
-      <div class="sitemap-node-path">Course catalog configuration</div>
+      <div class="sitemap-node-path">Program catalog & pricing tiers</div>
       <ul>
-        <li>Create course & set pricing tiers</li>
-        <li>Assign primary instructor trainers</li>
-        <li>Configure duration & competencies</li>
-        <li>Course Category & Skill tag mapping</li>
+        <li>Create course & set duration/tuition</li>
+        <li>Tiers: Essential, Elite, Internship</li>
+        <li>Assign primary certified trainers</li>
+        <li>Map competencies & skill tags</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Attendance Roster</span>
+        <span>5. Course Materials</span>
+        <span class="route-pill">/materials</span>
+      </div>
+      <div class="sitemap-node-path">Encrypted digital file repository</div>
+      <ul>
+        <li>Filter assets by course module</li>
+        <li>Upload lecture slides & code files (up to 50MB)</li>
+        <li>Downloadable curriculum documents</li>
+        <li>Secure presigned cloud storage bucket</li>
+      </ul>
+    </div>
+
+    <div class="sitemap-node">
+      <div class="sitemap-node-header">
+        <span>6. Attendance Roster</span>
         <span class="route-pill">/attendance</span>
       </div>
-      <div class="sitemap-node-path">Cohort attendance tracking</div>
+      <div class="sitemap-node-path">Daily cohort roll-call management</div>
       <ul>
-        <li>Daily roll-call by course & batch</li>
-        <li>Mark Present, Absent, Late, Excused</li>
-        <li>One-click "Mark All Present"</li>
-        <li>Real-time automated saving</li>
+        <li>Batch & date picker controls</li>
+        <li>One-click "Mark All Present" shortcut</li>
+        <li>Status toggles: Present, Absent, Late, Excused</li>
+        <li>Debounced automated database saving</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Assessments Studio</span>
+        <span>7. Assessments Studio</span>
         <span class="route-pill">/assessments</span>
       </div>
-      <div class="sitemap-node-path">Academic grading & evaluation</div>
+      <div class="sitemap-node-path">Academic grading & Google Forms sync</div>
       <ul>
-        <li>Create tests, assignments & quizzes</li>
-        <li>Import Google Forms & Sheets scores</li>
-        <li>Student Grading Studio & feedback</li>
-        <li>Individual submission re-grade / delete</li>
+        <li>Create tests, assignments & capstones</li>
+        <li>Sync Google Forms & Sheets response URLs</li>
+        <li>Grading Studio: marks & qualitative remarks</li>
+        <li>Single-result deletion & re-evaluation</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Certificates & Verification</span>
+        <span>8. Certificates Registry</span>
         <span class="route-pill">/certificates</span>
       </div>
-      <div class="sitemap-node-path">Credentials & public QR verification</div>
+      <div class="sitemap-node-path">Official credentialing & verification</div>
       <ul>
-        <li>Eligibility check (Fees cleared + passed)</li>
-        <li>Issue verified certificate with unique code</li>
-        <li>Printable high-res PDF certificate</li>
-        <li>Public /verify verification portal</li>
+        <li>Automated eligibility checks (fees + marks)</li>
+        <li>Generate tamper-proof verification ID</li>
+        <li>Download printable high-res PDF certificate</li>
+        <li>Public /verify portal with scan-to-verify QR</li>
       </ul>
     </div>
 
     <div class="sitemap-node">
       <div class="sitemap-node-header">
-        <span>Access & Role Security</span>
+        <span>9. Reports & Analytics</span>
+        <span class="route-pill">/reports</span>
+      </div>
+      <div class="sitemap-node-path">Financial & academic business intelligence</div>
+      <ul>
+        <li>Monthly revenue collection run-rate</li>
+        <li>Course profitability & GST summary</li>
+        <li>Academic pass rates & attendance stats</li>
+        <li>One-click CSV exports for accounting</li>
+      </ul>
+    </div>
+
+    <div class="sitemap-node">
+      <div class="sitemap-node-header">
+        <span>10. Audit Log Forensics</span>
+        <span class="route-pill">/audit-log</span>
+      </div>
+      <div class="sitemap-node-path">Immutable chronological database trail</div>
+      <ul>
+        <li>Real-time database trigger logging</li>
+        <li>Actor, action, entity & timestamp tracking</li>
+        <li>Trace actions by Correlation ID</li>
+        <li>Inspect raw JSON modification payload</li>
+      </ul>
+    </div>
+
+    <div class="sitemap-node">
+      <div class="sitemap-node-header">
+        <span>11. Access & Role Security</span>
         <span class="route-pill">/settings/users</span>
       </div>
-      <div class="sitemap-node-path">OTP generator & identity approval</div>
+      <div class="sitemap-node-path">User accounts & OTP invite protocol</div>
       <ul>
-        <li>Approve pending signups as Admin/Staff</li>
-        <li>Generate single-use OTP codes (7-day expiry)</li>
-        <li>Copy registration links for candidates</li>
-        <li>Revoke or upgrade permissions</li>
+        <li>Approve pending signups as Admin or Staff</li>
+        <li>Generate single-use OTP codes (1h-7d expiry)</li>
+        <li>Edit user metadata & phone contacts</li>
+        <li>Danger Zone: Revoke access or remove user</li>
+      </ul>
+    </div>
+
+    <div class="sitemap-node">
+      <div class="sitemap-node-header">
+        <span>12. System Configuration</span>
+        <span class="route-pill">/settings/*</span>
+      </div>
+      <div class="sitemap-node-path">Tax, brand & academic taxonomies</div>
+      <ul>
+        <li>GST Settings (/settings/gst)</li>
+        <li>Brand Information (/settings/brand)</li>
+        <li>Trainer Assignments (/settings/trainers)</li>
+        <li>Course Categories & Skill Tags</li>
       </ul>
     </div>
   </div>
 
-  <!-- MODULE 1: AUTHENTICATION -->
+  <!-- SECTION 1: AUTHENTICATION -->
   <div class="page-break"></div>
   <h2 class="section-title"><span class="section-num">01</span> System Authentication & Login Flow</h2>
   <span class="route-pill">Route: /login</span>
   <p class="desc">
-    All administrative actions require authenticated session access. Administrator accounts are linked to verified profiles with executive permissions.
+    Administrators access the enterprise portal through email and password authentication. The server sets an encrypted, HttpOnly session cookie and verifies executive role permissions.
   </p>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgLogin}" alt="Administrator Login Screen" />
-    <div class="screenshot-caption">Figure 1.1: System Sign-In Portal with highlighted credential inputs and action button.</div>
+    <img src="${imgLogin}" alt="Administrator Sign-In Portal" />
+    <div class="screenshot-caption">Figure 1.1: Sign-In portal with email, password fields, and submit action.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Element / Action</th>
-        <th style="width: 32%;">User Input / Description</th>
-        <th style="width: 30%;">System Behavior</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control / Action</th>
+        <th style="width: 32%;">Input / Details</th>
+        <th style="width: 35%;">System Outcome</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
         <td><span class="btn-name">Work Email Input</span></td>
-        <td>Enter your registered administrator email address (e.g. <code>admin@thoorigai.test</code>).</td>
-        <td>Validates RFC 5322 email syntax in real-time.</td>
+        <td>Enter registered admin email (e.g. <code>admin@thoorigai.test</code>).</td>
+        <td>Validates RFC 5322 syntax; flags malformed inputs.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
         <td><span class="btn-name">Password Input</span></td>
-        <td>Enter your confidential master password. Masked for security.</td>
-        <td>Ensures password length &amp; complexity standards.</td>
+        <td>Enter confidential administrator password.</td>
+        <td>Masked entry with support for secure password managers.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Sign In Button</span></td>
-        <td>Click to transmit credentials over secure TLS endpoint.</td>
-        <td>Authenticates with Supabase Auth, resolves executive profile, sets HTTP-only session cookie, and routes to Executive Dashboard.</td>
+        <td>Click to submit credentials to <code>/api/auth/login</code>.</td>
+        <td>Authenticates against Supabase Auth, updates JWT app_metadata with profile role, and redirects to Dashboard.</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="callout-box callout-important avoid-break">
-    <div class="callout-title">Security Recommendation</div>
-    Session cookies are partitioned with <code>SameSite=Lax</code> and <code>HttpOnly</code> headers. If session expiration occurs after 24 hours of inactivity, the user is redirected to <code>/login</code> automatically without data loss.
-  </div>
-
-  <!-- MODULE 2: EXECUTIVE DASHBOARD -->
+  <!-- SECTION 2: TOPBAR & NOTIFICATIONS -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">02</span> Executive Dashboard & Financial Command</h2>
-  <span class="route-pill">Route: /</span>
+  <h2 class="section-title"><span class="section-num">02</span> Global Header, Quick Search & Notifications</h2>
+  <span class="route-pill">Global Topbar Component</span>
   <p class="desc">
-    The central intelligence cockpit provides a real-time summary of revenue, collection efficiency, tuition receivables, pending approvals, and active academic cohorts.
+    Present across every administrative page, the topbar provides instant global student search, unread system alerts, user settings access, and session termination.
   </p>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgDash}" alt="Executive Dashboard" />
-    <div class="screenshot-caption">Figure 2.1: Executive Dashboard with financial KPI cards, quick actions, and sidebar navigation.</div>
+    <img src="${imgTopbar}" alt="Topbar and Notifications" />
+    <div class="screenshot-caption">Figure 2.1: Global Topbar displaying instant search bar, notification dropdown, and account actions.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Element / Action</th>
-        <th style="width: 32%;">Description &amp; Purpose</th>
-        <th style="width: 30%;">Resulting Workflow</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Interaction</th>
+        <th style="width: 35%;">Action Performed</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Add Student Quick Action</span></td>
-        <td>Top-right primary CTA button located on the executive header.</td>
-        <td>Instantly triggers learner enrollment modal without needing to switch tabs.</td>
+        <td><span class="btn-name">Global Instant Search</span></td>
+        <td>Click search bar or press keyboard shortcut <code>Ctrl+K</code> / <code>Cmd+K</code>.</td>
+        <td>Instant typeahead queries students by name, register ID, phone, or invoices without page reload.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Executive Financial Metrics</span></td>
-        <td>8 live calculation cards: Revenue collected, Total fees, Balance, Collection efficiency, Active students, Eligible certificates, Pending dues, Average fee.</td>
-        <td>Aggregates payments, discounts, and receivables in real-time directly from Postgres database.</td>
+        <td><span class="btn-name">Notifications Center</span></td>
+        <td>Click the bell icon to toggle the notification drawer.</td>
+        <td>Displays system alerts (pending approvals, new registrations, payment receipts) with "Mark All Read".</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Invoices Navigation</span></td>
-        <td>Direct link in the dark command sidebar to the billing ledger.</td>
-        <td>Navigates to <code>/invoices</code> for tax invoice generation and offline receipt recordings.</td>
+        <td><span class="btn-name">Account Settings</span></td>
+        <td>Click the profile avatar or settings icon.</td>
+        <td>Navigates directly to <code>/settings/user</code> to update credentials or personal contact details.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Admin Command Sidebar</span></td>
-        <td>Persistent left-side navigation displaying all 10 core administrative modules.</td>
-        <td>Provides instant 1-click access to all system modules, categorized by operations and settings.</td>
+        <td><span class="btn-name">Secure Sign Out</span></td>
+        <td>Click "Sign out" button on top-right.</td>
+        <td>Calls <code>/api/auth/logout</code>, purges session cookies, and safely redirects to <code>/login</code>.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 3: USERS & ROLES -->
+  <!-- SECTION 3: EXECUTIVE DASHBOARD -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">03</span> User Management, Approvals & OTP Generation</h2>
-  <span class="route-pill">Route: /settings/users</span>
+  <h2 class="section-title"><span class="section-num">03</span> Executive Dashboard & KPI Intelligence</h2>
+  <span class="route-pill">Route: /</span>
   <p class="desc">
-    Security controls for onboarding staff and co-administrators. The system features an automated, single-use One-Time Passcode (OTP) invitation protocol with automatic expiration.
+    The Executive Dashboard aggregates high-level institutional metrics: revenue collections, pending student balances, collection efficiency, active enrollments, and academic progress.
   </p>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgUsers}" alt="Users and Roles Screen" />
-    <div class="screenshot-caption">Figure 3.1: Users and Roles directory displaying Active Users, Pending Approvals, and OTP generation tools.</div>
+    <img src="${imgDash}" alt="Executive Dashboard" />
+    <div class="screenshot-caption">Figure 3.1: Executive Dashboard with live KPI cards, tab toggles, and enrollment quick-action.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Element / Action</th>
-        <th style="width: 32%;">Description &amp; Parameters</th>
-        <th style="width: 30%;">System Consequence</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Element</th>
+        <th style="width: 32%;">Description</th>
+        <th style="width: 35%;">Workflow Triggered</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-callout">1</span></td>
+        <td><span class="btn-name">Add Student CTA</span></td>
+        <td>Top-right primary button on executive header.</td>
+        <td>Triggers enrollment modal instantly from any view without switching pages.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">2</span></td>
+        <td><span class="btn-name">Financial KPI Cards</span></td>
+        <td>Live cards: Revenue Collected, Enrolled Cohort Value, Pending Balance, Collection Efficiency (%).</td>
+        <td>Aggregates payment ledgers directly from Postgres database in real time.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">3</span></td>
+        <td><span class="btn-name">Academic Tab Toggle</span></td>
+        <td>Click "Staff & Academic Data" toggle button.</td>
+        <td>Switches dashboard view to classroom operational metrics (active cohorts, attendance rates).</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">4</span></td>
+        <td><span class="btn-name">Master Navigation Sidebar</span></td>
+        <td>Persistent left command bar.</td>
+        <td>Provides one-click navigation to all 10 core administrative sections and settings modules.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="flow-title avoid-break">Staff & Academic Data View</h3>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgDashAcad}" alt="Academic Dashboard Tab" />
+    <div class="screenshot-caption">Figure 3.2: Academic view displaying cohort attendance, upcoming sessions, and pending test grading.</div>
+  </div>
+
+  <!-- SECTION 4: USERS & ROLES -->
+  <div class="page-break"></div>
+  <h2 class="section-title"><span class="section-num">04</span> User Management & Security Access Control</h2>
+  <span class="route-pill">Route: /settings/users</span>
+  <p class="desc">
+    Full identity and access management: reviewing pending signups, generating time-bound OTP invite codes, editing staff metadata, or revoking access.
+  </p>
+
+  <div class="screenshot-box avoid-break">
+    <img src="${imgUsers}" alt="Users and Roles Roster" />
+    <div class="screenshot-caption">Figure 4.1: Users directory displaying active accounts, pending registrations, and role approval actions.</div>
+  </div>
+
+  <table class="steps-table avoid-break">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
+        <th style="width: 32%;">Target</th>
+        <th style="width: 35%;">Security Outcome</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
         <td><span class="btn-name">Generate Invite Code</span></td>
-        <td>Top-right button triggering the invite generation modal.</td>
-        <td>Opens the OTP configuration dialog to create single-use invitation tokens.</td>
+        <td>Top CTA button above user directory.</td>
+        <td>Opens the OTP configuration dialog to create single-use registration tokens.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Active Users Roster</span></td>
-        <td>Table displaying all registered users, roles (Admin/Staff), email, and creation date.</td>
-        <td>Click any user row to edit personal contact info, departmental metadata, or revoke access.</td>
+        <td><span class="btn-name">User Directory Roster</span></td>
+        <td>Interactive table of registered staff and admins.</td>
+        <td>Click "Settings & Info" on any row to edit contact details, phone, or departmental info.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Approve as Admin</span></td>
-        <td>Dedicated action button on pending user signups.</td>
-        <td>Elevates pending user to full Administrator, updates JWT metadata, and grants complete permissions.</td>
+        <td>Approval button next to pending user registration.</td>
+        <td>Elevates user to full Administrator; updates JWT metadata and grants unrestricted access.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">4</span></td>
         <td><span class="btn-name">Approve as Staff</span></td>
-        <td>Alternative approval button for instructional staff.</td>
-        <td>Activates user with Staff permissions, restricting access to classroom and academic tools.</td>
+        <td>Approval button next to pending user registration.</td>
+        <td>Activates user as Staff; restricts access to classroom, attendance, and assessment tools.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- INVITE MODAL DETAILS -->
-  <h3 class="flow-title avoid-break">Creating Single-Use OTP Invite Links</h3>
+  <!-- INVITE MODAL -->
+  <h3 class="flow-title avoid-break">Generating Single-Use OTP Passcodes</h3>
   <div class="screenshot-box avoid-break">
     <img src="${imgModal}" alt="Generate Invite Modal" />
-    <div class="screenshot-caption">Figure 3.2: Modal interface for creating scoped, time-bound Staff vs Admin invitation codes.</div>
+    <div class="screenshot-caption">Figure 4.2: Scoped invitation modal with color-coded Staff vs Admin selection and expiration windows.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Option / Control</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
         <th style="width: 32%;">Instructions</th>
-        <th style="width: 30%;">Security Effect</th>
+        <th style="width: 35%;">Behavior</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
         <td><span class="btn-name">Staff Access Card</span></td>
-        <td>Click to select standard instructional privileges.</td>
-        <td>Generates prefix <code>STAFF-XXXX</code>. Restricted from financial data and settings.</td>
+        <td>Select for instructional staff &amp; trainers.</td>
+        <td>Generates <code>STAFF-XXXX</code> code. Confers standard classroom permissions.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
         <td><span class="btn-name">Admin Access Card</span></td>
-        <td>Click to select executive administrator privileges. Highlighted in royal purple.</td>
-        <td>Generates prefix <code>ADMIN-XXXX</code>. Grants full system access upon redemption.</td>
+        <td>Select for executive administrators (royal purple theme).</td>
+        <td>Generates <code>ADMIN-XXXX</code> code. Grants complete executive permissions.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Expiration Window</span></td>
-        <td>Select duration: 1 Hour, 24 Hours (Standard), 3 Days, or 7 Days.</td>
-        <td>After this timestamp, the code automatically burns and cannot be redeemed.</td>
+        <td>Choose validity: 1 Hour (Express), 24 Hours, 3 Days, or 7 Days.</td>
+        <td>Tokens automatically expire and burn after this timestamp.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Email Restriction (Optional)</span></td>
-        <td>Enter candidate's email address if you wish to restrict redemption to one person.</td>
-        <td>Only an account matching this exact email will be allowed to use this code.</td>
+        <td><span class="btn-name">Email Restriction</span></td>
+        <td>Optional: enter candidate's exact work email.</td>
+        <td>Enforces that only this exact email address can redeem the generated invite code.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">5</span></td>
-        <td><span class="btn-name">Generate Code Button</span></td>
-        <td>Click to write the cryptographic invite token to the database.</td>
-        <td>Produces single-use link: <code>https://app/signup?code=...</code> ready to copy.</td>
+        <td><span class="btn-name">Generate Code CTA</span></td>
+        <td>Click to generate cryptographic token.</td>
+        <td>Copies single-use link: <code>https://app/signup?code=...</code> to clipboard.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 4: STUDENTS -->
+  <!-- USER EDIT & DANGER ZONE -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">04</span> Student Lifecycle & Enrollment Management</h2>
+  <h3 class="flow-title avoid-break">User Details & Danger Zone Actions</h3>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgUserEdit}" alt="User Edit Modal" />
+    <div class="screenshot-caption">Figure 4.3: User metadata editor and Account Danger Zone (Revoke Access / Remove User).</div>
+  </div>
+
+  <table class="steps-table avoid-break">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Element</th>
+        <th style="width: 32%;">Description</th>
+        <th style="width: 35%;">Action Performed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-callout">1</span></td>
+        <td><span class="btn-name">Phone Numbers</span></td>
+        <td>Primary mobile, alternate phone, and emergency contact.</td>
+        <td>Updates trainer contact card used in classroom coordination.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">2</span></td>
+        <td><span class="btn-name">View User Log</span></td>
+        <td>Button deep-linking to <code>/audit-log</code>.</td>
+        <td>Filters the entire database audit trail to show all actions performed by this user.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">3</span></td>
+        <td><span class="btn-name">Revoke Access</span></td>
+        <td>Click "Revoke Access (Set Pending)".</td>
+        <td>Immediately demotes user to <code>pending</code>, invalidating active sessions.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">4</span></td>
+        <td><span class="btn-name">Remove User</span></td>
+        <td>Destructive action button.</td>
+        <td>Prompts confirmation dialog; permanently purges profile and auth credentials.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">5</span></td>
+        <td><span class="btn-name">Save Changes</span></td>
+        <td>Click "Save User Details".</td>
+        <td>Persists profile updates to database with immediate UI confirmation.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 5: STUDENTS -->
+  <div class="page-break"></div>
+  <h2 class="section-title"><span class="section-num">05</span> Student Lifecycle & Enrollment Management</h2>
   <span class="route-pill">Route: /students</span>
   <p class="desc">
-    Complete master registry of all enrolled learners, course batches, tuition payment balances, and academic progress indicators.
+    Master learner registry managing enrollment, tuition fee installments, course batch assignments, and academic status.
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgStudents}" alt="Students Directory" />
-    <div class="screenshot-caption">Figure 4.1: Student Directory with search filtering, enrollment status badges, and action triggers.</div>
+    <div class="screenshot-caption">Figure 5.1: Student Directory with search bar, course filters, and enrollment triggers.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Control</th>
-        <th style="width: 32%;">Action</th>
-        <th style="width: 30%;">Output</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Input / Details</th>
+        <th style="width: 35%;">Result</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Search Students</span></td>
-        <td>Type student name, register number (e.g. <code>STU-2026-001</code>), email, or mobile.</td>
-        <td>Instant client-side filter updating the roster view without page reloads.</td>
+        <td><span class="btn-name">Search Filter</span></td>
+        <td>Search by Student Name, Register Number (e.g. <code>STU-2026-001</code>), or Phone.</td>
+        <td>Instant client-side filter displaying matching learners in real time.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">New Student Button</span></td>
-        <td>Click to open learner registration form.</td>
-        <td>Captures name, contact info, course selection, agreed fee, and initial installment.</td>
+        <td><span class="btn-name">Add Student Button</span></td>
+        <td>Click primary action button.</td>
+        <td>Opens the multi-step learner enrollment and billing form.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Enrolled Students Table</span></td>
-        <td>View student ID, name, course, batch start, total fee, balance, and status.</td>
-        <td>Click any student row to view full billing history, attendance log, or issue certificate.</td>
+        <td><span class="btn-name">Master Registry Table</span></td>
+        <td>Displays Register ID, Name, Course, Batch Date, Total Fees, Balance, and Status.</td>
+        <td>Click any student row to view payment history, attendance records, or issue certificates.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 5: INVOICES -->
+  <!-- ADD STUDENT MODAL -->
+  <h3 class="flow-title avoid-break">Adding a New Student & Billing Setup</h3>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgAddStudent}" alt="Add Student Modal" />
+    <div class="screenshot-caption">Figure 5.2: Student admission form with demographic inputs, course selection, and initial installment.</div>
+  </div>
+
+  <table class="steps-table avoid-break">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Form Section</th>
+        <th style="width: 32%;">Fields &amp; Validations</th>
+        <th style="width: 35%;">System Consequence</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-callout">1</span></td>
+        <td><span class="btn-name">Student Legal Name</span></td>
+        <td>Full name as it should appear on official completion certificates.</td>
+        <td>Validated against minimum 2 characters; creates unique registration profile.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">2</span></td>
+        <td><span class="btn-name">Course Selection</span></td>
+        <td>Choose target program from course catalog dropdown.</td>
+        <td>Automatically populates standard tuition fee and duration.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">3</span></td>
+        <td><span class="btn-name">Batch Start Date</span></td>
+        <td>Calendar date picker for session commencement.</td>
+        <td>Assigns learner to the active cohort schedule for roll-call attendance.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">4</span></td>
+        <td><span class="btn-name">Contact Information</span></td>
+        <td>Primary mobile (+91), email, guardian name, guardian mobile, city, and area.</td>
+        <td>Enables automated WhatsApp / email attendance notifications.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">5</span></td>
+        <td><span class="btn-name">Save Record CTA</span></td>
+        <td>Click "Save Student &amp; Create Invoice".</td>
+        <td>Generates student registration ID, creates billing ledger row, and logs audit event.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 6: INVOICES -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">05</span> Invoicing, Payment Recording & GST Compliance</h2>
+  <h2 class="section-title"><span class="section-num">06</span> Invoicing, Payment Recording & GST Compliance</h2>
   <span class="route-pill">Route: /invoices</span>
   <p class="desc">
-    Official billing records, installment schedules, offline payment collection, and digital tax invoice issuance conforming to Indian GST regulations (CGST 9% + SGST 9% or IGST 18%).
+    Financial ledger compliant with Indian GST laws (HSN/SAC 999293). Record offline tuition fee payments, track installment schedules, and issue digital tax invoices.
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgInvoices}" alt="Invoices Ledger" />
-    <div class="screenshot-caption">Figure 5.1: Billing Ledger displaying invoice status (Paid, Partial, Overdue) and action buttons.</div>
+    <div class="screenshot-caption">Figure 6.1: Financial billing ledger with status filters, payment CTA, and invoice download buttons.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
-        <th style="width: 32%;">Data Entry Requirements</th>
-        <th style="width: 30%;">Financial Record Impact</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Description</th>
+        <th style="width: 35%;">Action / Output</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Record Fee Payment</span></td>
-        <td>Click the primary "Record Payment" button to log an incoming payment.</td>
-        <td>Opens modal: select Student, enter Amount, Payment Date, Mode (UPI/Cash/Bank), and Reference #.</td>
+        <td><span class="btn-name">Record Payment CTA</span></td>
+        <td>Primary button above billing ledger.</td>
+        <td>Opens payment recording modal to log incoming offline fee installments.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">GST Invoice Ledger</span></td>
-        <td>Displays Invoice #, Student Name, Total Bill, Paid Amount, Balance, and Status.</td>
-        <td>Automatically recalculates balance and updates student financial status upon payment entry.</td>
+        <td><span class="btn-name">Billing Status Tabs</span></td>
+        <td>Tabs: All Invoices, Paid, Partially Paid, Overdue.</td>
+        <td>Filters ledger rows instantly based on outstanding fee balance.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">PDF Invoice Download</span></td>
-        <td>Click the download icon next to any invoice row.</td>
-        <td>Generates official PDF tax invoice with ThoorigAI GSTIN, legal address, tax breakdown, and QR code.</td>
+        <td><span class="btn-name">GST Tax Invoices Table</span></td>
+        <td>Displays Invoice #, Student Name, Total Billed, Paid Amount, and Balance.</td>
+        <td>Maintains an immutable record of all institutional receivables and tax liabilities.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">4</span></td>
+        <td><span class="btn-name">Download PDF Invoice</span></td>
+        <td>Download button next to each invoice row.</td>
+        <td>Generates official PDF tax invoice with ThoorigAI GSTIN, CGST/SGST breakdown, and QR code.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 6: COURSES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">06</span> Course Curriculum & Program Catalog</h2>
-  <span class="route-pill">Route: /courses</span>
-  <p class="desc">
-    Configure training programs, syllabus structure, pricing tiers (Essential, Elite, Internship), course durations, and assign certified trainers.
-  </p>
-
+  <!-- RECORD PAYMENT MODAL -->
+  <h3 class="flow-title avoid-break">Recording an Offline Fee Installment</h3>
   <div class="screenshot-box avoid-break">
-    <img src="${imgCourses}" alt="Courses Management" />
-    <div class="screenshot-caption">Figure 6.1: Course catalog view with course category badges, fees, and creation triggers.</div>
+    <img src="${imgRecordPay}" alt="Record Payment Modal" />
+    <div class="screenshot-caption">Figure 6.2: Offline payment recording modal with student selector and payment mode options.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Element</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 30%;">Action / Result</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Field</th>
+        <th style="width: 32%;">Input Required</th>
+        <th style="width: 35%;">Financial Accounting Effect</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Add New Course Button</span></td>
-        <td>Top CTA to create a new program in the academy catalog.</td>
-        <td>Prompts for Course Title, Short Code (e.g. <code>FS-MERN</code>), Category, Fee, and Duration.</td>
+        <td><span class="btn-name">Select Student</span></td>
+        <td>Search student by name or register ID.</td>
+        <td>Displays current outstanding balance and course fee breakdown.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">2</span></td>
+        <td><span class="btn-name">Installment Amount</span></td>
+        <td>Enter payment amount in Indian Rupees (INR).</td>
+        <td>Validates amount cannot exceed outstanding balance unless advance.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">3</span></td>
+        <td><span class="btn-name">Payment Mode</span></td>
+        <td>Select: UPI (GPay/PhonePe), Cash, Bank Transfer (NEFT/IMPS), or Cheque.</td>
+        <td>Classifies payment method for accounting ledger export.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">4</span></td>
+        <td><span class="btn-name">Transaction Reference</span></td>
+        <td>Enter UPI UTR Number, Bank Transaction Ref, or Cash Receipt #.</td>
+        <td>Stores unique transaction audit reference to prevent double entry.</td>
+      </tr>
+      <tr>
+        <td><span class="badge-callout">5</span></td>
+        <td><span class="btn-name">Save Payment CTA</span></td>
+        <td>Click "Save Payment &amp; Issue Receipt".</td>
+        <td>Deducts balance, updates invoice status, and records transaction in audit log.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 7: COURSES -->
+  <div class="page-break"></div>
+  <h2 class="section-title"><span class="section-num">07</span> Course Catalog & Curriculum Configuration</h2>
+  <span class="route-pill">Route: /courses</span>
+  <p class="desc">
+    Configure the academy course catalog, pricing tiers (Essential, Elite, Internship), syllabus duration, and assign certified trainers.
+  </p>
+
+  <div class="screenshot-box avoid-break">
+    <img src="${imgCourses}" alt="Courses Catalog" />
+    <div class="screenshot-caption">Figure 7.1: Course catalog with tier badges, student counts, and course creation triggers.</div>
+  </div>
+
+  <table class="steps-table avoid-break">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Element</th>
+        <th style="width: 32%;">Description</th>
+        <th style="width: 35%;">Action Performed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-callout">1</span></td>
+        <td><span class="btn-name">Add New Course CTA</span></td>
+        <td>Top-right button triggering the course builder.</td>
+        <td>Opens modal to create a new academic course in the curriculum catalog.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
         <td><span class="btn-name">Course Catalog & Pricing</span></td>
-        <td>Grid listing all courses with student enrollment counts and fees.</td>
-        <td>Allows editing syllabus outlines, modifying standard tuition, or archiving discontinued courses.</td>
+        <td>Grid of all active courses with duration, fee, and enrolled students.</td>
+        <td>Click any card to modify syllabus modules, adjust pricing, or archive programs.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 7: MATERIALS -->
+  <!-- SECTION 8: MATERIALS -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">07</span> Course Materials & Learning Repository</h2>
+  <h2 class="section-title"><span class="section-num">08</span> Course Materials & Digital Asset Repository</h2>
   <span class="route-pill">Route: /materials</span>
   <p class="desc">
-    Digital asset management backed by secure cloud storage. Upload presentation slides, code repositories, assignments, and reference documents.
+    Digital asset management backed by encrypted cloud storage. Upload presentation slides, lab code files, syllabus guides, and reference documents.
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgMaterials}" alt="Course Materials" />
-    <div class="screenshot-caption">Figure 7.1: Course Materials interface with module selection and secure upload dropzone.</div>
+    <div class="screenshot-caption">Figure 8.1: Materials repository with course module filter and secure upload dropzone.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Control</th>
-        <th style="width: 32%;">How to Use</th>
-        <th style="width: 30%;">Storage Behavior</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Interaction</th>
+        <th style="width: 35%;">Storage Result</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Filter Course Module</span></td>
-        <td>Select the specific course from the dropdown selector.</td>
-        <td>Loads existing learning assets categorized by topic and week.</td>
+        <td><span class="btn-name">Course Module Filter</span></td>
+        <td>Select course from dropdown.</td>
+        <td>Filters file list to show materials assigned to the selected topic.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Upload Materials</span></td>
-        <td>Click or drag &amp; drop files (PDF, PPTX, ZIP, MP4) up to 50MB.</td>
-        <td>Uploads to private Supabase Storage bucket with authenticated presigned download URLs.</td>
+        <td><span class="btn-name">Upload Materials CTA</span></td>
+        <td>Click or drag &amp; drop files (PDF, PPT, ZIP up to 50MB).</td>
+        <td>Uploads to private Supabase Storage bucket with presigned download URLs.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Curriculum Assets List</span></td>
-        <td>Table of uploaded files with upload date, file size, and uploader name.</td>
-        <td>Direct download link or delete action for outdated lesson files.</td>
+        <td><span class="btn-name">Uploaded Digital Files</span></td>
+        <td>Table of files with title, size, upload date, and uploader name.</td>
+        <td>Provides instant download link or deletion action for obsolete assets.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 8: ATTENDANCE -->
+  <!-- SECTION 9: ATTENDANCE -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">08</span> Daily Attendance Tracking & Roll-Call</h2>
+  <h2 class="section-title"><span class="section-num">09</span> Daily Attendance Tracking & Roll-Call</h2>
   <span class="route-pill">Route: /attendance</span>
   <p class="desc">
-    Batch-wise daily attendance marking with automated saving. Tracks attendance percentages required for certificate issuance eligibility.
+    Daily roll-call attendance system with real-time automated saving. Tracks attendance percentages required for certificate issuance eligibility (75% threshold).
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgAttendance}" alt="Attendance Tracker" />
-    <div class="screenshot-caption">Figure 8.1: Attendance Roll-Call screen with date picker, quick-mark actions, and student grid.</div>
+    <div class="screenshot-caption">Figure 9.1: Attendance roll-call roster with date picker, quick-mark actions, and student grid.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Element</th>
-        <th style="width: 32%;">Action</th>
-        <th style="width: 30%;">Result</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Description</th>
+        <th style="width: 35%;">Action Performed</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Course & Date Selector</span></td>
-        <td>Choose the target course batch and select the attendance date from calendar.</td>
-        <td>Renders student roll-call list for the selected cohort and session.</td>
+        <td><span class="btn-name">Batch & Session Date</span></td>
+        <td>Select target course batch and choose attendance date.</td>
+        <td>Renders official student roster for the selected cohort session.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Mark All Present</span></td>
-        <td>Single-click shortcut button at top of attendance roster.</td>
-        <td>Instantly marks every student in the cohort as "Present" with a single action.</td>
+        <td><span class="btn-name">Bulk "Mark All Present"</span></td>
+        <td>One-click green action button at top of roster.</td>
+        <td>Instantly marks every student in the cohort as "Present" with a single click.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Roll-Call Roster</span></td>
-        <td>Interactive row per student: click [Present], [Absent], [Late], or [Excused].</td>
-        <td>Changes trigger debounced autosave to database; status indicator confirms save.</td>
+        <td>Individual student rows: click [Present], [Absent], [Late], or [Excused].</td>
+        <td>Changes trigger debounced autosave; green confirmation badge verifies database write.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 9: ASSESSMENTS & GRADING -->
+  <!-- SECTION 10: ASSESSMENTS -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">09</span> Assessments Studio & Google Forms Sync</h2>
+  <h2 class="section-title"><span class="section-num">10</span> Assessments Studio & Google Forms Sync</h2>
   <span class="route-pill">Route: /assessments</span>
   <p class="desc">
-    Create academic tests, link Google Forms / Sheets for automated grading, enter qualitative trainer feedback, and maintain evaluation standards.
+    Create academic tests, sync Google Forms and Sheets responses, input evaluation marks, and record qualitative trainer remarks in the Grading Studio.
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgAssessments}" alt="Assessments Studio" />
-    <div class="screenshot-caption">Figure 9.1: Assessments Studio with Google Forms sync modal, grading studio triggers, and tests roster.</div>
+    <div class="screenshot-caption">Figure 10.1: Assessments Studio with test creation CTA, Google Forms import, and Grading Studio.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
         <th style="width: 32%;">Description</th>
-        <th style="width: 30%;">Resulting Workflow</th>
+        <th style="width: 35%;">Result</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Create Assessment</span></td>
-        <td>Define test title, target course, max score, passing threshold, and evaluation date.</td>
-        <td>Publishes assessment to course syllabus and initiates student submission tracking.</td>
+        <td><span class="btn-name">New Test CTA</span></td>
+        <td>Click "Create Assessment". Enter title, max score, pass threshold, and course.</td>
+        <td>Publishes assessment to course syllabus and initiates student evaluation tracking.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Import Google Forms/Sheets</span></td>
-        <td>Paste external Google Form URL and Google Sheets responses link.</td>
-        <td>Preserves live links for trainers and imports student score columns automatically.</td>
+        <td><span class="btn-name">Import Google Forms</span></td>
+        <td>Click "Import" to link a Google Form or Google Sheet URL.</td>
+        <td>Preserves form/sheet links and imports student score columns automatically.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Open Grading Studio</span></td>
-        <td>Click "Grade" next to any test to open the interactive evaluation table.</td>
+        <td>Click "Grade" next to any test to open the evaluation interface.</td>
         <td>Review student submissions, input marks, type qualitative feedback, and save evaluations.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 10: CERTIFICATES -->
+  <!-- SECTION 11: CERTIFICATES -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">10</span> Certificate Issuance & QR Verification</h2>
-  <span class="route-pill">Route: /certificates</span>
+  <h2 class="section-title"><span class="section-num">11</span> Certificate Issuance & QR Verification</h2>
+  <span class="route-pill">Routes: /certificates &amp; /verify</span>
   <p class="desc">
-    Issue officially authenticated course completion certificates. Each certificate embeds a tamper-proof verification hash and QR code verifiable on <code>/verify</code>.
+    Issue officially authenticated completion certificates. The system automatically enforces two prerequisites: (1) 100% tuition fees cleared, and (2) Assessment pass threshold met.
   </p>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgCerts}" alt="Certificates Issuance" />
-    <div class="screenshot-caption">Figure 10.1: Certificate registry displaying issued credentials, verification codes, and PDF generation.</div>
+    <img src="${imgCerts}" alt="Certificates Registry" />
+    <div class="screenshot-caption">Figure 11.1: Certificate registry displaying issued credentials, verification codes, and PDF generation.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Control</th>
-        <th style="width: 32%;">Eligibility &amp; Operation</th>
-        <th style="width: 30%;">Output</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
+        <th style="width: 32%;">Prerequisites &amp; Action</th>
+        <th style="width: 35%;">Output</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Issue Certificate</span></td>
-        <td>System checks prerequisites: (1) 100% fees cleared, (2) Pass marks in assessments.</td>
+        <td><span class="btn-name">Issue Certificate CTA</span></td>
+        <td>Click button next to an eligible student with cleared balance.</td>
         <td>Generates unique verification code (e.g. <code>VREF-CERT-1048-A9B8</code>) with timestamp.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Certificates Registry</span></td>
-        <td>Displays student name, course, issue date, unique verification ID, and status.</td>
+        <td><span class="btn-name">Eligible & Issued Registry</span></td>
+        <td>Table displaying student name, course, issue date, and certificate ID.</td>
         <td>Maintains an immutable record of all certified graduates.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">3</span></td>
         <td><span class="btn-name">Official PDF with QR</span></td>
         <td>Click "Download" to generate vector-grade certificate PDF.</td>
-        <td>Renders high-resolution certificate with ThoorigAI seal, signature, and scan-to-verify QR code.</td>
+        <td>Renders printable certificate with ThoorigAI seal, signature, and scan-to-verify QR code.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- MODULE 11: REPORTS & AUDIT LOG -->
+  <h3 class="flow-title avoid-break">Public Certificate Verification Portal</h3>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgVerify}" alt="Public Verify Portal" />
+    <div class="screenshot-caption">Figure 11.2: Public verification portal at /verify allowing employers and students to validate credentials.</div>
+  </div>
+
+  <!-- SECTION 12: REPORTS & AUDIT -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">11</span> Reports, Analytics & Immutable Audit Trail</h2>
+  <h2 class="section-title"><span class="section-num">12</span> Business Intelligence, Reports & Audit Log</h2>
   <span class="route-pill">Routes: /reports &amp; /audit-log</span>
   <p class="desc">
     Export financial and academic analytics, and inspect the chronological database audit trail with correlation IDs.
   </p>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgReports}" alt="Reports and Analytics" />
-    <div class="screenshot-caption">Figure 11.1: Financial and Academic analytics tabs with CSV export options.</div>
+    <img src="${imgReportsFin}" alt="Financial Reports" />
+    <div class="screenshot-caption">Figure 12.1: Financial reports tab showing monthly collection run-rates and GST tax liabilities.</div>
   </div>
 
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Section</th>
-        <th style="width: 32%;">Information Provided</th>
-        <th style="width: 30%;">Export Options</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Tab / Report</th>
+        <th style="width: 32%;">Metrics Provided</th>
+        <th style="width: 35%;">Export Capability</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge-callout">1</span></td>
         <td><span class="btn-name">Financial Revenue Reports</span></td>
-        <td>Monthly collection run-rates, course revenue breakdown, and GST tax collected.</td>
-        <td>Download accounting spreadsheet with full transaction details.</td>
+        <td>Tuition collected, course revenue breakdown, and GST tax collected summary.</td>
+        <td>Click "Export CSV" to download accounting spreadsheets ready for Tally/Excel.</td>
       </tr>
       <tr>
         <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Academic Performance</span></td>
-        <td>Pass/fail ratios, batch average scores, and attendance percentage distribution.</td>
-        <td>Review cohort health and flag learners needing intervention.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Export Data (CSV)</span></td>
-        <td>One-click CSV generator at the top right of the reports dashboard.</td>
-        <td>Exports structured data ready for import into Excel, Tally, or external ERP systems.</td>
+        <td><span class="btn-name">Export Accounting CSV</span></td>
+        <td>Top CTA button generating structured CSV ledger.</td>
+        <td>Exports transaction records with invoice IDs, student details, and tax breakdowns.</td>
       </tr>
     </tbody>
   </table>
+
+  <h3 class="flow-title avoid-break">Academic Cohort Performance Analytics</h3>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgReportsAcad}" alt="Academic Reports" />
+    <div class="screenshot-caption">Figure 12.2: Academic reports tab displaying cohort pass rates, average test scores, and attendance.</div>
+  </div>
 
   <h3 class="flow-title avoid-break">System Forensics & Audit Trail</h3>
   <div class="screenshot-box avoid-break">
     <img src="${imgAudit}" alt="Audit Log Trail" />
-    <div class="screenshot-caption">Figure 11.2: Immutable Audit Log recording every administrative and security action.</div>
+    <div class="screenshot-caption">Figure 12.3: Immutable Audit Log recording every administrative and security action.</div>
   </div>
 
-  <!-- MODULE 12: SETTINGS -->
+  <!-- SECTION 13: SETTINGS MODULES -->
   <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">12</span> System Settings & Academy Configuration</h2>
-  <span class="route-pill">Routes: /settings/gst &amp; /settings/brand</span>
+  <h2 class="section-title"><span class="section-num">13</span> Academy Settings & System Configuration</h2>
+  <span class="route-pill">Routes: /settings/*</span>
   <p class="desc">
-    Maintain business tax compliance numbers and visual academy brand parameters.
+    Exhaustive configuration for GST compliance, academy brand identity, trainer mappings, course tiers, skill tags, and personal credentials.
   </p>
 
   <div class="screenshot-box avoid-break">
     <img src="${imgGst}" alt="GST Settings" />
-    <div class="screenshot-caption">Figure 12.1: Tax compliance settings configuring GSTIN, legal name, and tax percentages.</div>
+    <div class="screenshot-caption">Figure 13.1: Tax compliance settings configuring GSTIN, legal business name, and tax breakdown.</div>
   </div>
 
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Setting Field</th>
-        <th style="width: 32%;">Configuration Purpose</th>
-        <th style="width: 30%;">Impact</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">GSTIN Registration No</span></td>
-        <td>Enter the 15-character Goods and Services Tax Identification Number.</td>
-        <td>Printed on all official fee receipts and digital tax invoices.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Save Tax Configuration</span></td>
-        <td>Click to persist tax configuration changes to the database.</td>
-        <td>Instantly updates tax engine for all subsequent invoice calculations.</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="screenshot-box avoid-break">
+    <img src="${imgBrand}" alt="Brand Settings" />
+    <div class="screenshot-caption">Figure 13.2: Brand identity settings: academy display name, logo upload, and contact info.</div>
+  </div>
 
   <div class="screenshot-box avoid-break">
-    <img src="${imgBrand}" alt="Brand Information" />
-    <div class="screenshot-caption">Figure 12.2: Academy identity parameters: legal business name, brand logo, and contact info.</div>
+    <img src="${imgTrainers}" alt="Instructor Assignments" />
+    <div class="screenshot-caption">Figure 13.3: Trainer assignment settings mapping instructors to specific courses and batches.</div>
+  </div>
+
+  <div class="screenshot-box avoid-break">
+    <img src="${imgCats}" alt="Course Categories" />
+    <div class="screenshot-caption">Figure 13.4: Course categories manager defining catalog tiers (Essential, Elite, Internship).</div>
+  </div>
+
+  <div class="screenshot-box avoid-break">
+    <img src="${imgSkills}" alt="Skill Tags" />
+    <div class="screenshot-caption">Figure 13.5: Skill tags taxonomy managing technical competencies mapped to courses.</div>
+  </div>
+
+  <div class="screenshot-box avoid-break">
+    <img src="${imgSettings}" alt="User Settings" />
+    <div class="screenshot-caption">Figure 13.6: Personal profile and password update settings for administrators.</div>
   </div>
 
 </body>
@@ -1204,7 +1378,7 @@ async function buildAdminManual() {
 }
 
 async function buildStaffManual() {
-  console.log('Generating HTML for Staff Manual...')
+  console.log('Assembling Full Comprehensive Staff Manual...')
 
   const imgLogin = getBase64Img(path.join(STAFF_IMG_DIR, '01_login.png'))
   const imgSignup = getBase64Img(path.join(STAFF_IMG_DIR, '02_signup_onboarding.png'))
@@ -1231,16 +1405,16 @@ async function buildStaffManual() {
       <div class="cover-header">
         <div class="logo-badge">THOORIGAI</div>
         <div>
-          <strong style="display:block; font-size: 15px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
+          <strong style="display:block; font-size: 16px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
           <span style="font-size: 12px; color: #64748b;">Instructional Operations & Classroom Management</span>
         </div>
       </div>
 
       <div class="cover-title-group">
-        <span class="cover-tag" style="background: #dcfce7; color: #15803d;">Staff &amp; Faculty Guide</span>
-        <h1>STAFF &amp; INSTRUCTOR USER MANUAL</h1>
+        <span class="cover-tag" style="background: #dcfce7; color: #15803d;">Staff &amp; Faculty Complete Guide</span>
+        <h1>STAFF &amp; INSTRUCTOR COMPLETE USER MANUAL</h1>
         <p class="cover-subtitle">
-          Complete visual operational manual for Instructors and Academic Staff. Explains the invitation onboarding process, classroom operations, batch roll-call attendance, Google Forms assessment workflows, grading studio, and curriculum asset management.
+          An exhaustive, button-by-button operational handbook for Academy Faculty and Instructors. Covers the OTP invitation registration process, classroom operations, batch roll-call attendance, Google Forms assessment sync, grading studio evaluation, and learning asset uploads.
         </p>
       </div>
 
@@ -1258,15 +1432,15 @@ async function buildStaffManual() {
           <span>Release 1.0 (Live Production)</span>
         </div>
         <div class="meta-item">
-          <strong>Effective Date</strong>
-          <span>October 2026</span>
+          <strong>Coverage</strong>
+          <span>100% Staff Permitted Features</span>
         </div>
       </div>
     </div>
 
     <div class="cover-footer">
       <span>ThoorigAI Infotech LLP &bull; Faculty Resource</span>
-      <span>Document Ref: THOOR-STF-MAN-2026-v1</span>
+      <span>Document Ref: THOOR-STF-EXP-2026-v2</span>
     </div>
   </div>
 
@@ -1379,10 +1553,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Field / Button</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Field / Button</th>
         <th style="width: 32%;">Instructions</th>
-        <th style="width: 30%;">Validation Rule</th>
+        <th style="width: 35%;">Validation Rule</th>
       </tr>
     </thead>
     <tbody>
@@ -1429,10 +1603,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Widget / Element</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Widget / Element</th>
         <th style="width: 32%;">Information Provided</th>
-        <th style="width: 30%;">Recommended Action</th>
+        <th style="width: 35%;">Recommended Action</th>
       </tr>
     </thead>
     <tbody>
@@ -1467,10 +1641,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
         <th style="width: 32%;">Description</th>
-        <th style="width: 30%;">Result</th>
+        <th style="width: 35%;">Result</th>
       </tr>
     </thead>
     <tbody>
@@ -1505,10 +1679,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Control</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Control</th>
         <th style="width: 32%;">Action</th>
-        <th style="width: 30%;">System Result</th>
+        <th style="width: 35%;">System Result</th>
       </tr>
     </thead>
     <tbody>
@@ -1549,10 +1723,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
         <th style="width: 32%;">Step Description</th>
-        <th style="width: 30%;">Output</th>
+        <th style="width: 35%;">Output</th>
       </tr>
     </thead>
     <tbody>
@@ -1593,10 +1767,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
         <th style="width: 32%;">Instructions</th>
-        <th style="width: 30%;">Storage Details</th>
+        <th style="width: 35%;">Storage Details</th>
       </tr>
     </thead>
     <tbody>
@@ -1637,10 +1811,10 @@ async function buildStaffManual() {
   <table class="steps-table avoid-break">
     <thead>
       <tr>
-        <th style="width: 10%;">Step</th>
-        <th style="width: 28%;">Action</th>
+        <th style="width: 8%;">Step</th>
+        <th style="width: 25%;">Action</th>
         <th style="width: 32%;">Description</th>
-        <th style="width: 30%;">Benefit</th>
+        <th style="width: 35%;">Benefit</th>
       </tr>
     </thead>
     <tbody>
@@ -1687,13 +1861,13 @@ async function convertHtmlToPdf(htmlPath, pdfPath, documentTitle) {
     format: 'A4',
     printBackground: true,
     displayHeaderFooter: true,
-    headerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; text-align: right; padding-right: 14mm; font-family: sans-serif;">${documentTitle} &bull; ThoorigAI Infotech LLP</div>`,
-    footerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; display: flex; justify-content: space-between; padding: 0 14mm; font-family: sans-serif;"><span>Confidential & Proprietary</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
+    headerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; text-align: right; padding-right: 12mm; font-family: sans-serif;">${documentTitle} &bull; ThoorigAI Infotech LLP</div>`,
+    footerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; display: flex; justify-content: space-between; padding: 0 12mm; font-family: sans-serif;"><span>Confidential & Proprietary</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
     margin: {
-      top: '16mm',
-      bottom: '16mm',
-      left: '14mm',
-      right: '14mm',
+      top: '14mm',
+      bottom: '14mm',
+      left: '12mm',
+      right: '12mm',
     },
   })
 
@@ -1703,7 +1877,6 @@ async function convertHtmlToPdf(htmlPath, pdfPath, documentTitle) {
 }
 
 async function main() {
-  await captureModal()
   const adminHtml = await buildAdminManual()
   const staffHtml = await buildStaffManual()
 
@@ -1713,7 +1886,7 @@ async function main() {
   await convertHtmlToPdf(adminHtml, adminPdf, 'ADMINISTRATOR OPERATIONS MANUAL')
   await convertHtmlToPdf(staffHtml, staffPdf, 'STAFF & INSTRUCTOR USER MANUAL')
 
-  console.log('\n🎉 Both PDF Manuals successfully generated!')
+  console.log('\n🎉 Both PDF Manuals successfully generated and compiled!')
   console.log('1. Admin Manual:', adminPdf)
   console.log('2. Staff Manual:', staffPdf)
 }
