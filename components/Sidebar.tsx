@@ -163,8 +163,8 @@ export function Sidebar({
           <Link
             href="/settings/user"
             onClick={onNavigate}
-            aria-current={pathname.startsWith('/settings/user') ? 'page' : undefined}
-            className={`nav-item${pathname.startsWith('/settings/user') ? ' active' : ''}`}
+            aria-current={pathname === '/settings/user' || pathname.startsWith('/settings/user/') ? 'page' : undefined}
+            className={`nav-item${pathname === '/settings/user' || pathname.startsWith('/settings/user/') ? ' active' : ''}`}
             title="User settings"
           >
             <UserCog size={18} className="mr-2" />
