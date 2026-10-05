@@ -55,43 +55,94 @@ async function getAssessments(req: NextRequest) {
       query = query.eq('course_id', courseId)
     }
 
+    let formattedData: any[] = []
+    let totalCount = 0
+
     const { data, error, count } = await query
       .order('assessment_date', { ascending: false })
       .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
-    if (error) throw error
+    if (!error && data) {
+      totalCount = count || data.length
+      formattedData = data.map((record: any) => {
+        const course = normalizeJoined(record.courses)
+        const profile = normalizeJoined(record.profiles)
+        return {
+          id: record.id,
+          courseId: record.course_id,
+          courseName: course?.name,
+          title: record.title,
+          maxScore: record.max_score,
+          assessmentDate: record.assessment_date,
+          formUrl: record.form_url ?? null,
+          sheetUrl: record.sheet_url ?? null,
+          createdBy: profile
+            ? {
+                id: profile.id,
+                fullName: profile.full_name,
+                role: profile.role,
+              }
+            : null,
+          createdAt: record.created_at,
+        }
+      })
+    } else {
+      // Resilient fallback query if specific joined foreign keys or optional columns fail
+      let fbQuery = supabase
+        .from('assessments')
+        .select('id, course_id, title, max_score, assessment_date, created_by, created_at', { count: 'exact' })
+      if (courseId) {
+        fbQuery = fbQuery.eq('course_id', courseId)
+      }
+      const fbResult = await fbQuery
+        .order('assessment_date', { ascending: false })
+        .range(pagination.offset, pagination.offset + pagination.limit - 1)
 
-    // Format the response for easier consumption
-    const formattedData = (data || []).map((record: any) => {
-      const course = normalizeJoined(record.courses)
-      const profile = normalizeJoined(record.profiles)
-      return {
+      const records = fbResult.data ?? []
+      totalCount = fbResult.count ?? records.length
+
+      const courseIds = Array.from(new Set(records.map((r: any) => r.course_id).filter(Boolean)))
+      const userIds = Array.from(new Set(records.map((r: any) => r.created_by).filter(Boolean)))
+      let courseMap = new Map<string, string>()
+      let profileMap = new Map<string, { id: string; fullName: string; role: string }>()
+
+      if (courseIds.length > 0) {
+        const { data: cData } = await supabase.from('courses').select('id, name').in('id', courseIds)
+        if (cData) courseMap = new Map(cData.map((c: any) => [c.id, c.name]))
+      }
+      if (userIds.length > 0) {
+        const { data: pData } = await supabase.from('profiles').select('id, full_name, role').in('id', userIds)
+        if (pData) {
+          profileMap = new Map(
+            pData.map((p: any) => [
+              p.id,
+              { id: String(p.id), fullName: String(p.full_name || ''), role: String(p.role || 'staff') },
+            ]),
+          )
+        }
+      }
+
+      formattedData = records.map((record: any) => ({
         id: record.id,
         courseId: record.course_id,
-        courseName: course?.name,
+        courseName: courseMap.get(String(record.course_id)) ?? '',
         title: record.title,
         maxScore: record.max_score,
         assessmentDate: record.assessment_date,
-        formUrl: record.form_url ?? null,
-        sheetUrl: record.sheet_url ?? null,
-        createdBy: profile
-          ? {
-              id: profile.id,
-              fullName: profile.full_name,
-              role: profile.role,
-            }
-          : null,
+        formUrl: null,
+        sheetUrl: null,
+        createdBy: profileMap.get(String(record.created_by)) ?? null,
         createdAt: record.created_at,
-      }
-    })
+      }))
+    }
 
     return NextResponse.json({
       data: formattedData,
-      count: data?.length || 0,
+      count: formattedData.length,
       page: pagination.page,
       pageSize: pagination.pageSize,
-      totalCount: count || 0,
-      hasMore: pagination.offset + pagination.limit < (count || 0),
+      totalCount,
+      hasMore: pagination.offset + pagination.limit < totalCount,
     })
   } catch (error) {
     return unexpectedApiError(error, 'Unable to load assessments')

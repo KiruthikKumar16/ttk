@@ -64,6 +64,7 @@ function makeClient() {
         'update',
         'delete',
         'is',
+        'in',
       ])
         query[method] = vi.fn(() => query)
       query.maybeSingle = vi.fn(async () => current)
@@ -214,7 +215,7 @@ describe('read-only domain services', () => {
       data: [{ id: '1', studentId: 9, studentName: 'Asha', markedBy: 'Trainer' }],
     })
     setResults('assessments', {
-      count: 0,
+      count: 1,
       data: [
         {
           id: 1,
@@ -223,13 +224,80 @@ describe('read-only domain services', () => {
           max_score: 10,
           assessment_date: '2026-09-29',
           created_at: '2026-09-29',
-          courses: null,
-          profiles: null,
+          courses: { id: 'C1', name: 'Web' },
+          profiles: { id: 'P1', full_name: 'Trainer', role: 'staff' },
+          form_url: 'https://form.test',
+          sheet_url: 'https://sheet.test',
         },
       ],
     })
-    await expect(listAssessmentPage({ page: 1, pageSize: 5, search: 'Quiz', courseId: 'C1' })).resolves.toMatchObject({
-      data: [{ courseName: '', title: 'Quiz', createdBy: null }],
+    await expect(listAssessmentPage({ page: 1, pageSize: 5, search: 'Quiz', courseId: 'C1' })).resolves.toEqual({
+      totalCount: 1,
+      data: [
+        {
+          id: '1',
+          courseId: 'C1',
+          courseName: 'Web',
+          title: 'Quiz',
+          maxScore: 10,
+          assessmentDate: '2026-09-29',
+          formUrl: 'https://form.test',
+          sheetUrl: 'https://sheet.test',
+          createdAt: '2026-09-29',
+          createdBy: { id: 'P1', fullName: 'Trainer', role: 'staff' },
+        },
+      ],
+    })
+
+    // Fallback query test
+    setResults(
+      'assessments',
+      { data: null, error: new Error('PGRST200 join error') },
+      {
+        count: 1,
+        data: [
+          {
+            id: 2,
+            course_id: 'C2',
+            title: 'Fallback Quiz',
+            max_score: 25,
+            assessment_date: '2026-09-30',
+            created_by: 'U1',
+            created_at: '2026-09-30',
+          },
+        ],
+      },
+    )
+    setResults('courses', { data: [{ id: 'C2', name: 'Cloud' }], error: null })
+    setResults('profiles', { data: [{ id: 'U1', full_name: 'Lead', role: 'admin' }], error: null })
+
+    await expect(listAssessmentPage({ page: 1, pageSize: 5, search: 'Fallback', courseId: 'C2' })).resolves.toEqual({
+      totalCount: 1,
+      data: [
+        {
+          id: '2',
+          courseId: 'C2',
+          courseName: 'Cloud',
+          title: 'Fallback Quiz',
+          maxScore: 25,
+          assessmentDate: '2026-09-30',
+          formUrl: null,
+          sheetUrl: null,
+          createdAt: '2026-09-30',
+          createdBy: { id: 'U1', fullName: 'Lead', role: 'admin' },
+        },
+      ],
+    })
+
+    // Both queries fail test
+    setResults(
+      'assessments',
+      { data: null, error: new Error('primary error') },
+      { data: null, error: new Error('fallback error') },
+    )
+    await expect(listAssessmentPage({ page: 1, pageSize: 5, search: '', courseId: '' })).resolves.toEqual({
+      totalCount: 0,
+      data: [],
     })
     setResults('audit_log', {
       count: 1,
