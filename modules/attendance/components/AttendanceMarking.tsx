@@ -136,24 +136,24 @@ export function AttendanceMarking({
     if (isSelected) {
       switch (status) {
         case 'Present':
-          return 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-semibold ring-2 ring-emerald-500/30'
+          return 'bg-[#1b7a4b] text-white border-[#1b7a4b] shadow-sm font-bold ring-2 ring-emerald-500/30'
         case 'Absent':
-          return 'bg-rose-600 text-white border-rose-600 shadow-sm font-semibold ring-2 ring-rose-500/30'
+          return 'bg-[#b53c37] text-white border-[#b53c37] shadow-sm font-bold ring-2 ring-rose-500/30'
         case 'Late':
-          return 'bg-amber-600 text-white border-amber-600 shadow-sm font-semibold ring-2 ring-amber-500/30'
+          return 'bg-[#a8710f] text-white border-[#a8710f] shadow-sm font-bold ring-2 ring-amber-500/30'
         case 'Excused':
-          return 'bg-sky-600 text-white border-sky-600 shadow-sm font-semibold ring-2 ring-sky-500/30'
+          return 'bg-[#0284c7] text-white border-[#0284c7] shadow-sm font-bold ring-2 ring-sky-500/30'
       }
     }
     switch (status) {
       case 'Present':
-        return 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/70 hover:text-emerald-800 font-medium'
+        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#1b7a4b] hover:bg-[var(--success-bg)] hover:text-[#1b7a4b] font-medium'
       case 'Absent':
-        return 'bg-white text-slate-700 border-slate-200 hover:border-rose-300 hover:bg-rose-50/70 hover:text-rose-800 font-medium'
+        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#b53c37] hover:bg-[var(--danger-bg)] hover:text-[#b53c37] font-medium'
       case 'Late':
-        return 'bg-white text-slate-700 border-slate-200 hover:border-amber-300 hover:bg-amber-50/70 hover:text-amber-800 font-medium'
+        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#a8710f] hover:bg-[var(--warning-bg)] hover:text-[#a8710f] font-medium'
       case 'Excused':
-        return 'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/70 hover:text-sky-800 font-medium'
+        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#0284c7] hover:bg-sky-50 hover:text-[#0284c7] font-medium'
     }
   }
 
@@ -566,7 +566,7 @@ export function AttendanceMarking({
                             }
                           }}
                           onClick={() => void setStatus(row.registerId, status)}
-                          className={`w-full min-h-10 sm:min-h-11 px-3 py-2 rounded-xl border text-xs sm:text-sm transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 inline-flex items-center justify-center gap-1.5 ${getStatusButtonClass(
+                          className={`w-full min-h-10 sm:min-h-11 px-3 py-2 rounded-full border text-xs sm:text-sm transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-[var(--g1)] inline-flex items-center justify-center gap-1.5 ${getStatusButtonClass(
                             status,
                             isSelected,
                           )}`}

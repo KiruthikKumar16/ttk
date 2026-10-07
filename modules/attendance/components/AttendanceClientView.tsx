@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { AttendanceMarking } from './AttendanceMarking'
+import { KpiCard } from '@/components/ui/KpiCard'
 import type { CourseCategory } from '@/lib/types'
 
 export interface CourseOption {
@@ -266,100 +267,62 @@ export function AttendanceClientView({
   return (
     <div className="space-y-6">
       {/* 1. Header & KPI Statistics Tiles */}
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
-          <p className="eyebrow">CLASSROOM SESSIONS & ROSTER</p>
-          <h1>Attendance Hub</h1>
-          <p className="subcopy">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            CLASSROOM SESSIONS & ROSTER
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">
+            Attendance Hub
+          </h1>
+          <p className="text-sm text-[var(--mute)] mt-1">
             Record student daily sessions, inspect curriculum attendance rates, and audit presence logs.
           </p>
         </div>
       </div>
 
-      <div className="reports-stats-grid">
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Overall Rate</span>
-            <div className="stat-icon icon-blue">
-              <TrendingUp size={16} />
-            </div>
-          </div>
-          <div className="stat-value flex items-baseline gap-2">
-            <span>{kpiData.overallPct}%</span>
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                kpiData.overallPct >= 85
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                  : kpiData.overallPct >= 75
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                    : 'bg-rose-50 text-rose-700 border border-rose-200/60'
-              }`}
-            >
-              {kpiData.overallPct >= 85 ? 'Healthy' : kpiData.overallPct >= 75 ? 'Fair' : 'At Risk'}
-            </span>
-          </div>
-          <p className="stat-sub">Across all batches and recorded sessions</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Batches Tracked</span>
-            <div className="stat-icon icon-navy">
-              <GraduationCap size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{kpiData.activeCoursesCount}</div>
-          <p className="stat-sub">Active course programs in session</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Total Sessions</span>
-            <div className="stat-icon icon-violet">
-              <CalendarDays size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{kpiData.totalSessions}</div>
-          <p className="stat-sub">Cumulative classroom hours marked</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>At-Risk Batches</span>
-            <div className={`stat-icon ${kpiData.atRiskCount > 0 ? 'icon-amber' : 'icon-green'}`}>
-              <AlertTriangle size={16} />
-            </div>
-          </div>
-          <div className="stat-value flex items-baseline gap-2">
-            <span>{kpiData.atRiskCount}</span>
-            {kpiData.atRiskCount > 0 ? (
-              <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                &lt;75% Attendance
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Optimal
-              </span>
-            )}
-          </div>
-          <p className="stat-sub">Programs needing faculty attention</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Overall Rate"
+          value={`${kpiData.overallPct}%`}
+          subtitle="Across all batches and recorded sessions"
+          icon={<TrendingUp size={18} />}
+          badge={{
+            text: kpiData.overallPct >= 85 ? 'Healthy' : kpiData.overallPct >= 75 ? 'Fair' : 'At Risk',
+            variant: kpiData.overallPct >= 85 ? 'success' : kpiData.overallPct >= 75 ? 'warning' : 'danger',
+          }}
+          variant="hero"
+        />
+        <KpiCard
+          title="Batches Tracked"
+          value={kpiData.activeCoursesCount}
+          subtitle="Active course programs in session"
+          icon={<GraduationCap size={18} />}
+        />
+        <KpiCard
+          title="Total Sessions"
+          value={kpiData.totalSessions}
+          subtitle="Cumulative classroom hours marked"
+          icon={<CalendarDays size={18} />}
+        />
+        <KpiCard
+          title="At-Risk Batches"
+          value={kpiData.atRiskCount}
+          subtitle="Programs needing faculty attention"
+          icon={<AlertTriangle size={18} />}
+          badge={{
+            text: kpiData.atRiskCount > 0 ? '<75% Attendance' : 'Optimal',
+            variant: kpiData.atRiskCount > 0 ? 'danger' : 'success',
+          }}
+        />
       </div>
 
       {/* 2. Accessible Segmented Tabs */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-1.5 rounded-xl border"
-        style={{
-          background: 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: 'blur(8px)',
-          borderColor: 'rgba(226, 232, 240, 0.6)',
-          boxShadow: 'var(--shadow-xs)',
-        }}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-2 rounded-[22px] bg-[var(--card)] border border-[var(--border)] shadow-[var(--shadow-card)]">
         <div
           role="tablist"
           aria-label="Attendance views"
-          className="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/70 shadow-2xs"
+          className="inline-flex items-center p-1 rounded-full bg-[var(--panel)]"
         >
           <button
             type="button"
@@ -368,13 +331,19 @@ export function AttendanceClientView({
             aria-selected={activeTab === 'marking'}
             aria-controls="panel-marking"
             onClick={() => handleTabChange('marking')}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'marking'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'text-white shadow-md'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={{
+              background:
+                activeTab === 'marking'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
+            }}
           >
-            <UserCheck size={14} className={activeTab === 'marking' ? 'text-white' : 'text-slate-500'} />
+            <UserCheck size={14} />
             <span>Daily Marking</span>
           </button>
 
@@ -385,19 +354,27 @@ export function AttendanceClientView({
             aria-selected={activeTab === 'analytics'}
             aria-controls="panel-analytics"
             onClick={() => handleTabChange('analytics')}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'analytics'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'text-white shadow-md'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={{
+              background:
+                activeTab === 'analytics'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
+            }}
           >
-            <BarChart3 size={14} className={activeTab === 'analytics' ? 'text-white' : 'text-slate-500'} />
+            <BarChart3 size={14} />
             <span>Course & Student Analytics</span>
             {kpiData.atRiskCount > 0 && (
               <span
-                className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeTab === 'analytics' ? 'bg-indigo-700 text-indigo-100' : 'bg-rose-100 text-rose-800'
-                }`}
+                className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{
+                  background: activeTab === 'analytics' ? 'rgba(255,255,255,0.25)' : 'var(--danger-bg)',
+                  color: activeTab === 'analytics' ? '#fff' : '#b53c37',
+                }}
               >
                 {kpiData.atRiskCount} at risk
               </span>
@@ -411,13 +388,19 @@ export function AttendanceClientView({
             aria-selected={activeTab === 'records'}
             aria-controls="panel-records"
             onClick={() => handleTabChange('records')}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'records'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'text-white shadow-md'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={{
+              background:
+                activeTab === 'records'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
+            }}
           >
-            <FileText size={14} className={activeTab === 'records' ? 'text-white' : 'text-slate-500'} />
+            <FileText size={14} />
             <span>Records & Audit Log</span>
           </button>
         </div>
