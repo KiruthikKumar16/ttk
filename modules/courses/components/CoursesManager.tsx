@@ -256,76 +256,78 @@ export function CoursesManager({
 
   return (
     <>
-      <div className="page-heading">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[var(--border)] mb-6">
         <div>
-          <p className="eyebrow">ACADEMY CURRICULUM</p>
-          <h1>Manage Courses</h1>
-          <p className="subcopy">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">ACADEMY CURRICULUM</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text)]">Manage Courses</h1>
+          <p className="text-xs text-[var(--mute)] mt-1">
             Configure academy curriculum programs, duration tiers, tuition fees, and GST pricing.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
           {canManageCategories && (
-            <Link href="/settings/course-categories" className="btn-secondary text-xs">
-              <Layers size={14} className="text-slate-500" />
+            <Link
+              href="/settings/course-categories"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--border)] bg-[var(--panel)] text-xs font-bold text-[var(--text)] hover:bg-[var(--card)] transition-colors"
+            >
+              <Layers size={14} className="text-[var(--mute)]" />
               <span>Configure Categories</span>
             </Link>
           )}
           {canCreate && (
-            <Button onClick={openAddModal} className="btn-primary text-xs">
+            <button
+              onClick={openAddModal}
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-90 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }}
+            >
               <Plus size={14} />
               <span>Add Course</span>
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Category Filter Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-2 border-b border-gray-200">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-1.5 rounded-full bg-[var(--panel)] border border-[var(--border)]">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Link
             href={makeCategoryTabUrl(undefined)}
-            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
               !selectedCategoryId
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'text-white shadow-xs'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={
+              !selectedCategoryId
+                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                : {}
+            }
           >
             All Courses
           </Link>
           {categories.map((cat) => {
             const isSelected = selectedCategoryId === cat.id
-            const isInternship = cat.name.toLowerCase().includes('internship')
-            const isElite = cat.name.toLowerCase().includes('elite')
-            const isEssential = cat.name.toLowerCase().includes('essential')
-            const activeBg = isInternship
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : isElite
-                ? 'bg-purple-600 text-white shadow-xs'
-                : isEssential
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-blue-600 text-white shadow-xs'
-            const badgeBg = isInternship
-              ? 'bg-emerald-100 text-emerald-800'
-              : isElite
-                ? 'bg-purple-100 text-purple-800'
-                : isEssential
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-gray-100 text-gray-600'
 
             return (
               <Link
                 key={cat.id}
                 href={makeCategoryTabUrl(cat.id)}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   isSelected
-                    ? activeBg
-                    : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'text-white shadow-xs'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
+                style={
+                  isSelected
+                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                    : {}
+                }
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-xs px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-white/20 text-white' : badgeBg}`}
+                  className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-[var(--card)] text-[var(--mute)]'
+                  }`}
                 >
                   {cat.duration}
                 </span>
@@ -334,32 +336,37 @@ export function CoursesManager({
           })}
           <Link
             href={makeCategoryTabUrl('uncategorized')}
-            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
               selectedCategoryId === 'uncategorized'
-                ? 'bg-gray-700 text-white shadow-xs'
-                : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'text-white shadow-xs'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={
+              selectedCategoryId === 'uncategorized'
+                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                : {}
+            }
           >
             Uncategorized
           </Link>
         </div>
 
-        <div className="text-xs text-gray-500 font-medium">
+        <div className="text-xs text-[var(--mute)] font-semibold px-3">
           Showing {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'}
         </div>
       </div>
 
-      <section className="panel">
-        <div className="panel-header">
+      <section className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-xs overflow-hidden mb-6">
+        <div className="p-5 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2>
+            <h2 className="text-base font-bold text-[var(--text)]">
               {selectedCategoryId
                 ? selectedCategoryId === 'uncategorized'
                   ? 'Uncategorized Courses'
                   : `${categories.find((c) => c.id === selectedCategoryId)?.name || 'Filtered'} Courses (${filteredCourses.length})`
                 : `Course Catalog (${filteredCourses.length})`}
             </h2>
-            <p>
+            <p className="text-xs text-[var(--mute)] mt-0.5">
               Academy curriculum with GST Inclusive and Exclusive pricing (
               {gstRate > 0 ? `${gstRate}% GST applicable` : 'GST disabled'})
             </p>
@@ -369,7 +376,7 @@ export function CoursesManager({
               <div className="relative">
                 <Search
                   size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                 />
                 <input
                   name="search"
@@ -378,7 +385,7 @@ export function CoursesManager({
                   placeholder="Search courses..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-48 sm:w-60 pl-9 pr-8 py-2 rounded-xl border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs"
+                  className="w-48 sm:w-60 pl-9 pr-8 py-2 rounded-full border border-[var(--border)] bg-[var(--panel)] text-xs font-medium text-[var(--text)] placeholder:text-[var(--mute)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)] shadow-2xs"
                 />
                 {query && (
                   <button
@@ -391,7 +398,7 @@ export function CoursesManager({
                       const qs = params.toString()
                       router.push('/courses' + (qs ? `?${qs}` : ''))
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] p-0.5 cursor-pointer"
                     aria-label="Clear search input"
                   >
                     <X size={14} />
@@ -419,7 +426,7 @@ export function CoursesManager({
                     params.set('pageSize', String(pageSize))
                     router.push(`/courses?${params.toString()}`)
                   }}
-                  className="py-2 pl-3 pr-7 rounded-xl border border-gray-300 bg-white text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs appearance-none cursor-pointer"
+                  className="py-2 pl-3.5 pr-8 rounded-full border border-[var(--border)] bg-[var(--panel)] text-xs font-semibold text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)] shadow-2xs appearance-none cursor-pointer"
                 >
                   <option value="name">Name</option>
                   <option value="fee">Fee</option>
@@ -427,7 +434,7 @@ export function CoursesManager({
                 </select>
                 <ChevronDown
                   size={14}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                 />
               </div>
 
@@ -437,15 +444,20 @@ export function CoursesManager({
             </form>
 
             {/* View Mode Toggle: Table List vs Grid Cards */}
-            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+            <div className="flex items-center bg-[var(--panel)] p-1 rounded-full border border-[var(--border)] shrink-0 gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-white text-blue-600 shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'text-white shadow-2xs'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
+                style={
+                  viewMode === 'table'
+                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                    : {}
+                }
                 title="Table List View"
                 aria-label="Table List View"
               >
@@ -454,11 +466,16 @@ export function CoursesManager({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-white text-blue-600 shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'text-white shadow-2xs'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
+                style={
+                  viewMode === 'grid'
+                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                    : {}
+                }
                 title="Course Cards Grid View"
                 aria-label="Course Cards Grid View"
               >
@@ -469,27 +486,27 @@ export function CoursesManager({
         </div>
 
         {viewMode === 'table' ? (
-          <div className="data-wrap" role="region" aria-label="Course list" tabIndex={0}>
-            <table className="w-full table-auto" style={{ whiteSpace: 'normal' }}>
-              <thead>
+          <div className="overflow-x-auto" role="region" aria-label="Course list" tabIndex={0}>
+            <table className="w-full text-left text-xs" style={{ whiteSpace: 'normal' }}>
+              <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th style={{ width: '28%' }}>Course</th>
-                  <th style={{ width: '15%' }}>Category</th>
-                  <th style={{ width: '12%' }}>Duration</th>
-                  <th style={{ width: '13%' }}>Tax Mode</th>
-                  <th style={{ width: '20%' }}>Description</th>
-                  <th className="align-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
+                  <th className="py-3.5 px-4" style={{ width: '28%' }}>Course</th>
+                  <th className="py-3.5 px-4" style={{ width: '15%' }}>Category</th>
+                  <th className="py-3.5 px-4" style={{ width: '12%' }}>Duration</th>
+                  <th className="py-3.5 px-4" style={{ width: '13%' }}>Tax Mode</th>
+                  <th className="py-3.5 px-4" style={{ width: '20%' }}>Description</th>
+                  <th className="py-3.5 px-4 text-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
                     Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredCourses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-gray-500">
-                      <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
-                      <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
-                      <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
+                    <td colSpan={6} className="text-center py-12 text-[var(--mute)]">
+                      <BookOpen size={32} className="mx-auto text-[var(--mute)] mb-2" />
+                      <p className="font-bold text-[var(--text)]">No courses found matching your criteria.</p>
+                      <p className="text-xs text-[var(--mute)] mt-1">Try switching categories or clearing search filters.</p>
                     </td>
                   </tr>
                 ) : (
@@ -500,73 +517,74 @@ export function CoursesManager({
                     const courseGst = courseBreakdown.gstAmount
                     const courseTotal = courseBreakdown.totalAmount
                     const isElite = c.categoryName?.toLowerCase().includes('elite')
-                    const isEssential = c.categoryName?.toLowerCase().includes('essential')
 
                     return (
                       <tr
                         key={c.id}
-                        className="cursor-pointer hover:bg-slate-50/90 transition-colors group"
+                        className="cursor-pointer hover:bg-[var(--panel)] transition-colors group"
                         onClick={() => openEditModal(c)}
                         title="Click to view & edit course details"
                       >
-                        <td>
+                        <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
                             <div
-                              className={`mini-avatar shrink-0 ${
-                                isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
-                              }`}
+                              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+                              style={{
+                                background: isElite ? 'var(--panel)' : 'var(--panel)',
+                                color: 'var(--g1)',
+                              }}
                             >
                               {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
                             </div>
                             <div className="min-w-0">
-                              <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                              <strong className="block font-bold text-[var(--text)] group-hover:text-[var(--g1)] transition-colors leading-snug">
                                 {c.name}
                               </strong>
-                              <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
+                              <small className="block text-[var(--mute)] font-mono text-xs">{c.id}</small>
                             </div>
                           </div>
                         </td>
-                        <td>
+                        <td className="py-3.5 px-4">
                           {c.categoryName ? (
                             <CategoryBadge categoryName={c.categoryName} />
                           ) : (
-                            <span className="text-xs text-gray-400 italic">Unassigned</span>
+                            <span className="text-xs text-[var(--mute)] italic">Unassigned</span>
                           )}
                         </td>
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          <div className="flex items-center gap-1.5 text-gray-700 text-xs font-medium">
-                            <Clock size={13} className="text-gray-400 shrink-0" />
+                        <td className="py-3.5 px-4" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="flex items-center gap-1.5 text-[var(--text)] text-xs font-semibold">
+                            <Clock size={13} className="text-[var(--mute)] shrink-0" />
                             <span>{c.duration}</span>
                           </div>
                         </td>
-                        <td>
+                        <td className="py-3.5 px-4">
                           {isInclusive ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-[#1b7a4b]">
                               GST Inclusive
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#a8710f]">
                               GST Exclusive
                             </span>
                           )}
                         </td>
-                        <td>
-                          <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed" title={c.description}>
+                        <td className="py-3.5 px-4">
+                          <p className="text-[var(--mute)] text-xs line-clamp-2 leading-relaxed" title={c.description}>
                             {c.description || '—'}
                           </p>
                         </td>
-                        <td className="align-right" style={{ whiteSpace: 'nowrap' }}>
-                          <div className="text-sm font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
+                        <td className="py-3.5 px-4 text-right" style={{ whiteSpace: 'nowrap' }}>
+                          <div className="text-sm font-bold text-[var(--text)] leading-tight">{money(courseTotal)}</div>
                           {gstRate > 0 && (
-                            <div className="text-[11px] text-gray-500 mt-0.5">
+                            <div className="text-[11px] text-[var(--mute)] mt-0.5">
                               {isInclusive ? (
                                 <>
                                   Base: {money(courseBase)}{' '}
-                                  <span className="text-emerald-600 font-medium">({money(courseGst)} GST incl.)</span>
+                                  <span className="text-[#1b7a4b] font-bold">({money(courseGst)} GST incl.)</span>
                                 </>
                               ) : (
                                 <>
-                                  Base: {money(c.fee)} <span className="text-gray-600">+{money(courseGst)}</span>
+                                  Base: {money(c.fee)} <span>+{money(courseGst)}</span>
                                 </>
                               )}
                             </div>
@@ -581,12 +599,12 @@ export function CoursesManager({
           </div>
         ) : (
           /* Courses Grid View */
-          <div className="p-4" role="region" aria-label="Course grid" tabIndex={0}>
+          <div className="p-5" role="region" aria-label="Course grid" tabIndex={0}>
             {filteredCourses.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
-                <p className="font-medium text-gray-600">No courses found matching your criteria.</p>
-                <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing search filters.</p>
+              <div className="text-center py-12 text-[var(--mute)]">
+                <BookOpen size={32} className="mx-auto text-[var(--mute)] mb-2" />
+                <p className="font-bold text-[var(--text)]">No courses found matching your criteria.</p>
+                <p className="text-xs text-[var(--mute)] mt-1">Try switching categories or clearing search filters.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -601,64 +619,66 @@ export function CoursesManager({
                     <div
                       key={c.id}
                       onClick={() => openEditModal(c)}
-                      className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex flex-col justify-between"
+                      className="bg-[var(--card)] border border-[var(--border)] rounded-[22px] p-5 shadow-xs hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
                       title="Click to view & edit course details"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div
-                              className={`mini-avatar shrink-0 ${
-                                isElite ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
-                              }`}
+                              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+                              style={{
+                                background: 'var(--panel)',
+                                color: 'var(--g1)',
+                              }}
                             >
                               {isElite ? <Sparkles size={16} /> : <BookOpen size={16} />}
                             </div>
                             <div className="min-w-0">
-                              <strong className="block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug truncate">
+                              <strong className="block font-bold text-[var(--text)] group-hover:text-[var(--g1)] transition-colors leading-snug truncate">
                                 {c.name}
                               </strong>
-                              <small className="block text-gray-500 font-mono text-xs">{c.id}</small>
+                              <small className="block text-[var(--mute)] font-mono text-xs">{c.id}</small>
                             </div>
                           </div>
                           {isInclusive ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-[#1b7a4b] shrink-0">
                               GST Incl.
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#a8710f] shrink-0">
                               GST Excl.
                             </span>
                           )}
                         </div>
 
                         <div className="flex items-center justify-between text-xs mb-3">
-                          <div className="flex items-center gap-1.5 text-gray-700 font-medium">
-                            <Clock size={13} className="text-gray-400 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-[var(--text)] font-semibold">
+                            <Clock size={13} className="text-[var(--mute)] shrink-0" />
                             <span>{c.duration}</span>
                           </div>
                           {c.categoryName ? (
                             <CategoryBadge categoryName={c.categoryName} />
                           ) : (
-                            <span className="text-xs text-gray-400 italic">Unassigned</span>
+                            <span className="text-xs text-[var(--mute)] italic">Unassigned</span>
                           )}
                         </div>
 
-                        <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed mb-3" title={c.description}>
+                        <p className="text-[var(--mute)] text-xs line-clamp-2 leading-relaxed mb-3" title={c.description}>
                           {c.description || 'No course description provided.'}
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-gray-100 flex items-end justify-between">
+                      <div className="pt-3 border-t border-[var(--border)] flex items-end justify-between">
                         <div>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--mute)] block">
                             Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                           </span>
-                          <div className="text-base font-bold text-gray-900 leading-tight">{money(courseTotal)}</div>
+                          <div className="text-base font-extrabold text-[var(--text)] leading-tight">{money(courseTotal)}</div>
                           {gstRate > 0 && (
-                            <div className="text-[11px] text-gray-500 mt-0.5">
+                            <div className="text-[11px] text-[var(--mute)] mt-0.5">
                               {isInclusive ? (
-                                <span className="text-emerald-700">Incl. {money(courseGst)} GST</span>
+                                <span className="text-[#1b7a4b] font-semibold">Incl. {money(courseGst)} GST</span>
                               ) : (
                                 <span>+{money(courseGst)} GST</span>
                               )}
@@ -670,14 +690,16 @@ export function CoursesManager({
                           <Link
                             href={`/courses/${encodeURIComponent(c.id)}/materials`}
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-[var(--text)] bg-[var(--panel)] hover:bg-[var(--card)] border border-[var(--border)] rounded-full transition-colors"
                             title="Manage course materials and syllabus"
                           >
                             <BookOpen size={12} />
                             <span>Materials</span>
                           </Link>
                           {canUpdate && (
-                            <span className="text-xs font-semibold text-blue-600 group-hover:underline">Edit</span>
+                            <span className="text-xs font-bold group-hover:underline" style={{ color: 'var(--g1)' }}>
+                              Edit
+                            </span>
                           )}
                         </div>
                       </div>
@@ -689,14 +711,16 @@ export function CoursesManager({
           </div>
         )}
 
-        <div className="panel-header flex items-center justify-between">
+        <div className="p-4 border-t border-[var(--border)] bg-[var(--panel)] flex items-center justify-between text-xs text-[var(--mute)]">
           <span>
             {totalCount} courses · Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
           </span>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-2">
             <Link
               aria-disabled={page <= 1}
-              className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+              className={`px-4 py-1.5 rounded-full font-bold border border-[var(--border)] bg-[var(--card)] text-[var(--text)] transition-colors ${
+                page <= 1 ? 'pointer-events-none opacity-40' : 'hover:bg-[var(--panel)]'
+              }`}
               href={`/courses?${new URLSearchParams({
                 ...(search ? { search } : {}),
                 ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
@@ -710,7 +734,9 @@ export function CoursesManager({
             </Link>
             <Link
               aria-disabled={page >= Math.ceil(totalCount / pageSize)}
-              className={page >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : ''}
+              className={`px-4 py-1.5 rounded-full font-bold border border-[var(--border)] bg-[var(--card)] text-[var(--text)] transition-colors ${
+                page >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-40' : 'hover:bg-[var(--panel)]'
+              }`}
               href={`/courses?${new URLSearchParams({
                 ...(search ? { search } : {}),
                 ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
@@ -727,17 +753,17 @@ export function CoursesManager({
 
         {/* Add / Edit Course Modal */}
         {modalOpen && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-bold text-[var(--text)]">
                       {editingCourse ? 'Edit Course' : 'Add New Course'}
                     </h2>
                     {editingCourse?.categoryName && <CategoryBadge categoryName={editingCourse.categoryName} />}
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-[var(--mute)] mt-0.5">
                     {editingCourse
                       ? `Modify curriculum pricing, duration tier, and course settings for ${editingCourse.name}.`
                       : 'Configure curriculum tuition fee, GST pricing mode, duration tier, and details.'}
@@ -747,7 +773,7 @@ export function CoursesManager({
                   {editingCourse && (
                     <Link
                       href={`/courses/${encodeURIComponent(editingCourse.id)}/materials`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] hover:bg-[var(--card)] transition-colors"
                       title="Manage course materials and syllabus"
                     >
                       <BookOpen size={13} />
@@ -758,7 +784,7 @@ export function CoursesManager({
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                    className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
                   >
                     <X size={18} />
                   </button>
@@ -766,7 +792,7 @@ export function CoursesManager({
               </div>
 
               {formError && (
-                <div className="mx-6 mt-4 p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2">
+                <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-[#b53c37] flex items-center gap-2">
                   <AlertCircle size={16} />
                   <span>{formError}</span>
                 </div>
@@ -774,8 +800,8 @@ export function CoursesManager({
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course Name <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-[var(--text)] mb-1">
+                    Course Name <span className="text-[#b53c37]">*</span>
                   </label>
                   <input
                     type="text"
@@ -783,20 +809,21 @@ export function CoursesManager({
                     placeholder="e.g. Full Stack Development"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                   />
                 </div>
 
                 {/* Course Category Selector */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="course-category-select" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="course-category-select" className="block text-xs font-bold text-[var(--text)]">
                       Category Tier
                     </label>
                     {canManageCategories && (
                       <Link
                         href="/settings/course-categories"
-                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 hover:underline"
+                        className="text-xs font-bold hover:underline flex items-center gap-1"
+                        style={{ color: 'var(--g1)' }}
                         target="_blank"
                       >
                         Manage Categories <ArrowUpRight size={11} />
@@ -808,7 +835,7 @@ export function CoursesManager({
                     aria-label="Category Tier"
                     value={categoryId}
                     onChange={(e) => handleCategorySelect(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                   >
                     <option value="">-- Select Category --</option>
                     {categories.map((cat) => (
@@ -818,67 +845,67 @@ export function CoursesManager({
                     ))}
                     <option value="none">No Category (Custom Duration)</option>
                   </select>
-                  <p className="text-[11px] text-gray-500 mt-1">
+                  <p className="text-[11px] text-[var(--mute)] mt-1">
                     Selecting a category auto-fills the duration below (e.g. Essential → 6 weeks, Elite → 12 weeks).
                   </p>
                 </div>
 
                 {/* GST Pricing Mode Selector */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    GST Calculation Mode <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-[var(--text)] mb-1.5">
+                    GST Calculation Mode <span className="text-[#b53c37]">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setGstInclusive(false)}
-                      className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                      className={`p-3 rounded-[16px] border text-left transition-all flex flex-col justify-between cursor-pointer ${
                         !gstInclusive
-                          ? 'border-blue-600 bg-blue-50/60 ring-1 ring-blue-600'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                          ? 'border-[var(--g1)] bg-[var(--panel)] ring-1 ring-[var(--g1)]'
+                          : 'border-[var(--border)] hover:border-[var(--mute)] bg-[var(--card)]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-900">Exclusive of GST</span>
+                        <span className="text-xs font-bold text-[var(--text)]">Exclusive of GST</span>
                         <span
                           className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            !gstInclusive ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                            !gstInclusive ? 'border-[var(--g1)] bg-[var(--g1)]' : 'border-[var(--border)]'
                           }`}
                         >
                           {!gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">+GST added on top of fee</span>
+                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">+GST added on top of fee</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setGstInclusive(true)}
-                      className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                      className={`p-3 rounded-[16px] border text-left transition-all flex flex-col justify-between cursor-pointer ${
                         gstInclusive
-                          ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                          ? 'border-[var(--g1)] bg-[var(--panel)] ring-1 ring-[var(--g1)]'
+                          : 'border-[var(--border)] hover:border-[var(--mute)] bg-[var(--card)]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-900">Inclusive of GST</span>
+                        <span className="text-xs font-bold text-[var(--text)]">Inclusive of GST</span>
                         <span
                           className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            gstInclusive ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
+                            gstInclusive ? 'border-[var(--g1)] bg-[var(--g1)]' : 'border-[var(--border)]'
                           }`}
                         >
                           {gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 mt-1 leading-tight">Fee already contains GST</span>
+                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">Fee already contains GST</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Course Fee (₹) <span className="text-red-500">*</span>
+                    <label className="block text-xs font-bold text-[var(--text)] mb-1">
+                      Course Fee (₹) <span className="text-[#b53c37]">*</span>
                     </label>
                     <input
                       type="number"
@@ -887,16 +914,16 @@ export function CoursesManager({
                       placeholder="e.g. 42000"
                       value={fee}
                       onChange={(e) => setFee(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                     />
-                    <span className="text-[11px] text-gray-400 mt-0.5 block">
+                    <span className="text-[11px] text-[var(--mute)] mt-0.5 block">
                       {gstInclusive ? 'All-inclusive tuition fee' : 'Base tuition fee before GST'}
                     </span>
                   </div>
 
                   <div>
-                    <label htmlFor="course-duration-select" className="block text-sm font-medium text-gray-700 mb-1">
-                      Duration <span className="text-red-500">*</span>
+                    <label htmlFor="course-duration-select" className="block text-xs font-bold text-[var(--text)] mb-1">
+                      Duration <span className="text-[#b53c37]">*</span>
                     </label>
                     <select
                       id="course-duration-select"
@@ -913,7 +940,7 @@ export function CoursesManager({
                           setCategoryId(matchingCat.id)
                         }
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                     >
                       <option value="">-- Select Duration --</option>
                       {availableDurations.map((item) => (
@@ -922,78 +949,87 @@ export function CoursesManager({
                         </option>
                       ))}
                     </select>
-                    <span className="text-[11px] text-gray-400 mt-0.5 block">Configured from category tiers</span>
+                    <span className="text-[11px] text-[var(--mute)] mt-0.5 block">Configured from category tiers</span>
                   </div>
                 </div>
 
                 {/* Live Fee + GST Preview Box */}
                 {enteredFee > 0 && (
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5 text-gray-700">
-                    <div className="font-semibold text-gray-900 flex items-center justify-between">
+                  <div className="p-3.5 bg-[var(--panel)] border border-[var(--border)] rounded-[18px] text-xs space-y-1.5 text-[var(--text)]">
+                    <div className="font-bold flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         Fee Breakdown
                         <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            gstInclusive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            gstInclusive ? 'bg-emerald-500/15 text-[#1b7a4b]' : 'bg-amber-500/15 text-[#a8710f]'
                           }`}
                         >
                           {gstInclusive ? 'GST Inclusive' : 'GST Exclusive'}
                         </span>
                       </span>
-                      <span className="text-slate-500 font-normal">
+                      <span className="text-[var(--mute)] font-normal">
                         {gstRate > 0 ? `GST @ ${gstRate}%` : 'GST Not Applicable'}
                       </span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--mute)]">
                       <span>Base Tuition (Taxable Amount):</span>
-                      <strong className="text-gray-900">{money(modalBase)}</strong>
+                      <strong className="text-[var(--text)]">{money(modalBase)}</strong>
                     </div>
                     {gstRate > 0 && (
-                      <div className="flex justify-between text-gray-600">
+                      <div className="flex justify-between text-[var(--mute)]">
                         <span>GST Amount:</span>
-                        <strong className="text-gray-900">{money(modalGst)}</strong>
+                        <strong className="text-[var(--text)]">{money(modalGst)}</strong>
                       </div>
                     )}
-                    <div className="pt-1.5 border-t border-slate-200 flex justify-between font-bold text-gray-900 text-sm">
+                    <div className="pt-1.5 border-t border-[var(--border)] flex justify-between font-bold text-sm">
                       <span>Total Invoice Amount:</span>
-                      <span className="text-blue-700">{money(modalTotal)}</span>
+                      <span style={{ color: 'var(--g1)' }}>{money(modalTotal)}</span>
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                  <label className="block text-xs font-bold text-[var(--text)] mb-1">Description (Optional)</label>
                   <textarea
                     rows={3}
                     placeholder="Short summary of technologies covered..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 border border-[var(--border)] rounded-[18px] text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-[var(--border)]">
                   <div>
                     {editingCourse && canDelete && (
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
                         onClick={() => openSecurityDeleteModal(editingCourse)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 text-xs px-3 py-1.5"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#b53c37] hover:bg-rose-500/10 border border-rose-500/20 transition-colors cursor-pointer"
                         disabled={submitting}
                       >
-                        <Trash2 size={14} className="mr-1.5" />
+                        <Trash2 size={14} />
                         Delete Course
-                      </Button>
+                      </button>
                     )}
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      disabled={submitting}
+                      className="px-4 py-2 rounded-full text-xs font-semibold text-[var(--text)] bg-[var(--panel)] border border-[var(--border)] hover:bg-[var(--card)] transition-colors cursor-pointer"
+                    >
                       Cancel
-                    </Button>
-                    <Button type="submit" disabled={submitting}>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-5 py-2 rounded-full text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }}
+                    >
                       {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </form>
@@ -1004,15 +1040,15 @@ export function CoursesManager({
         {/* Security Deletion Modal with Course Name Confirmation */}
         {deleteConfirmOpen && deleteConfirmCourse && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-60 animate-in fade-in duration-150">
-            <div className="bg-white rounded-xl shadow-2xl border border-red-100 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
-              <div className="bg-red-50/70 border-b border-red-100 px-6 py-4 flex items-center justify-between">
+            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-rose-500/20 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
+              <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-rose-500/20 text-[#b53c37] flex items-center justify-center shrink-0">
                     <ShieldAlert size={20} />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900">Delete Course</h3>
-                    <span className="text-[11px] font-bold tracking-wider uppercase text-red-600">
+                    <h3 className="text-base font-bold text-[var(--text)]">Delete Course</h3>
+                    <span className="text-[11px] font-bold tracking-wider uppercase text-[#b53c37]">
                       Destructive & Cascading Action
                     </span>
                   </div>
@@ -1021,7 +1057,7 @@ export function CoursesManager({
                   type="button"
                   onClick={closeSecurityDeleteModal}
                   disabled={deleting}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                  className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
