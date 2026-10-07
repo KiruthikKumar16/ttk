@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, History, Activity } from 'lucide-react'
 import type { AuditEntry } from '@/modules/audit/service'
+import { Tag } from '@/components/ui/Tag'
+import { Card } from '@/components/ui/Card'
+import { PillButton } from '@/components/ui/PillButton'
 
 /* ── Helpers ── */
 
@@ -65,13 +68,15 @@ function ChangeDiff({
 }) {
   if (action === 'insert' && newValues) {
     const fields = Object.entries(newValues).filter(([k]) => !HIDDEN_FIELDS.has(k))
-    if (fields.length === 0) return <span className="audit-no-changes">No field data recorded</span>
+    if (fields.length === 0) return <span className="text-xs text-[var(--mute)]">No field data recorded</span>
     return (
-      <div className="audit-diff-list">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
         {fields.map(([key, val]) => (
-          <div key={key} className="audit-diff-row">
-            <span className="audit-diff-field">{prettyFieldName(key)}</span>
-            <span className="audit-diff-new">{prettyValue(val)}</span>
+          <div key={key} className="p-2.5 rounded-xl bg-[var(--card)] border border-[var(--border)] text-xs">
+            <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block mb-0.5">
+              {prettyFieldName(key)}
+            </span>
+            <span className="font-medium text-[var(--ink)] break-all">{prettyValue(val)}</span>
           </div>
         ))}
       </div>
@@ -80,13 +85,15 @@ function ChangeDiff({
 
   if (action === 'delete' && oldValues) {
     const fields = Object.entries(oldValues).filter(([k]) => !HIDDEN_FIELDS.has(k))
-    if (fields.length === 0) return <span className="audit-no-changes">No field data recorded</span>
+    if (fields.length === 0) return <span className="text-xs text-[var(--mute)]">No field data recorded</span>
     return (
-      <div className="audit-diff-list">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
         {fields.map(([key, val]) => (
-          <div key={key} className="audit-diff-row">
-            <span className="audit-diff-field">{prettyFieldName(key)}</span>
-            <span className="audit-diff-old">{prettyValue(val)}</span>
+          <div key={key} className="p-2.5 rounded-xl bg-[var(--card)] border border-[var(--border)] text-xs">
+            <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block mb-0.5">
+              {prettyFieldName(key)}
+            </span>
+            <span className="font-medium text-[var(--ink)] line-through opacity-70 break-all">{prettyValue(val)}</span>
           </div>
         ))}
       </div>
@@ -97,22 +104,31 @@ function ChangeDiff({
     const changedFields = Object.keys(newValues).filter(
       (key) => !HIDDEN_FIELDS.has(key) && String(oldValues[key]) !== String(newValues[key]),
     )
-    if (changedFields.length === 0) return <span className="audit-no-changes">No visible field changes</span>
+    if (changedFields.length === 0) return <span className="text-xs text-[var(--mute)]">No visible field changes</span>
     return (
-      <div className="audit-diff-list">
+      <div className="space-y-2">
         {changedFields.map((key) => (
-          <div key={key} className="audit-diff-row">
-            <span className="audit-diff-field">{prettyFieldName(key)}</span>
-            <span className="audit-diff-old">{prettyValue(oldValues[key])}</span>
-            <span className="audit-diff-arrow">→</span>
-            <span className="audit-diff-new">{prettyValue(newValues[key])}</span>
+          <div
+            key={key}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[var(--card)] border border-[var(--border)] text-xs"
+          >
+            <span className="font-semibold text-[var(--ink)] min-w-[140px]">{prettyFieldName(key)}</span>
+            <div className="flex items-center gap-2 flex-1 break-all">
+              <span className="px-2 py-0.5 rounded-lg bg-[rgba(181,60,55,0.08)] text-[#b53c37] line-through font-mono text-[11px]">
+                {prettyValue(oldValues[key])}
+              </span>
+              <span className="text-[var(--mute)]">→</span>
+              <span className="px-2 py-0.5 rounded-lg bg-[rgba(27,122,75,0.08)] text-[#1b7a4b] font-medium font-mono text-[11px]">
+                {prettyValue(newValues[key])}
+              </span>
+            </div>
           </div>
         ))}
       </div>
     )
   }
 
-  return <span className="audit-no-changes">No detailed changes available</span>
+  return <span className="text-xs text-[var(--mute)]">No detailed changes available</span>
 }
 
 /* ── Row with expandable detail ── */
@@ -121,43 +137,62 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
   const [expanded, setExpanded] = useState(false)
   const hasDetail = Boolean(entry.oldValues || entry.newValues)
 
+  const actionTagVariant = entry.action === 'insert' ? 'success' : entry.action === 'delete' ? 'danger' : 'accent'
+
   return (
     <>
-      <tr className={hasDetail ? 'clickable-row' : ''} onClick={() => hasDetail && setExpanded((prev) => !prev)}>
-        <td className="audit-timestamp">{formatDateTime(entry.changedAt)}</td>
-        <td>
-          <span className="audit-table-name">{entry.tableName}</span>
+      <tr
+        className={`transition-colors border-b border-[var(--border)] ${
+          hasDetail ? 'cursor-pointer hover:bg-[var(--panel)]' : ''
+        }`}
+        onClick={() => hasDetail && setExpanded((prev) => !prev)}
+      >
+        <td className="py-3.5 px-5 text-xs text-[var(--mute)] font-mono">{formatDateTime(entry.changedAt)}</td>
+        <td className="py-3.5 px-5">
+          <span className="text-xs font-semibold text-[var(--ink)] font-mono bg-[var(--panel)] px-2 py-1 rounded-md border border-[var(--border)]">
+            {entry.tableName}
+          </span>
         </td>
-        <td>
-          <span className={`audit-action audit-action-${entry.action}`}>{actionLabel(entry.action)}</span>
+        <td className="py-3.5 px-5">
+          <Tag variant={actionTagVariant}>{actionLabel(entry.action)}</Tag>
         </td>
-        <td className="mono">{entry.recordId.slice(0, 8)}…</td>
-        <td>
-          <div className="audit-actor">
-            <span className="audit-actor-name">{entry.actor}</span>
-            {entry.actorRole && <span className="audit-actor-role">{entry.actorRole}</span>}
+        <td className="py-3.5 px-5 font-mono text-xs text-[var(--mute)]">{entry.recordId.slice(0, 8)}…</td>
+        <td className="py-3.5 px-5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[var(--ink)]">{entry.actor}</span>
+            {entry.actorRole && (
+              <span className="text-[10px] font-medium text-[var(--mute)] uppercase px-1.5 py-0.5 bg-[var(--panel)] rounded">
+                {entry.actorRole}
+              </span>
+            )}
           </div>
         </td>
-        <td className="audit-expand-cell">
+        <td className="py-3.5 px-5 text-right">
           {hasDetail && (
             <button
               type="button"
-              className="audit-expand-btn"
+              className="p-1 rounded-full text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--panel)] transition-colors"
               aria-label={expanded ? 'Collapse changes' : 'Expand changes'}
               onClick={(e) => {
                 e.stopPropagation()
                 setExpanded((prev) => !prev)
               }}
             >
-              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </button>
           )}
         </td>
       </tr>
       {expanded && (
-        <tr className="audit-detail-row">
-          <td colSpan={6}>
-            <div className="audit-detail-panel">
+        <tr className="bg-[var(--panel)] border-b border-[var(--border)]">
+          <td colSpan={6} className="p-4">
+            <div className="rounded-[18px] bg-[var(--bg)] p-4 border border-[var(--border)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold text-[var(--mute)] uppercase tracking-wider">
+                  Audit Snapshot Details
+                </span>
+                <span className="text-[11px] font-mono text-[var(--mute)]">ID: #{entry.id}</span>
+              </div>
               <ChangeDiff action={entry.action} oldValues={entry.oldValues} newValues={entry.newValues} />
             </div>
           </td>
@@ -306,37 +341,49 @@ export function AuditLogView({
   const hasActiveFilters = Boolean(searchTerm || tableFilter || actionFilter || userFilter)
 
   return (
-    <>
-      <div className="page-heading">
+    <div className="space-y-6">
+      {/* Page Heading & Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="eyebrow">SYSTEM ACTIVITY</p>
-          <h1>Audit Log</h1>
-          <p className="subcopy">Review changes to student, payment, and course records.</p>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Tag variant="accent">SYSTEM ACTIVITY</Tag>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">Audit Log</h1>
+          <p className="text-xs text-[var(--mute)] mt-1">
+            Review changes to student, payment, and course records with granular field audit trail.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Tag variant="neutral">
+            <Activity size={12} className="inline mr-1" />
+            {entries.length} Entries Logged
+          </Tag>
         </div>
       </div>
 
-      <section className="panel">
-        {/* ── Filter bar ── */}
-        <div className="panel-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+      {/* Filter Bar Panel */}
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
             {/* Search */}
             <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] max-w-xs">
               <Search
                 size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
               />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search record ID, table, or action…"
-                className="w-full pl-9 pr-8 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                className="w-full pl-9 pr-8 py-2 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors placeholder:text-[var(--mute)]"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--ink)]"
                   aria-label="Clear search"
                 >
                   <X size={14} />
@@ -361,7 +408,7 @@ export function AuditLogView({
                   if (userFilter) setShowSuggestions(true)
                 }}
                 placeholder="Filter by user name…"
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                className="w-full px-3.5 py-2 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors placeholder:text-[var(--mute)]"
               />
               {userFilter && (
                 <button
@@ -370,7 +417,7 @@ export function AuditLogView({
                     handleClearUserSearch()
                     setShowSuggestions(false)
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--ink)]"
                   aria-label="Clear user search"
                 >
                   <X size={14} />
@@ -378,15 +425,14 @@ export function AuditLogView({
               )}
               {/* Autocomplete Dropdown */}
               {showSuggestions && userSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
                   <ul className="py-1">
                     {userSuggestions.map((user) => (
                       <li key={user.id}>
                         <button
                           type="button"
-                          className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                          className="w-full text-left px-4 py-2 text-xs text-[var(--ink)] hover:bg-[var(--panel)] focus:bg-[var(--panel)] focus:outline-none font-medium"
                           onMouseDown={(e) => {
-                            // Prevent input blur before click registers
                             e.preventDefault()
                           }}
                           onClick={() => {
@@ -413,7 +459,7 @@ export function AuditLogView({
                 id="audit-table-filter"
                 value={tableFilter}
                 onChange={(e) => handleTableChange(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer font-medium"
               >
                 <option value="">All Tables</option>
                 <option value="assessments">Assessments</option>
@@ -441,7 +487,7 @@ export function AuditLogView({
                 id="audit-action-filter"
                 value={actionFilter}
                 onChange={(e) => handleActionChange(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer font-medium"
               >
                 <option value="">All Actions</option>
                 <option value="insert">Created</option>
@@ -452,36 +498,26 @@ export function AuditLogView({
 
             {/* Reset */}
             {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={handleClearAll}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
-                title="Reset all filters"
-              >
-                <X size={13} />
-                <span>Reset</span>
-              </button>
+              <PillButton variant="secondary" size="sm" icon={<X size={13} />} onClick={handleClearAll}>
+                Reset
+              </PillButton>
             )}
           </div>
-
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="text-xs text-slate-500 whitespace-nowrap">
-              Showing <strong className="text-slate-800">{entries.length}</strong> entries
-            </div>
-          </div>
         </div>
+      </Card>
 
-        {/* ── Table ── */}
-        <div className="data-wrap">
-          <table>
-            <thead>
+      {/* Main Table */}
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-[26px] overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th>Timestamp</th>
-                <th>Table</th>
-                <th>Action</th>
-                <th>Record ID</th>
-                <th>Changed By</th>
-                <th style={{ width: 40 }}></th>
+                <th className="py-3 px-5">Timestamp</th>
+                <th className="py-3 px-5">Table</th>
+                <th className="py-3 px-5">Action</th>
+                <th className="py-3 px-5">Record ID</th>
+                <th className="py-3 px-5">Changed By</th>
+                <th className="py-3 px-5 text-right" style={{ width: 48 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -490,7 +526,7 @@ export function AuditLogView({
               ))}
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--muted)' }}>
+                  <td colSpan={6} className="text-center py-12 text-xs text-[var(--mute)]">
                     {hasActiveFilters ? 'No audit records match your current filters.' : 'No audit records found.'}
                   </td>
                 </tr>
@@ -499,9 +535,9 @@ export function AuditLogView({
           </table>
         </div>
 
-        {/* ── Pagination ── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 bg-slate-50/40 text-xs text-slate-500">
-          <div className="table-summary border-0 p-0">Cursor page {page}</div>
+        {/* Pagination Toolbar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-[var(--border)] bg-[var(--panel)] text-xs text-[var(--mute)]">
+          <div className="font-medium">Cursor page {page}</div>
           <div className="flex items-center gap-2">
             <a
               href={
@@ -510,10 +546,10 @@ export function AuditLogView({
                   : buildHref({ page: 1 })
               }
               aria-disabled={!cursor}
-              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-colors ${
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--border)] font-medium transition-colors ${
                 !cursor
-                  ? 'pointer-events-none opacity-40 text-slate-400'
-                  : 'text-slate-700 hover:bg-slate-100 hover:border-slate-300'
+                  ? 'pointer-events-none opacity-40 bg-[var(--panel)] text-[var(--mute)]'
+                  : 'hover:bg-[var(--card)] text-[var(--ink)]'
               }`}
             >
               <ChevronLeft size={14} />
@@ -526,10 +562,10 @@ export function AuditLogView({
                   : '#'
               }
               aria-disabled={!hasNextPage}
-              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-colors ${
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--border)] font-medium transition-colors ${
                 !hasNextPage
-                  ? 'pointer-events-none opacity-40 text-slate-400'
-                  : 'text-slate-700 hover:bg-slate-100 hover:border-slate-300'
+                  ? 'pointer-events-none opacity-40 bg-[var(--panel)] text-[var(--mute)]'
+                  : 'hover:bg-[var(--card)] text-[var(--ink)]'
               }`}
             >
               Next
@@ -537,7 +573,7 @@ export function AuditLogView({
             </a>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   )
 }
