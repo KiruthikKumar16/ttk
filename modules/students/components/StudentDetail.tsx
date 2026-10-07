@@ -700,7 +700,7 @@ export function StudentDetail({
                       attendanceRate >= 80
                         ? 'text-[#1b7a4b]'
                         : attendanceRate >= 70
-                          ? 'text-[#a8710f]'
+                          ? 'text-[#854d0e]'
                           : 'text-[#b53c37]'
                     }`}
                   >
@@ -718,9 +718,9 @@ export function StudentDetail({
                 </div>
 
                 <div className="p-3.5 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60">
-                  <span className="text-[11px] font-semibold text-[#a8710f] uppercase tracking-wider block">Late</span>
-                  <strong className="text-2xl font-extrabold text-[#a8710f] mt-0.5 block">{lateSessions}</strong>
-                  <span className="text-[10px] text-[#a8710f] font-medium">0.5 credit</span>
+                  <span className="text-[11px] font-semibold text-[#854d0e] uppercase tracking-wider block">Late</span>
+                  <strong className="text-2xl font-extrabold text-[#854d0e] mt-0.5 block">{lateSessions}</strong>
+                  <span className="text-[10px] text-[#854d0e] font-medium">0.5 credit</span>
                 </div>
 
                 <div className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60">

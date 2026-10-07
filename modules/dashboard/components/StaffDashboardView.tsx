@@ -264,7 +264,7 @@ export function StaffDashboardView({
                         className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                           isCritical
                             ? 'bg-[var(--danger-bg)] text-[#b53c37] border border-rose-200/50'
-                            : 'bg-[var(--warning-bg)] text-[#a8710f] border border-amber-200/50'
+                            : 'bg-[var(--warning-bg)] text-[#854d0e] border border-amber-200/50'
                         }`}
                       >
                         {s.rate}%

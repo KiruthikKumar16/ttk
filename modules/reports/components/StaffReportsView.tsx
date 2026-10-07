@@ -398,7 +398,7 @@ export function StaffReportsView({
                           r.status === 'Present'
                             ? 'bg-emerald-500/15 text-[#1b7a4b]'
                             : r.status === 'Late'
-                              ? 'bg-amber-500/15 text-[#a8710f]'
+                              ? 'bg-amber-500/15 text-[#854d0e]'
                               : 'bg-rose-500/15 text-[#b53c37]'
                         }`}
                       >
@@ -475,14 +475,14 @@ export function StaffReportsView({
           <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
             <div>
               <h3 className="text-xs font-bold text-[var(--text)] uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle size={15} className="text-[#a8710f]" />
+                <AlertTriangle size={15} className="text-[#854d0e]" />
                 Students with Attendance Below 75%
               </h3>
               <p className="text-[11px] text-[var(--mute)] mt-0.5">
                 Requires faculty review and outreach to prevent student dropouts.
               </p>
             </div>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-[#a8710f]">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-[#854d0e]">
               {lowAttendanceStudents.length} Students At Risk
             </span>
           </div>

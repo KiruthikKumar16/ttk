@@ -37,8 +37,8 @@ export function Tag({ children, variant = 'neutral', size = 'md', icon, classNam
   } else if (variant === 'warning') {
     variantStyle = {
       backgroundColor: 'var(--warning-bg)',
-      color: '#a8710f',
-      borderColor: 'rgba(168, 113, 15, 0.2)',
+      color: '#854d0e',
+      borderColor: 'rgba(133, 77, 14, 0.25)',
     }
     variantClass = 'border'
   } else if (variant === 'danger') {

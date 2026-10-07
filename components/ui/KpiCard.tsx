@@ -118,7 +118,7 @@ export function KpiCard({
               badge.variant === 'success'
                 ? 'bg-[var(--success-bg)] text-[#1b7a4b]'
                 : badge.variant === 'warning'
-                  ? 'bg-[var(--warning-bg)] text-[#a8710f]'
+                  ? 'bg-[var(--warning-bg)] text-[#854d0e]'
                   : badge.variant === 'danger'
                     ? 'bg-[var(--danger-bg)] text-[#b53c37]'
                     : badge.variant === 'accent'

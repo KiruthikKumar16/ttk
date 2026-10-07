@@ -162,7 +162,7 @@ export default function LoginPage() {
           </div>
 
           {isPendingApproval && (
-            <div className="p-4 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60 text-xs text-[#a8710f] space-y-2">
+            <div className="p-4 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60 text-xs text-[#854d0e] space-y-2">
               <div className="font-bold flex items-center gap-1.5">
                 <Clock size={15} /> Account Awaiting Approval
               </div>

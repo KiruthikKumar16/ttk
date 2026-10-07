@@ -274,7 +274,7 @@ export function DashboardMetrics({
       {pendingUsers.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 p-4 sm:p-5 rounded-[22px] border border-amber-200/60 bg-[var(--warning-bg)] shadow-[var(--shadow-xs)]">
           <div className="flex items-center gap-3.5">
-            <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/15 text-[#a8710f] flex items-center justify-center">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/15 text-[#854d0e] flex items-center justify-center">
               <UserCheck size={20} />
             </div>
             <div>
@@ -282,7 +282,7 @@ export function DashboardMetrics({
                 <span className="font-bold text-sm text-[var(--text-heading)]">
                   {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-[#a8710f]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-[#854d0e]">
                   Action Required
                 </span>
               </div>
@@ -352,7 +352,7 @@ export function DashboardMetrics({
                 className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
                 style={{
                   background: activeView === 'staff' ? 'rgba(255,255,255,0.25)' : 'var(--warning-bg)',
-                  color: activeView === 'staff' ? '#fff' : '#a8710f',
+                  color: activeView === 'staff' ? '#fff' : '#854d0e',
                 }}
               >
                 {academicData.lowAttendanceStudents.length}

@@ -79,7 +79,7 @@ export function GstSettingsPage({
 
       {!settings && (
         <p
-          className="p-3.5 rounded-2xl bg-[rgba(168,113,15,0.08)] border border-[rgba(168,113,15,0.25)] text-xs font-semibold text-[#a8710f]"
+          className="p-3.5 rounded-2xl bg-[rgba(168,113,15,0.08)] border border-[rgba(168,113,15,0.25)] text-xs font-semibold text-[#854d0e]"
           role="status"
         >
           GST settings have not been configured yet. Save this form to create them.
@@ -170,7 +170,7 @@ export function GstSettingsPage({
               />
             </div>
             {!gstin.trim() && (
-              <p className="mt-1.5 text-xs font-semibold text-[#a8710f]" role="status">
+              <p className="mt-1.5 text-xs font-semibold text-[#854d0e]" role="status">
                 GSTIN not configured
               </p>
             )}

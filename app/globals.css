@@ -9,7 +9,7 @@
    Light by default · Soft grey page · White rounded shell (36px)
    Light-grey panels (26px) · White cards (22px) · Pill controls (9999px)
    Accent system: --g1 ... --g5, --g1b, --g2b (default #1f7d52)
-   Fixed semantic colors: success #1b7a4b, warning #a8710f, danger #b53c37
+   Fixed semantic colors: success #1b7a4b, warning #854d0e, danger #b53c37
    Typography: Plus Jakarta Sans (400/500/600/700/800)
    ═══════════════════════════════════════════════════════ */
 
@@ -57,8 +57,8 @@
   /* Semantic Fixed Colors */
   --success: #1b7a4b;
   --success-bg: #eaf6f0;
-  --warning: #a8710f;
-  --warning-bg: #fdf6ea;
+  --warning: #854d0e;
+  --warning-bg: #fef3c7;
   --danger: #b53c37;
   --danger-bg: #faeeee;
   --info: #0284c7;

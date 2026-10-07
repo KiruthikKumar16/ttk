@@ -105,7 +105,7 @@ export function AdminReportsClient({
             {lowAttendanceCount > 0 && (
               <span
                 className={`ml-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeView === 'staff' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-[#a8710f]'
+                  activeView === 'staff' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-[#854d0e]'
                 }`}
               >
                 {lowAttendanceCount}

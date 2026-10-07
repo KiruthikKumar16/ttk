@@ -140,7 +140,7 @@ export function AttendanceMarking({
         case 'Absent':
           return 'bg-[#b53c37] text-white border-[#b53c37] shadow-sm font-bold ring-2 ring-rose-500/30'
         case 'Late':
-          return 'bg-[#a8710f] text-white border-[#a8710f] shadow-sm font-bold ring-2 ring-amber-500/30'
+          return 'bg-[#854d0e] text-white border-[#854d0e] shadow-sm font-bold ring-2 ring-amber-500/30'
         case 'Excused':
           return 'bg-[#0284c7] text-white border-[#0284c7] shadow-sm font-bold ring-2 ring-sky-500/30'
       }
@@ -151,7 +151,7 @@ export function AttendanceMarking({
       case 'Absent':
         return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#b53c37] hover:bg-[var(--danger-bg)] hover:text-[#b53c37] font-medium'
       case 'Late':
-        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#a8710f] hover:bg-[var(--warning-bg)] hover:text-[#a8710f] font-medium'
+        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#854d0e] hover:bg-[var(--warning-bg)] hover:text-[#854d0e] font-medium'
       case 'Excused':
         return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#0284c7] hover:bg-sky-50 hover:text-[#0284c7] font-medium'
     }

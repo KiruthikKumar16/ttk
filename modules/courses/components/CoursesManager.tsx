@@ -551,7 +551,7 @@ export function CoursesManager({
                               GST Inclusive
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#a8710f]">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#854d0e]">
                               GST Exclusive
                             </span>
                           )}
@@ -634,7 +634,7 @@ export function CoursesManager({
                               GST Incl.
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#a8710f] shrink-0">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#854d0e] shrink-0">
                               GST Excl.
                             </span>
                           )}
@@ -958,7 +958,7 @@ export function CoursesManager({
                         Fee Breakdown
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            gstInclusive ? 'bg-emerald-500/15 text-[#1b7a4b]' : 'bg-amber-500/15 text-[#a8710f]'
+                            gstInclusive ? 'bg-emerald-500/15 text-[#1b7a4b]' : 'bg-amber-500/15 text-[#854d0e]'
                           }`}
                         >
                           {gstInclusive ? 'GST Inclusive' : 'GST Exclusive'}

@@ -556,18 +556,18 @@ export function UserRoles({
             onClick={() => setActiveTab('pending')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'pending'
-                ? 'bg-[#a8710f] text-white shadow-xs'
+                ? 'bg-[#854d0e] text-white shadow-xs'
                 : counts.pending > 0
-                  ? 'bg-[rgba(168,113,15,0.08)] text-[#a8710f] border border-[rgba(168,113,15,0.25)] hover:bg-[rgba(168,113,15,0.15)]'
+                  ? 'bg-[rgba(133,77,14,0.08)] text-[#854d0e] border border-[rgba(133,77,14,0.25)] hover:bg-[rgba(133,77,14,0.15)]'
                   : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
-            <Clock size={13} className={counts.pending > 0 && activeTab !== 'pending' ? 'text-[#a8710f]' : ''} />
+            <Clock size={13} className={counts.pending > 0 && activeTab !== 'pending' ? 'text-[#854d0e]' : ''} />
             Pending Approval
             {counts.pending > 0 && (
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeTab === 'pending' ? 'bg-white/20 text-white' : 'bg-[#a8710f] text-white animate-pulse'
+                  activeTab === 'pending' ? 'bg-white/20 text-white' : 'bg-[#854d0e] text-white animate-pulse'
                 }`}
               >
                 {counts.pending}
@@ -884,7 +884,7 @@ export function UserRoles({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`}
+                  className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-[#854d0e] animate-pulse' : 'bg-[#1b7a4b]'}`}
                 />
                 <span className="text-xs font-semibold text-[var(--ink)]">
                   {hasChanges

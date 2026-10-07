@@ -472,7 +472,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
           {/* Full-width Action Bar */}
           <Card className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`} />
+              <div className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#854d0e] animate-pulse' : 'bg-[#1b7a4b]'}`} />
               <span className="text-xs font-medium text-[var(--mute)]">
                 {isDirty ? 'Unsaved changes pending' : 'All brand settings saved'}
               </span>
