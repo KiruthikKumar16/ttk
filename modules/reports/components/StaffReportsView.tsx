@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import type { Student, Course, CourseCategory } from '@/lib/types'
 import type { AcademicReportData } from '@/modules/reports/service'
+import { KpiCard } from '@/components/ui/KpiCard'
 
 function parseDate(dateString?: string): Date {
   if (!dateString) return new Date(0)
@@ -173,30 +174,33 @@ export function StaffReportsView({
   return (
     <div className="space-y-6">
       {/* Top Header & Date Filter Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reports</h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
+            <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text)]">Reports</h1>
+            <span
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
+              style={{ background: 'var(--panel)', color: 'var(--g1)' }}
+            >
               Staff Academic Reports
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-[var(--mute)] mt-1">
             Audit classroom attendance records, student evaluations, test pass rates, and learner retention.
           </p>
         </div>
 
         {/* Date Controls */}
-        <div className="flex flex-wrap items-center gap-2.5 p-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
-            <Calendar size={14} className="text-slate-400" />
+        <div className="flex flex-wrap items-center gap-2.5 p-1.5 bg-[var(--card)] rounded-full border border-[var(--border)] shadow-2xs">
+          <div className="flex items-center gap-1.5 text-xs text-[var(--mute)] px-2">
+            <Calendar size={14} className="text-[var(--mute)]" />
             <input
               id="staff-rep-start-date"
               aria-label="Start date"
               type="date"
               value={startDateStr}
               onChange={(e) => setStartDateStr(e.target.value)}
-              className="text-xs border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs border border-[var(--border)] rounded-full px-2.5 py-1 bg-[var(--card)] text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
             />
             <span>to</span>
             <input
@@ -205,7 +209,7 @@ export function StaffReportsView({
               type="date"
               value={endDateStr}
               onChange={(e) => setEndDateStr(e.target.value)}
-              className="text-xs border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs border border-[var(--border)] rounded-full px-2.5 py-1 bg-[var(--card)] text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
             />
           </div>
 
@@ -218,7 +222,7 @@ export function StaffReportsView({
                 setStartDateStr(past.toISOString().slice(0, 10))
                 setEndDateStr(now.toISOString().slice(0, 10))
               }}
-              className="px-2 py-1 text-[11px] font-medium rounded hover:bg-slate-100 text-slate-700"
+              className="px-2.5 py-1 text-xs font-bold rounded-full bg-[var(--panel)] hover:bg-[var(--border)] text-[var(--text)] transition-colors"
             >
               7d
             </button>
@@ -230,7 +234,7 @@ export function StaffReportsView({
                 setStartDateStr(past.toISOString().slice(0, 10))
                 setEndDateStr(now.toISOString().slice(0, 10))
               }}
-              className="px-2 py-1 text-[11px] font-medium rounded hover:bg-slate-100 text-slate-700"
+              className="px-2.5 py-1 text-xs font-bold rounded-full bg-[var(--panel)] hover:bg-[var(--border)] text-[var(--text)] transition-colors"
             >
               30d
             </button>
@@ -240,14 +244,14 @@ export function StaffReportsView({
                 setStartDateStr(`${now.getFullYear()}-01-01`)
                 setEndDateStr(now.toISOString().slice(0, 10))
               }}
-              className="px-2 py-1 text-[11px] font-medium rounded hover:bg-slate-100 text-slate-700"
+              className="px-2.5 py-1 text-xs font-bold rounded-full bg-[var(--panel)] hover:bg-[var(--border)] text-[var(--text)] transition-colors"
             >
               YTD
             </button>
           </div>
           <Link
             href={`/api/reports/export?startDate=${startDateStr}&endDate=${endDateStr}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] hover:bg-[var(--card)] transition-colors shadow-2xs"
           >
             <Download size={13} />
             Download CSV
@@ -257,87 +261,81 @@ export function StaffReportsView({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <span>Period Attendance</span>
-            <Calendar size={16} className="text-emerald-600" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{attendanceStats.rate}%</span>
-            <span className="text-xs text-slate-500">present rate</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {attendanceStats.present} present / {attendanceStats.total} logged sessions
-          </p>
-        </div>
+        <KpiCard
+          title="Period Attendance"
+          value={`${attendanceStats.rate}%`}
+          subtitle={`${attendanceStats.present} present / ${attendanceStats.total} logged sessions`}
+          icon={Calendar}
+          variant="hero"
+        />
 
-        <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <span>Active Learners</span>
-            <Users size={16} className="text-blue-600" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{students.length}</span>
-            <span className="text-xs text-slate-500">enrolled total</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">{students.length} active in course batches</p>
-        </div>
+        <KpiCard
+          title="Active Learners"
+          value={students.length}
+          subtitle={`${students.length} active in course batches`}
+          icon={Users}
+        />
 
-        <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <span>Assessments</span>
-            <ClipboardCheck size={16} className="text-indigo-600" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{assessmentStats.totalTests}</span>
-            <span className="text-xs text-slate-500">conducted</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">{assessmentStats.totalSubmissions} submissions evaluated</p>
-        </div>
+        <KpiCard
+          title="Assessments"
+          value={assessmentStats.totalTests}
+          subtitle={`${assessmentStats.totalSubmissions} submissions evaluated`}
+          icon={ClipboardCheck}
+        />
 
-        <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <span>Average Score</span>
-            <Award size={16} className="text-amber-600" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{assessmentStats.avgScore}%</span>
-            <span className="text-xs text-slate-500">cohort average</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">{assessmentStats.passRate}% student pass rate</p>
-        </div>
+        <KpiCard
+          title="Average Score"
+          value={`${assessmentStats.avgScore}%`}
+          subtitle={`${assessmentStats.passRate}% student pass rate`}
+          icon={Award}
+        />
       </div>
 
       {/* Tabs & Search / Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[var(--border)] pb-3">
+        <div className="inline-flex items-center p-1 rounded-full bg-[var(--panel)] border border-[var(--border)] gap-1">
           <button
             onClick={() => setActiveTab('attendance')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
               activeTab === 'attendance'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'text-white shadow-xs'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={
+              activeTab === 'attendance'
+                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                : {}
+            }
           >
             Attendance Logs ({filteredAttendance.length})
           </button>
           <button
             onClick={() => setActiveTab('assessments')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
               activeTab === 'assessments'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'text-white shadow-xs'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={
+              activeTab === 'assessments'
+                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                : {}
+            }
           >
             Assessments & Grading ({filteredAssessments.length})
           </button>
           <button
             onClick={() => setActiveTab('students')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
               activeTab === 'students'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'text-white shadow-xs'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
+            style={
+              activeTab === 'students'
+                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
+                : {}
+            }
           >
             Attendance Watchlist ({lowAttendanceStudents.length})
           </button>
@@ -346,84 +344,80 @@ export function StaffReportsView({
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
             <input
               type="text"
               aria-label="Search student or test"
               placeholder="Search student or test..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-xs pl-8 pr-2.5 py-1.5 border border-slate-200 rounded-lg w-44 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+              className="text-xs pl-8 pr-3 py-1.5 border border-[var(--border)] rounded-full w-48 focus:outline-none focus:ring-1 focus:ring-[var(--g1)] bg-[var(--card)] text-[var(--text)] placeholder-[var(--mute)]"
             />
           </div>
 
           {/* Export Button */}
           {activeTab === 'attendance' && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={handleExportAttendanceCSV}
-              className="text-xs font-medium border-slate-300 gap-1.5"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[var(--panel)] transition-colors cursor-pointer"
             >
               <Download size={13} />
               Export CSV
-            </Button>
+            </button>
           )}
 
           {activeTab === 'assessments' && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={handleExportAssessmentsCSV}
-              className="text-xs font-medium border-slate-300 gap-1.5"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[var(--panel)] transition-colors cursor-pointer"
             >
               <Download size={13} />
               Export CSV
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Tab 1: Attendance Logs Table */}
       {activeTab === 'attendance' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className="bg-slate-50/80">
+        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+          <table className="min-w-full divide-y divide-[var(--border)] text-xs">
+            <thead className="bg-[var(--panel)]">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Date</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Student</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Course</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Date</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Student</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Course</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border)]">
               {filteredAttendance.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--mute)]">
                     No attendance records logged in this date range.
                   </td>
                 </tr>
               ) : (
                 filteredAttendance.slice(0, 50).map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-2.5 font-mono text-slate-600">
+                  <tr key={r.id} className="hover:bg-[var(--panel)] transition-colors">
+                    <td className="px-4 py-2.5 font-mono text-[var(--mute)]">
                       {new Date(r.sessionDate).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-4 py-2.5 font-medium text-slate-900">
+                    <td className="px-4 py-2.5 font-bold text-[var(--text)]">
                       <div className="flex items-center gap-1.5">
                         <span>{r.studentName}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">#{r.studentRegisterId}</span>
+                        <span className="text-[10px] text-[var(--mute)] font-mono">#{r.studentRegisterId}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-slate-600">{r.courseName}</td>
+                    <td className="px-4 py-2.5 text-[var(--mute)]">{r.courseName}</td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                           r.status === 'Present'
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-emerald-500/15 text-[#1b7a4b]'
                             : r.status === 'Late'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-rose-100 text-rose-800'
+                              ? 'bg-amber-500/15 text-[#a8710f]'
+                              : 'bg-rose-500/15 text-[#b53c37]'
                         }`}
                       >
                         {r.status}
@@ -435,7 +429,7 @@ export function StaffReportsView({
             </tbody>
           </table>
           {filteredAttendance.length > 50 && (
-            <div className="p-3 text-center text-xs text-slate-500 bg-slate-50 border-t border-slate-100">
+            <div className="p-3 text-center text-xs text-[var(--mute)] bg-[var(--panel)] border-t border-[var(--border)]">
               Showing first 50 of {filteredAttendance.length} records. Click &quot;Export CSV&quot; for the complete
               file.
             </div>
@@ -445,42 +439,42 @@ export function StaffReportsView({
 
       {/* Tab 2: Assessments Table */}
       {activeTab === 'assessments' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className="bg-slate-50/80">
+        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+          <table className="min-w-full divide-y divide-[var(--border)] text-xs">
+            <thead className="bg-[var(--panel)]">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Assessment</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Course</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Date</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Max Score</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Avg Score</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Submissions</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Pass / Fail</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Assessment</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Course</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Date</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Max Score</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Avg Score</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Submissions</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Pass / Fail</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border)]">
               {filteredAssessments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-[var(--mute)]">
                     No assessments recorded in this date range.
                   </td>
                 </tr>
               ) : (
                 filteredAssessments.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-2.5 font-medium text-slate-900">{a.title}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{a.courseName}</td>
-                    <td className="px-4 py-2.5 font-mono text-slate-600">
+                  <tr key={a.id} className="hover:bg-[var(--panel)] transition-colors">
+                    <td className="px-4 py-2.5 font-bold text-[var(--text)]">{a.title}</td>
+                    <td className="px-4 py-2.5 text-[var(--mute)]">{a.courseName}</td>
+                    <td className="px-4 py-2.5 font-mono text-[var(--mute)]">
                       {new Date(a.assessmentDate).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-4 py-2.5 font-medium text-slate-700">{a.maxScore}</td>
-                    <td className="px-4 py-2.5 font-semibold text-indigo-700">{a.avgScore}%</td>
-                    <td className="px-4 py-2.5 text-slate-600">{a.resultsCount} graded</td>
+                    <td className="px-4 py-2.5 font-medium text-[var(--text)]">{a.maxScore}</td>
+                    <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--g1)' }}>{a.avgScore}%</td>
+                    <td className="px-4 py-2.5 text-[var(--mute)]">{a.resultsCount} graded</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-emerald-700 font-semibold">{a.passCount} pass</span>
-                        <span className="text-slate-300">/</span>
-                        <span className="text-rose-700 font-medium">{a.failCount} fail</span>
+                        <span className="text-[#1b7a4b] font-bold">{a.passCount} pass</span>
+                        <span className="text-[var(--mute)]">/</span>
+                        <span className="text-[#b53c37] font-semibold">{a.failCount} fail</span>
                       </div>
                     </td>
                   </tr>
@@ -493,50 +487,50 @@ export function StaffReportsView({
 
       {/* Tab 3: Attendance Watchlist (< 75%) */}
       {activeTab === 'students' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+          <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle size={15} className="text-amber-600" />
+              <h3 className="text-xs font-bold text-[var(--text)] uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle size={15} className="text-[#a8710f]" />
                 Students with Attendance Below 75%
               </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-[var(--mute)] mt-0.5">
                 Requires faculty review and outreach to prevent student dropouts.
               </p>
             </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-[#a8710f]">
               {lowAttendanceStudents.length} Students At Risk
             </span>
           </div>
 
-          <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className="bg-slate-50/80">
+          <table className="min-w-full divide-y divide-[var(--border)] text-xs">
+            <thead className="bg-[var(--panel)]">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Student Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Register ID</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Course</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Sessions Attended</th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-600">Attendance Rate</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Student Name</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Register ID</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Course</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Sessions Attended</th>
+                <th className="px-4 py-3 text-left font-bold text-[var(--mute)]">Attendance Rate</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border)]">
               {lowAttendanceStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-emerald-700 font-medium">
+                  <td colSpan={5} className="px-4 py-8 text-center text-[#1b7a4b] font-bold">
                     All students meet or exceed the 75% attendance threshold.
                   </td>
                 </tr>
               ) : (
                 lowAttendanceStudents.map((s) => (
-                  <tr key={s.registerId} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-2.5 font-medium text-slate-900">{s.name}</td>
-                    <td className="px-4 py-2.5 font-mono text-slate-600">#{s.registerId}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{s.course}</td>
-                    <td className="px-4 py-2.5 text-slate-600">
+                  <tr key={s.registerId} className="hover:bg-[var(--panel)] transition-colors">
+                    <td className="px-4 py-2.5 font-bold text-[var(--text)]">{s.name}</td>
+                    <td className="px-4 py-2.5 font-mono text-[var(--mute)]">#{s.registerId}</td>
+                    <td className="px-4 py-2.5 text-[var(--mute)]">{s.course}</td>
+                    <td className="px-4 py-2.5 text-[var(--mute)]">
                       {s.present} of {s.total} sessions
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">{s.rate}%</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-[#b53c37]">{s.rate}%</span>
                     </td>
                   </tr>
                 ))

@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import type { Payment, Student, Course, CourseCategory } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { PaymentsTable } from '@/components/shared/PaymentsTable'
+import { KpiCard } from '@/components/ui/KpiCard'
 
 // Robust date parser supporting '15 Sep 2026', '2026-09-18', '14-Sep-2026', etc.
 function parseDate(dateString?: string): Date {
@@ -294,139 +295,118 @@ export function ReportsView({
 
   return (
     <>
-      <div className="page-heading">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[var(--border)] mb-6">
         <div>
-          <p className="eyebrow">OPERATIONS REPORTING</p>
-          <h1>Reports</h1>
-          <p className="subcopy">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">OPERATIONS REPORTING</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text)]">Reports</h1>
+          <p className="text-xs text-[var(--mute)] mt-1">
             Executive analytics — financial velocity, cohort enrollment, marketing channels, and collection insights.
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap shrink-0">
-          <div className="date-filter-group">
-            <label htmlFor="rep-start-date" className="date-filter-label">
+          <div className="flex items-center gap-2 p-1.5 rounded-full bg-[var(--card)] border border-[var(--border)] shadow-2xs">
+            <label htmlFor="rep-start-date" className="text-xs font-bold text-[var(--mute)] pl-2">
               From
             </label>
-            <div className="date-input-wrap">
-              <Calendar size={15} />
+            <div className="flex items-center gap-1.5 text-xs text-[var(--mute)]">
+              <Calendar size={14} className="text-[var(--mute)]" />
               <input
                 id="rep-start-date"
                 aria-label="Start date"
                 type="date"
                 value={startDateStr}
                 onChange={(e) => setStartDateStr(e.target.value)}
+                className="text-xs border border-[var(--border)] rounded-full px-2.5 py-1 bg-[var(--panel)] text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
               />
             </div>
-            <label htmlFor="rep-end-date" className="date-filter-label">
+            <label htmlFor="rep-end-date" className="text-xs font-bold text-[var(--mute)]">
               To
             </label>
-            <div className="date-input-wrap">
-              <Calendar size={15} />
+            <div className="flex items-center gap-1.5 text-xs text-[var(--mute)] pr-1">
+              <Calendar size={14} className="text-[var(--mute)]" />
               <input
                 id="rep-end-date"
                 aria-label="End date"
                 type="date"
                 value={endDateStr}
                 onChange={(e) => setEndDateStr(e.target.value)}
+                className="text-xs border border-[var(--border)] rounded-full px-2.5 py-1 bg-[var(--panel)] text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
               />
             </div>
           </div>
-          <Button variant="default" size="default" onClick={download} className="shrink-0">
-            <FileText size={16} />
-            <span className="ml-2">Download CSV</span>
-          </Button>
+          <button
+            onClick={download}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-90 shrink-0 cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }}
+          >
+            <FileText size={15} />
+            <span>Download CSV</span>
+          </button>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════
           4x2 BALANCED KPI METRICS GRID (8 Comprehensive Metrics)
           ═══════════════════════════════════════════════════════ */}
-      <div className="reports-stats-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Row 1: Financial Performance */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Revenue collected</span>
-            <div className="stat-icon icon-green">
-              <CircleDollarSign size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{money(revenue)}</div>
-          <p className="stat-sub">In selected period</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Total course fees</span>
-            <div className="stat-icon icon-navy">
-              <Wallet size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{money(totalFees)}</div>
-          <p className="stat-sub">Enrolled cohort value</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Outstanding balance</span>
-            <div className="stat-icon icon-amber">
-              <ArrowDownRight size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{money(outstanding)}</div>
-          <p className="stat-sub">Pending collection</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Collection efficiency</span>
-            <div className="stat-icon icon-blue">
-              <TrendingUp size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{collectionRate}%</div>
-          <p className="stat-sub">
-            {money(totalPaid)} of {money(totalFees)}
-          </p>
-        </div>
+        <KpiCard
+          title="Revenue collected"
+          value={money(revenue)}
+          subtitle="In selected period"
+          icon={CircleDollarSign}
+          variant="hero"
+        />
+
+        <KpiCard
+          title="Total course fees"
+          value={money(totalFees)}
+          subtitle="Enrolled cohort value"
+          icon={Wallet}
+        />
+
+        <KpiCard
+          title="Outstanding balance"
+          value={money(outstanding)}
+          subtitle="Pending collection"
+          icon={ArrowDownRight}
+        />
+
+        <KpiCard
+          title="Collection efficiency"
+          value={`${collectionRate}%`}
+          subtitle={`${money(totalPaid)} of ${money(totalFees)}`}
+          icon={TrendingUp}
+        />
 
         {/* Row 2: Operational Health & Demographics */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Total students</span>
-            <div className="stat-icon icon-blue">
-              <Users size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{students.length}</div>
-          <p className="stat-sub">Active enrollments</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Certificate eligible</span>
-            <div className="stat-icon icon-green">
-              <ShieldCheck size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{fullyPaid}</div>
-          <p className="stat-sub">100% fees cleared</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Pending dues</span>
-            <div className="stat-icon icon-amber">
-              <Clock size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{pending}</div>
-          <p className="stat-sub">Students with balance</p>
-        </div>
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Average course fee</span>
-            <div className="stat-icon icon-navy">
-              <GraduationCap size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{money(avgFee)}</div>
-          <p className="stat-sub">Per enrolled student</p>
-        </div>
+        <KpiCard
+          title="Total students"
+          value={students.length}
+          subtitle="Active enrollments"
+          icon={Users}
+        />
+
+        <KpiCard
+          title="Certificate eligible"
+          value={fullyPaid}
+          subtitle="100% fees cleared"
+          icon={ShieldCheck}
+        />
+
+        <KpiCard
+          title="Pending dues"
+          value={pending}
+          subtitle="Students with balance"
+          icon={Clock}
+        />
+
+        <KpiCard
+          title="Average course fee"
+          value={money(avgFee)}
+          subtitle="Per enrolled student"
+          icon={GraduationCap}
+        />
       </div>
 
       {/* Curriculum Category Performance Tiers */}

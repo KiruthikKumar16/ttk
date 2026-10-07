@@ -10,10 +10,20 @@ export interface KpiCardProps {
     text: string
     variant?: 'success' | 'warning' | 'danger' | 'accent' | 'neutral'
   }
-  icon?: React.ReactNode
+  icon?: React.ReactNode | React.ElementType
   variant?: 'normal' | 'hero'
   className?: string
   onClick?: () => void
+}
+
+function renderKpiIcon(icon: React.ReactNode | React.ElementType, size = 20) {
+  if (!icon) return null
+  if (React.isValidElement(icon)) return icon
+  if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && 'render' in icon)) {
+    const IconComp = icon as React.ElementType
+    return <IconComp size={size} />
+  }
+  return icon as React.ReactNode
 }
 
 export function KpiCard({
@@ -56,7 +66,7 @@ export function KpiCard({
           </div>
           {icon && (
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md">
-              {icon}
+              {renderKpiIcon(icon, 20)}
             </div>
           )}
         </div>
@@ -99,7 +109,7 @@ export function KpiCard({
               color: 'var(--g1)',
             }}
           >
-            {icon}
+            {renderKpiIcon(icon, 18)}
           </div>
         )}
       </div>
