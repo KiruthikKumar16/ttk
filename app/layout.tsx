@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next'
 import { connection } from 'next/server'
 import { headers } from 'next/headers'
 import { brand, brandCssVariables } from '@/lib/brand'
+import { ThemeProvider } from '@/lib/ThemeContext'
 import './globals.css'
 import { QueryProvider } from '@/lib/query/QueryProvider'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -62,15 +63,23 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     .join(';')
 
   return (
-    <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${inter.variable}`} data-theme="light">
       <head>
         <style nonce={nonce}>{`:root{${brandVariables}}`}</style>
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('thoorigai_theme')||'light';document.documentElement.setAttribute('data-theme',t);var a=localStorage.getItem('thoorigai_accent');if(a){document.documentElement.style.setProperty('--g1',a);}}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="antialiased">
-        <QueryProvider>
-          {children}
-          <LoadingSpinner />
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            {children}
+            <LoadingSpinner />
+          </QueryProvider>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

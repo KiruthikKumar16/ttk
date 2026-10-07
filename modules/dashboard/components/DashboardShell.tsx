@@ -7,6 +7,8 @@ import type { Role } from '@/lib/types'
 import { Sidebar } from '@/components/Sidebar'
 import { Topbar } from '@/components/Topbar'
 
+import { SettingsDrawer } from '@/components/ui/SettingsDrawer'
+
 export function DashboardShell({ role, children }: { role: Role; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -37,63 +39,61 @@ export function DashboardShell({ role, children }: { role: Role; children: React
   }
 
   return (
-    <div className="app-shell">
-      {/* Desktop / Large Screen Sidebar */}
-      <Sidebar role={role} collapsed={collapsed} />
+    <div className="app-shell p-0 md:p-3 lg:p-4 bg-[var(--bg)] min-h-screen box-border flex">
+      {/* 36px Rounded Outer Shell */}
+      <div className="app-shell-inner flex w-full min-h-full md:min-h-[calc(100vh-2rem)] rounded-none md:rounded-[36px] bg-[var(--shell)] border border-[var(--border)] overflow-hidden shadow-xs">
+        {/* Desktop / Large Screen Sidebar */}
+        <Sidebar role={role} collapsed={collapsed} />
 
-      {/* Mobile / Tablet / Foldable Slide-Over Drawer */}
-      {mobileOpen && (
-        <div
-          className="mobile-drawer fixed inset-0 z-50 lg:hidden flex"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation Menu"
-        >
-          {/* Backdrop */}
+        {/* Mobile / Tablet / Foldable Slide-Over Drawer */}
+        {mobileOpen && (
           <div
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity animate-in fade-in"
-            onClick={() => setMobileOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Drawer Container */}
-          <div
-            className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-left duration-200"
-            style={{ background: 'linear-gradient(180deg, #0c1222 0%, #0f172a 30%, #0c1222 100%)' }}
+            className="mobile-drawer fixed inset-0 z-50 lg:hidden flex"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation Menu"
           >
-            {/* Top Close Button for Mobile Accessibility */}
+            {/* Backdrop */}
             <div
-              className="flex items-center justify-between px-4 pt-3 pb-2"
-              style={{ borderBottom: '1px solid rgba(99, 102, 241, 0.1)' }}
-            >
-              <span
-                className="text-[10px] font-bold uppercase tracking-widest"
-                style={{ color: '#64748b', letterSpacing: '1.5px' }}
-              >
-                Navigation
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                className="p-1.5 rounded-lg transition-colors"
-                style={{ color: '#64748b' }}
-                aria-label="Close navigation"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              <Sidebar role={role} collapsed={false} onNavigate={() => setMobileOpen(false)} />
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in"
+              onClick={() => setMobileOpen(false)}
+              aria-hidden="true"
+            />
+
+            {/* Drawer Container */}
+            <div className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-left duration-200 bg-[var(--shell)] border-r border-[var(--border)]">
+              {/* Top Close Button for Mobile Accessibility */}
+              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[var(--border)]">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--mute)]">
+                  Navigation
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="p-1.5 rounded-lg text-[var(--mute)] hover:text-[var(--text)] transition-colors cursor-pointer"
+                  aria-label="Close navigation"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                <Sidebar role={role} collapsed={false} onNavigate={() => setMobileOpen(false)} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main Content Area */}
-      <div className="main-area">
-        <Topbar onMenu={handleToggleMenu} role={role} />
-        <main className="content">{children}</main>
+        {/* Main Content Area */}
+        <div className="main-area flex-1 flex flex-col min-w-0 bg-[var(--shell)]">
+          <Topbar onMenu={handleToggleMenu} role={role} />
+          <main className="content flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[var(--panel)] m-2 sm:m-3 rounded-[26px] border border-[var(--border)]">
+            {children}
+          </main>
+        </div>
       </div>
+
+      {/* Global Settings Drawer (Theme + Accent) */}
+      <SettingsDrawer />
     </div>
   )
 }

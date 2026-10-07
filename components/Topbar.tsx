@@ -15,10 +15,12 @@ import {
   UserRound,
   Users,
   X,
+  Palette,
 } from 'lucide-react'
 import type { Payment, Role, Student } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { NotificationPanel } from '@/components/NotificationPanel'
+import { useTheme } from '@/lib/ThemeContext'
 
 type BreadcrumbSegment = {
   label: string
@@ -30,6 +32,7 @@ type BreadcrumbSegment = {
 export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { openSettings } = useTheme()
 
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -423,21 +426,19 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
 
         <NotificationPanel role={role} />
 
+        <button
+          type="button"
+          onClick={openSettings}
+          title="Theme & Appearance"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--mute)] hover:text-[var(--g1)] hover:bg-[var(--hover-bg)] transition-all cursor-pointer"
+        >
+          <Palette size={14} />
+        </button>
+
         <Link
           href="/settings/user"
           title="User settings"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(226, 232, 240, 0.6)',
-            background: 'rgba(255, 255, 255, 0.5)',
-            color: '#64748b',
-            transition: 'all 0.15s',
-          }}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--mute)] hover:text-[var(--text)] hover:bg-[var(--hover-bg)] transition-all"
         >
           <UserCog size={14} />
         </Link>
@@ -446,19 +447,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
           type="button"
           onClick={() => void handleSignOut()}
           title="Sign out"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(226, 232, 240, 0.6)',
-            background: 'rgba(255, 255, 255, 0.5)',
-            color: '#64748b',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--mute)] hover:text-rose-500 hover:bg-rose-50/50 transition-all cursor-pointer"
         >
           <LogOut size={14} />
         </button>

@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { brand } from '@/lib/brand'
 import { supabaseBrowser } from '@/lib/supabase/browser'
-
-import Link from 'next/link'
-import { Clock } from 'lucide-react'
+import { Clock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPendingApproval, setIsPendingApproval] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -78,7 +78,6 @@ export default function LoginPage() {
         throw new Error(message || 'Unable to sign in. Please try again.')
       }
 
-      // Sign in successful, redirect to home
       router.push('/')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.')
@@ -88,24 +87,36 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-page">
-      <section className="login-card" aria-labelledby="login-title">
-        <Image
-          className="login-logo"
-          src={brand.logoPath}
-          alt={`${brand.shortName} logo`}
-          width={76}
-          height={76}
-          sizes="76px"
-          priority
-        />
-        <p className="login-brand">{brand.displayName}</p>
-        <h1 id="login-title" className="login-title">
-          Sign in to {brand.displayName}
-        </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[var(--bg)] transition-colors">
+      <section
+        className="w-full max-w-md rounded-[26px] bg-[var(--card)] p-8 sm:p-10 border border-[var(--card-border)] shadow-[var(--shadow-card)] text-[var(--text)] transition-all"
+        aria-labelledby="login-title"
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="h-16 w-16 rounded-[20px] bg-[var(--panel)] border border-[var(--border)] p-2 shadow-xs flex items-center justify-center">
+            <Image
+              src={brand.logoPath}
+              alt={`${brand.shortName} logo`}
+              width={56}
+              height={56}
+              priority
+              className="object-contain"
+            />
+          </div>
+          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">
+            {brand.displayName}
+          </p>
+          <h1 id="login-title" className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--text-heading)]">
+            Sign in to {brand.displayName}
+          </h1>
+          <p className="mt-1 text-xs text-[var(--mute)]">
+            Academic &amp; operations portal for authorized personnel
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5">
               Email address
             </label>
             <input
@@ -116,60 +127,88 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="name@thoorigai.in"
+              className="w-full rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 text-sm text-[var(--text)] placeholder-[var(--mute-light)] transition-all focus:border-[var(--g1)] focus:bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g5)]"
             />
           </div>
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5">
               Password
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="••••••••••••"
+                className="w-full rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 pr-11 text-sm text-[var(--text)] placeholder-[var(--mute-light)] transition-all focus:border-[var(--g1)] focus:bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g5)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] transition-colors p-1"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
+
           {isPendingApproval && (
-            <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
-              <div className="font-semibold flex items-center gap-1.5 text-amber-800">
+            <div className="p-4 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60 text-xs text-[#a8710f] space-y-2">
+              <div className="font-bold flex items-center gap-1.5">
                 <Clock size={15} /> Account Awaiting Approval
               </div>
-              <p className="text-[11px] text-amber-700">
+              <p className="text-[11px] leading-relaxed">
                 Your registration has been received and is waiting for administrator authorization.
               </p>
               <div className="pt-1">
                 <Link
                   href={`/pending-approval?email=${encodeURIComponent(email)}`}
-                  className="text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1 text-[11px]"
+                  className="font-semibold underline inline-flex items-center gap-1 text-[11px] hover:text-[#78350f]"
                 >
-                  Have an invite code or OTP? Activate now &rarr;
+                  Have an invite code or OTP? Activate now <ArrowRight size={12} />
                 </Link>
               </div>
             </div>
           )}
+
           {error && (
-            <p className="login-error" role="alert">
+            <p className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60 text-xs font-medium text-[#b53c37]" role="alert">
               {error}
             </p>
           )}
+
           <button
             type="submit"
             disabled={loading}
             aria-busy={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="w-full rounded-full py-3 px-6 text-sm font-semibold text-white transition-all shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            style={{
+              background: 'linear-gradient(135deg, var(--g1) 0%, var(--g1b) 100%)',
+              boxShadow: '0 4px 14px -2px var(--g1b)',
+            }}
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              'Sign in'
+            )}
           </button>
         </form>
-        <p className="login-help">
+
+        <p className="mt-8 text-center text-xs text-[var(--mute)]">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
-            Request Staff Access &rarr;
+          <Link href="/signup" className="font-bold text-[var(--g1)] hover:underline inline-flex items-center gap-1">
+            Request Staff Access <ArrowRight size={12} />
           </Link>
         </p>
       </section>
