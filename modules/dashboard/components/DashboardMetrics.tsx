@@ -29,6 +29,8 @@ import type { DashboardSummary } from '@/modules/dashboard/types'
 import type { StaffDashboardData } from '@/modules/dashboard/service'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { getTimeBasedGreeting } from '@/lib/greeting'
+import { KpiCard } from '@/components/ui/KpiCard'
+import { PillButton } from '@/components/ui/PillButton'
 
 export function DashboardMetrics({
   summary,
@@ -251,78 +253,56 @@ export function DashboardMetrics({
 
   return (
     <>
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <p className="eyebrow">{greetingData.formattedDate}</p>
-          <h1>{greetingData.greeting}</h1>
-          <p className="subcopy">{greetingData.subcopy}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            {greetingData.formattedDate}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">
+            {greetingData.greeting}
+          </h1>
+          <p className="text-sm text-[var(--mute)] mt-1">{greetingData.subcopy}</p>
         </div>
         {canCreateStudent && (
-          <Link href="/students/new" className="btn-primary" style={{ gap: 6 }}>
-            <Plus size={14} />
-            Add student
+          <Link
+            href="/students/new"
+            className="btn-primary"
+            style={{ textDecoration: 'none' }}
+          >
+            <Plus size={16} />
+            <span>Add student</span>
           </Link>
         )}
       </div>
 
       {pendingUsers.length > 0 && (
-        <div
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
-          style={{
-            padding: '14px 18px',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid rgba(245, 158, 11, 0.2)',
-            background: 'linear-gradient(135deg, rgba(255, 251, 235, 0.9), rgba(254, 243, 199, 0.6))',
-            boxShadow: 'var(--shadow-xs)',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="shrink-0"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(245, 158, 11, 0.12)',
-                display: 'grid',
-                placeItems: 'center',
-                color: '#b45309',
-              }}
-            >
-              <UserCheck size={18} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 p-4 sm:p-5 rounded-[22px] border border-amber-200/60 bg-[var(--warning-bg)] shadow-[var(--shadow-xs)]">
+          <div className="flex items-center gap-3.5">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/15 text-[#a8710f] flex items-center justify-center">
+              <UserCheck size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm" style={{ color: '#78350f' }}>
+                <span className="font-bold text-sm text-[var(--text-heading)]">
                   {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending
                 </span>
-                <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    background: 'rgba(245, 158, 11, 0.15)',
-                    color: '#92400e',
-                  }}
-                >
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-[#a8710f]">
                   Action Required
                 </span>
               </div>
-              <p className="text-xs mt-0.5" style={{ color: '#92400e' }}>
+              <p className="text-xs text-[var(--mute)] mt-0.5">
                 {pendingUsers
                   .map((u) => u.fullName)
                   .slice(0, 3)
                   .join(', ')}
-                {pendingUsers.length > 3 ? ` and ${pendingUsers.length - 3} more` : ''} registered and waiting for
-                academy portal access.
+                {pendingUsers.length > 3 ? ` and ${pendingUsers.length - 3} more` : ''} registered and waiting for academy portal access.
               </p>
             </div>
           </div>
           <Link
             href="/settings/users?filter=pending"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-xs font-semibold shrink-0 transition-all shadow-xs"
-            style={{ background: 'linear-gradient(135deg, #b45309, #92400e)' }}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-white text-xs font-semibold shrink-0 shadow-sm transition-transform hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #b45309, #92400e)', textDecoration: 'none' }}
           >
             Review & Approve <ArrowRight size={13} />
           </Link>
@@ -330,22 +310,11 @@ export function DashboardMetrics({
       )}
 
       {/* Admin View Switcher Toggle */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6"
-        style={{
-          padding: '6px 6px 6px 8px',
-          borderRadius: 'var(--radius-lg)',
-          background: 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(226, 232, 240, 0.5)',
-          boxShadow: 'var(--shadow-xs)',
-        }}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 p-2 rounded-[22px] bg-[var(--card)] border border-[var(--border)] shadow-[var(--shadow-card)]">
         <div
           role="tablist"
           aria-label="Dashboard view toggle"
-          className="inline-flex items-center p-1 rounded-lg"
-          style={{ background: 'rgba(241, 245, 249, 0.6)' }}
+          className="inline-flex items-center p-1 rounded-full bg-[var(--panel)]"
         >
           <button
             type="button"
@@ -354,15 +323,19 @@ export function DashboardMetrics({
             aria-selected={activeView === 'financial'}
             aria-controls="admin-financial-panel"
             onClick={() => handleViewChange('financial')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer"
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              activeView === 'financial'
+                ? 'text-white shadow-md'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
+            }`}
             style={{
               background:
-                activeView === 'financial' ? 'linear-gradient(135deg, var(--gold), var(--gold-deep))' : 'transparent',
-              color: activeView === 'financial' ? '#fff' : '#64748b',
-              boxShadow: activeView === 'financial' ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
+                activeView === 'financial'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
             }}
           >
-            <CircleDollarSign size={13} />
+            <CircleDollarSign size={14} />
             <span>Financial Overview</span>
           </button>
 
@@ -373,22 +346,26 @@ export function DashboardMetrics({
             aria-selected={activeView === 'staff'}
             aria-controls="admin-staff-panel"
             onClick={() => handleViewChange('staff')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer"
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              activeView === 'staff'
+                ? 'text-white shadow-md'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
+            }`}
             style={{
               background:
-                activeView === 'staff' ? 'linear-gradient(135deg, var(--gold), var(--gold-deep))' : 'transparent',
-              color: activeView === 'staff' ? '#fff' : '#64748b',
-              boxShadow: activeView === 'staff' ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
+                activeView === 'staff'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
             }}
           >
-            <GraduationCap size={13} />
+            <GraduationCap size={14} />
             <span>Staff & Academic Data</span>
             {academicData && academicData.lowAttendanceStudents.length > 0 && (
               <span
-                className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
                 style={{
-                  background: activeView === 'staff' ? 'rgba(255,255,255,0.2)' : 'rgba(245, 158, 11, 0.12)',
-                  color: activeView === 'staff' ? '#fff' : '#92400e',
+                  background: activeView === 'staff' ? 'rgba(255,255,255,0.25)' : 'var(--warning-bg)',
+                  color: activeView === 'staff' ? '#fff' : '#a8710f',
                 }}
               >
                 {academicData.lowAttendanceStudents.length}
@@ -397,8 +374,8 @@ export function DashboardMetrics({
           </button>
         </div>
 
-        <div className="text-xs px-2 flex items-center gap-2" style={{ color: '#64748b' }}>
-          <span className="shrink-0" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+        <div className="text-xs px-3 flex items-center gap-2 text-[var(--mute)] font-medium">
+          <span className="shrink-0 h-2 w-2 rounded-full" style={{ background: 'var(--g1)' }} />
           <span>
             {activeView === 'financial'
               ? 'Displaying tuition revenue, fee balances & payments'
@@ -410,18 +387,16 @@ export function DashboardMetrics({
       {/* ─── FINANCIAL VIEW PANEL ─── */}
       {activeView === 'financial' && (
         <div id="admin-financial-panel" role="tabpanel" aria-labelledby="admin-dashboard-toggle-financial">
-          <div className="reports-stats-grid">
-            {financialMetrics.map(({ label, value, sub, Icon, iconClass }) => (
-              <div className="stat-card" key={label}>
-                <div className="stat-head">
-                  <span>{label}</span>
-                  <div className={`stat-icon ${iconClass}`}>
-                    <Icon size={16} />
-                  </div>
-                </div>
-                <div className="stat-value">{value}</div>
-                <p className="stat-sub">{sub}</p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {financialMetrics.map(({ label, value, sub, Icon }, idx) => (
+              <KpiCard
+                key={label}
+                title={label}
+                value={value}
+                subtitle={sub}
+                icon={<Icon size={18} />}
+                variant={idx === 0 ? 'hero' : 'normal'}
+              />
             ))}
           </div>
 
@@ -517,69 +492,52 @@ export function DashboardMetrics({
         <div id="admin-staff-panel" role="tabpanel" aria-labelledby="admin-dashboard-toggle-staff">
           {/* Top Academic KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {staffMetrics.map(({ label, value, sub, Icon, iconClass }) => (
-              <div className="stat-card" key={label}>
-                <div className="stat-head">
-                  <span>{label}</span>
-                  <div className={`stat-icon ${iconClass}`}>
-                    <Icon size={16} />
-                  </div>
-                </div>
-                <div className="stat-value">{value}</div>
-                <p className="stat-sub">{sub}</p>
-              </div>
+            {staffMetrics.map(({ label, value, sub, Icon }, idx) => (
+              <KpiCard
+                key={label}
+                title={label}
+                value={value}
+                subtitle={sub}
+                icon={<Icon size={18} />}
+                variant={idx === 0 ? 'hero' : 'normal'}
+              />
             ))}
           </div>
 
           {/* Quick Academic Actions Dock */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2.5 mb-6">
             <Link
               href="/attendance"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-xs font-semibold transition-all"
-              style={{
-                background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-              }}
+              className="btn-primary"
+              style={{ textDecoration: 'none' }}
             >
-              <CalendarDays size={13} />
-              Mark / View Attendance
+              <CalendarDays size={14} />
+              <span>Mark / View Attendance</span>
             </Link>
             <Link
               href="/assessments"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                border: '1px solid rgba(226, 232, 240, 0.6)',
-                background: 'rgba(255, 255, 255, 0.7)',
-                color: '#334155',
-              }}
+              className="btn-secondary"
+              style={{ textDecoration: 'none' }}
             >
-              <ClipboardCheck size={13} style={{ color: 'var(--gold)' }} />
-              Assessments ({academicData?.assessmentCount ?? 0})
+              <ClipboardCheck size={14} style={{ color: 'var(--g1)' }} />
+              <span>Assessments ({academicData?.assessmentCount ?? 0})</span>
             </Link>
             <Link
               href="/materials"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                border: '1px solid rgba(226, 232, 240, 0.6)',
-                background: 'rgba(255, 255, 255, 0.7)',
-                color: '#334155',
-              }}
+              className="btn-secondary"
+              style={{ textDecoration: 'none' }}
             >
-              <FolderOpen size={13} style={{ color: '#d97706' }} />
-              Learning Materials ({academicData?.materialsCount ?? 0})
+              <FolderOpen size={14} style={{ color: 'var(--g1)' }} />
+              <span>Learning Materials ({academicData?.materialsCount ?? 0})</span>
             </Link>
             {canCreateStudent && (
               <Link
                 href="/students/new"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
-                style={{
-                  border: '1px solid rgba(226, 232, 240, 0.6)',
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  color: '#334155',
-                }}
+                className="btn-secondary"
+                style={{ textDecoration: 'none' }}
               >
-                <Plus size={13} style={{ color: '#10b981' }} />
-                Add Student
+                <Plus size={14} style={{ color: '#1b7a4b' }} />
+                <span>Add Student</span>
               </Link>
             )}
           </div>

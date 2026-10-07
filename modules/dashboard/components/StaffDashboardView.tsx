@@ -18,6 +18,7 @@ import type { StaffDashboardData } from '@/modules/dashboard/service'
 import { Button } from '@/components/ui/button'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { getTimeBasedGreeting } from '@/lib/greeting'
+import { KpiCard } from '@/components/ui/KpiCard'
 
 export function StaffDashboardView({
   data,
@@ -44,148 +45,96 @@ export function StaffDashboardView({
   } = data
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header with Greeting & Date */}
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-              style={{
-                background: 'rgba(16, 185, 129, 0.12)',
-                color: '#059669',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
-              }}
-            >
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--g4)] text-[var(--g1)] border border-[var(--g3)]">
               Faculty Portal
             </span>
-            <p className="eyebrow !p-0 !m-0">{greetingData.formattedDate}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)]">
+              {greetingData.formattedDate}
+            </p>
           </div>
-          <h1>{greetingData.greeting}</h1>
-          <p className="subcopy">{greetingData.subcopy}</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">
+            {greetingData.greeting}
+          </h1>
+          <p className="text-sm text-[var(--mute)] mt-1">{greetingData.subcopy}</p>
         </div>
 
         {/* Quick Actions Dock */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link
             href="/attendance"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-xs font-semibold transition-all shadow-xs"
-            style={{
-              background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-              boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-            }}
+            className="btn-primary"
+            style={{ textDecoration: 'none' }}
           >
             <CalendarDays size={14} />
-            Mark Attendance
+            <span>Mark Attendance</span>
           </Link>
           <Link
             href="/assessments"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              border: '1px solid rgba(226, 232, 240, 0.8)',
-              background: 'rgba(255, 255, 255, 0.8)',
-              color: '#334155',
-            }}
+            className="btn-secondary"
+            style={{ textDecoration: 'none' }}
           >
-            <ClipboardCheck size={14} style={{ color: 'var(--accent-violet)' }} />
-            Assessments
+            <ClipboardCheck size={14} style={{ color: 'var(--g1)' }} />
+            <span>Assessments</span>
           </Link>
           <Link
             href="/materials"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              border: '1px solid rgba(226, 232, 240, 0.8)',
-              background: 'rgba(255, 255, 255, 0.8)',
-              color: '#334155',
-            }}
+            className="btn-secondary"
+            style={{ textDecoration: 'none' }}
           >
-            <FolderOpen size={14} style={{ color: '#d97706' }} />
-            Upload Materials
+            <FolderOpen size={14} style={{ color: 'var(--g1)' }} />
+            <span>Upload Materials</span>
           </Link>
           {canCreateStudent && (
             <Link
               href="/students/new"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                border: '1px solid rgba(226, 232, 240, 0.8)',
-                background: 'rgba(255, 255, 255, 0.8)',
-                color: '#334155',
-              }}
+              className="btn-secondary"
+              style={{ textDecoration: 'none' }}
             >
-              <Plus size={14} style={{ color: '#10b981' }} />
-              Add Student
+              <Plus size={14} style={{ color: '#1b7a4b' }} />
+              <span>Add Student</span>
             </Link>
           )}
         </div>
       </div>
 
       {/* Top Academic KPI Cards */}
-      <div className="reports-stats-grid">
-        {/* Metric 1: Students */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Enrolled Students</span>
-            <div className="stat-icon icon-blue">
-              <Users size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{totalStudents}</div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-            <span className="font-semibold text-emerald-700">{activeStudents} active</span>
-            <Link href="/students" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-              Roster &rarr;
-            </Link>
-          </div>
-        </div>
-
-        {/* Metric 2: Today's Attendance */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Today&apos;s Attendance</span>
-            <div className="stat-icon icon-green">
-              <CalendarDays size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{todayAttendance.rate}%</div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-            <span className="font-semibold text-emerald-700">{todayAttendance.present} present</span>
-            <span className="font-medium text-rose-600">{todayAttendance.absent} absent</span>
-          </div>
-        </div>
-
-        {/* Metric 3: Assessments */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Assessments</span>
-            <div className="stat-icon icon-violet">
-              <ClipboardCheck size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{assessmentCount}</div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-            <span className="text-slate-500">Conducted</span>
-            <Link href="/assessments" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-              Grade &rarr;
-            </Link>
-          </div>
-        </div>
-
-        {/* Metric 4: Course Materials */}
-        <div className="stat-card">
-          <div className="stat-head">
-            <span>Study Materials</span>
-            <div className="stat-icon icon-amber">
-              <FolderOpen size={16} />
-            </div>
-          </div>
-          <div className="stat-value">{materialsCount}</div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-            <span className="text-slate-500">Published</span>
-            <Link href="/materials" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-              Library &rarr;
-            </Link>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Enrolled Students"
+          value={totalStudents}
+          subtitle={`${activeStudents} active learners`}
+          icon={<Users size={18} />}
+          variant="hero"
+        />
+        <KpiCard
+          title="Today's Attendance"
+          value={`${todayAttendance.rate}%`}
+          subtitle={`${todayAttendance.present} present • ${todayAttendance.absent} absent`}
+          icon={<CalendarDays size={18} />}
+          badge={{
+            text: `${todayAttendance.present} in session`,
+            variant: todayAttendance.rate >= 75 ? 'success' : 'warning',
+          }}
+        />
+        <KpiCard
+          title="Assessments"
+          value={assessmentCount}
+          subtitle="Total conducted"
+          icon={<ClipboardCheck size={18} />}
+          badge={{ text: 'Studio ready', variant: 'neutral' }}
+        />
+        <KpiCard
+          title="Study Materials"
+          value={materialsCount}
+          subtitle="Published resources"
+          icon={<FolderOpen size={18} />}
+          badge={{ text: 'Library', variant: 'neutral' }}
+        />
       </div>
 
       {/* Row 1: Today's Attendance Summary & Attendance Watchlist (Equal 50% Width) */}
@@ -302,38 +251,47 @@ export function StaffDashboardView({
               <span className="font-medium">All active students meet the 75% attendance threshold!</span>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {lowAttendanceStudents.map((s) => (
-                <div
-                  key={s.id}
-                  className="p-2.5 rounded-xl bg-white/90 border border-amber-200/60 shadow-2xs flex items-center justify-between gap-2"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-slate-900 truncate">{s.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">#{s.registerId}</span>
+            <div className="space-y-2.5 max-h-[240px] overflow-y-auto pr-1">
+              {lowAttendanceStudents.map((s) => {
+                const isCritical = s.rate < 60
+                return (
+                  <div
+                    key={s.id}
+                    className="p-3 rounded-[18px] bg-[var(--card)] border border-[var(--border)] shadow-[var(--shadow-xs)] flex items-center justify-between gap-3 transition-colors hover:border-[var(--g1)]"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[var(--text-heading)] truncate">{s.name}</span>
+                        <span className="text-[10px] text-[var(--mute)] font-mono">#{s.registerId}</span>
+                      </div>
+                      <p className="text-[11px] text-[var(--mute)] truncate mt-0.5">{s.course}</p>
+                      {s.phone && (
+                        <a
+                          href={`tel:${s.phone}`}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold mt-1 text-[var(--g1)] hover:underline"
+                        >
+                          <Phone size={11} />
+                          <span>Call: {s.phone}</span>
+                        </a>
+                      )}
                     </div>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.course}</p>
-                    {s.phone && (
-                      <a
-                        href={`tel:${s.phone}`}
-                        className="inline-flex items-center gap-1 text-[10px] text-indigo-600 font-medium mt-1 hover:underline"
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                          isCritical
+                            ? 'bg-[var(--danger-bg)] text-[#b53c37] border border-rose-200/50'
+                            : 'bg-[var(--warning-bg)] text-[#a8710f] border border-amber-200/50'
+                        }`}
                       >
-                        <Phone size={10} />
-                        {s.phone}
-                      </a>
-                    )}
+                        {s.rate}%
+                      </span>
+                      <span className="block text-[10px] text-[var(--mute)] mt-0.5">
+                        {s.presentSessions}/{s.totalSessions} sessions
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/50">
-                      {s.rate}%
-                    </span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">
-                      {s.presentSessions}/{s.totalSessions} days
-                    </span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
