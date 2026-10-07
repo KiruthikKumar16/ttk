@@ -1200,13 +1200,13 @@ table {
 }
 th {
   text-align: left;
-  color: #64748b;
-  font-size: 10px;
+  color: #1e293b;
+  font-size: 11px;
   letter-spacing: 0.8px;
   font-weight: 700;
   text-transform: uppercase;
-  background: rgba(248, 250, 252, 0.8);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  background: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   padding: 10px 16px;
 }
 th.align-right {

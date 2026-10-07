@@ -73,7 +73,7 @@ export function SelectTrigger({ children, className = '', onClick, disabled = fa
 }
 
 export function SelectValue({ children, placeholder }: { children?: React.ReactNode; placeholder?: string }) {
-  return <span className="text-gray-500">{children ?? placeholder}</span>
+  return <span className="text-slate-800 font-medium">{children ?? placeholder}</span>
 }
 
 export function SelectContent({ className = '', children }: SelectContentProps) {

@@ -816,7 +816,7 @@ export function Assessments({
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-100">
                 <div className="space-y-0.5">
                   <h2 className="text-xl font-bold text-slate-900">Assessments Catalog</h2>
-                  <p className="text-xs sm:text-sm text-slate-500">
+                  <p className="text-xs sm:text-sm text-slate-700">
                     Filter by curriculum or category tier to review student evaluations and launch quizzes.
                   </p>
                 </div>
@@ -946,7 +946,7 @@ export function Assessments({
                               {assessment.title}
                             </span>
                             {assessment.createdBy && (
-                              <p className="text-[11px] text-slate-500">
+                              <p className="text-[11px] text-slate-700">
                                 Created by {assessment.createdBy.fullName} ({assessment.createdBy.role})
                               </p>
                             )}
@@ -976,7 +976,7 @@ export function Assessments({
                               <button
                                 type="button"
                                 onClick={() => handleCopyLink(assessment.formUrl!, assessment.id)}
-                                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all"
+                                className="p-1.5 rounded-lg border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all"
                                 title="Copy student quiz link"
                               >
                                 {copiedFormId === assessment.id ? (
@@ -987,7 +987,7 @@ export function Assessments({
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-500 italic">None linked</span>
+                            <span className="text-xs text-slate-700 italic">None linked</span>
                           )}
                         </td>
 
@@ -1009,10 +1009,10 @@ export function Assessments({
 
                     {assessments.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center py-12 text-slate-500 space-y-2">
-                          <ClipboardList size={32} className="mx-auto text-slate-400" />
-                          <p className="text-sm font-semibold text-slate-700">No assessments match current filters</p>
-                          <p className="text-xs text-slate-500">
+                        <td colSpan={6} className="text-center py-12 text-slate-700 space-y-2">
+                          <ClipboardList size={32} className="mx-auto text-slate-600" />
+                          <p className="text-sm font-semibold text-slate-900">No assessments match current filters</p>
+                          <p className="text-xs text-slate-700">
                             Create a new assessment above or choose another curriculum.
                           </p>
                         </td>
@@ -1024,7 +1024,7 @@ export function Assessments({
 
               {/* Pagination / Load More */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-slate-700">
                   Showing {assessments.length} of {assessmentTotalCount} assessments
                 </div>
                 {assessmentHasMore && (
