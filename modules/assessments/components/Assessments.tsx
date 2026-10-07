@@ -35,6 +35,7 @@ import type { CourseCategory } from '@/lib/types'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { GoogleFormsImportModal } from './GoogleFormsImportModal'
 import { ClassroomQRModal } from './ClassroomQRModal'
+import { KpiCard } from '@/components/ui/KpiCard'
 
 export type Assessment = {
   id: string
@@ -509,11 +510,15 @@ export function Assessments({
   return (
     <div className="space-y-6">
       {/* 1. Page Header & KPI Summary */}
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
-          <p className="eyebrow">ACADEMIC EVALUATIONS & QUIZZES</p>
-          <h1>Assessments</h1>
-          <p className="subcopy">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            ACADEMIC EVALUATIONS & QUIZZES
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">
+            Assessments
+          </h1>
+          <p className="text-sm text-[var(--mute)] mt-1">
             Create evaluations, distribute Google Forms quizzes, and import graded responses in seconds.
           </p>
         </div>
@@ -528,21 +533,21 @@ export function Assessments({
             <span>Back to Assessments</span>
           </Button>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1 rounded-full bg-[var(--card)] border border-[var(--border)] shadow-xs">
             <button
               type="button"
               onClick={() => setActiveTab('library')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'library' ? 'text-white' : 'btn-secondary'
-              }`}
-              style={
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'library'
-                  ? {
-                      background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-                    }
-                  : {}
-              }
+                  ? 'text-white shadow-md'
+                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+              }`}
+              style={{
+                background:
+                  activeTab === 'library'
+                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                    : 'transparent',
+              }}
             >
               <ClipboardList size={14} />
               <span>Catalog & Library</span>
@@ -550,17 +555,17 @@ export function Assessments({
             <button
               type="button"
               onClick={() => setActiveTab('create')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'create' ? 'text-white' : 'btn-secondary'
-              }`}
-              style={
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'create'
-                  ? {
-                      background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-                    }
-                  : {}
-              }
+                  ? 'text-white shadow-md'
+                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+              }`}
+              style={{
+                background:
+                  activeTab === 'create'
+                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                    : 'transparent',
+              }}
             >
               <Plus size={14} />
               <span>Create Assessment</span>
@@ -571,58 +576,34 @@ export function Assessments({
 
       {/* KPI Tiles (shown in library/create views) */}
       {!selectedAssessmentId && (
-        <div className="reports-stats-grid">
-          <div className="stat-card">
-            <div className="stat-head">
-              <span>Total Assessments</span>
-              <div className="stat-icon icon-blue">
-                <ClipboardList size={16} />
-              </div>
-            </div>
-            <div className="stat-value">{kpis.total}</div>
-            <p className="stat-sub">Across active course batches</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-head">
-              <span>Google Form Quizzes</span>
-              <div className="stat-icon icon-violet">
-                <FileSpreadsheet size={16} />
-              </div>
-            </div>
-            <div className="stat-value flex items-baseline gap-2">
-              <span>{kpis.withGoogleForms}</span>
-              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                Connected
-              </span>
-            </div>
-            <p className="stat-sub">Live QR quiz integrations</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-head">
-              <span>Batches Evaluated</span>
-              <div className="stat-icon icon-navy">
-                <GraduationCap size={16} />
-              </div>
-            </div>
-            <div className="stat-value">{kpis.uniqueCourses}</div>
-            <p className="stat-sub">Programs with completed marks</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-head">
-              <span>Grading Pipeline</span>
-              <div className="stat-icon icon-green">
-                <Award size={16} />
-              </div>
-            </div>
-            <div className="stat-value text-emerald-600 text-lg flex items-center gap-1.5 mt-2">
-              <CheckCircle2 size={18} />
-              <span>Instant CSV</span>
-            </div>
-            <p className="stat-sub">Auto-score and sync responses</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard
+            title="Total Assessments"
+            value={kpis.total}
+            subtitle="Across active course batches"
+            icon={<ClipboardList size={18} />}
+            variant="hero"
+          />
+          <KpiCard
+            title="Google Form Quizzes"
+            value={kpis.withGoogleForms}
+            subtitle="Live QR quiz integrations"
+            icon={<FileSpreadsheet size={18} />}
+            badge={{ text: 'Connected', variant: 'accent' }}
+          />
+          <KpiCard
+            title="Batches Evaluated"
+            value={kpis.uniqueCourses}
+            subtitle="Programs with completed marks"
+            icon={<GraduationCap size={18} />}
+          />
+          <KpiCard
+            title="Grading Pipeline"
+            value="Instant CSV"
+            subtitle="Auto-score and sync responses"
+            icon={<Award size={18} />}
+            badge={{ text: 'Active', variant: 'success' }}
+          />
         </div>
       )}
 
