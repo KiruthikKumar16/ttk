@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, ExternalLink } from 'lucide-react'
+import { Eye, ExternalLink, ShieldCheck } from 'lucide-react'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { PillButton } from '@/components/ui/PillButton'
+import { Tag } from '@/components/ui/Tag'
 
 export interface CertificateRowItem {
   id: string
@@ -32,62 +34,62 @@ export function CertificateTableRow({
   return (
     <tr
       onClick={handleRowClick}
-      className="cursor-pointer hover:bg-slate-50/80 transition-colors group"
+      className="cursor-pointer transition-colors group hover:bg-[var(--panel)]"
+      style={{ borderBottom: '1px solid var(--border)' }}
       title={`Open certificate ${certificate.certificate_id}`}
     >
-      <td>
+      <td className="py-3.5 px-5">
         <Link
           href={certTargetUrl}
-          className="inline-flex items-center min-h-[28px] font-mono font-medium text-slate-900 group-hover:text-indigo-600 group-hover:underline"
+          className="inline-flex items-center min-h-[28px] font-mono text-xs font-bold text-[var(--ink)] group-hover:text-[var(--g1)] transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           {certificate.certificate_id}
         </Link>
       </td>
-      <td>
+      <td className="py-3.5 px-5">
         <Link
           href={`/students/${certificate.student_register_id}`}
-          className="inline-flex items-center min-h-[28px] font-medium text-indigo-600 hover:underline"
+          className="inline-flex items-center min-h-[28px] text-xs font-semibold text-[var(--ink)] hover:text-[var(--g1)] transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           {certificate.student_name}
         </Link>
       </td>
-      <td className="font-medium text-slate-800">{certificate.course_name}</td>
-      <td>
+      <td className="py-3.5 px-5 text-xs font-medium text-[var(--ink)]">{certificate.course_name}</td>
+      <td className="py-3.5 px-5">
         {categoryName ? (
           <CategoryBadge categoryName={categoryName} />
         ) : (
-          <span className="text-xs text-slate-600 italic">Unassigned</span>
+          <span className="text-xs text-[var(--mute)] italic">Unassigned</span>
         )}
       </td>
-      <td className="text-slate-600">{certificate.issue_date}</td>
-      <td>
+      <td className="py-3.5 px-5 text-xs text-[var(--mute)]">{certificate.issue_date}</td>
+      <td className="py-3.5 px-5">
         {certificate.verification_code ? (
           <Link
             href={`/verify/${certificate.verification_code}`}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--g1)] hover:underline"
             onClick={(e) => e.stopPropagation()}
             title="Verify public certificate record"
           >
+            <ShieldCheck size={13} />
             <span>Verify</span>
-            <ExternalLink size={12} />
+            <ExternalLink size={11} />
           </Link>
         ) : (
-          '—'
+          <span className="text-xs text-[var(--mute)]">—</span>
         )}
       </td>
-      <td className="text-right" onClick={(e) => e.stopPropagation()}>
-        <Link
-          href={certTargetUrl}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 rounded-md shadow-2xs transition-colors"
-          title="View & Print Certificate"
-        >
-          <Eye size={13} />
-          <span>View</span>
+      <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+        <Link href={certTargetUrl}>
+          <PillButton variant="secondary" size="sm" icon={<Eye size={13} />}>
+            View
+          </PillButton>
         </Link>
       </td>
     </tr>
   )
 }
+
