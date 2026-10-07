@@ -44,22 +44,22 @@ export function MaterialsDirectory({
   return (
     <div className="space-y-6">
       {/* Category Tabs & Search Bar */}
-      <div className="panel p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="p-3 rounded-[22px] bg-[var(--card)] border border-[var(--border)] shadow-[var(--shadow-card)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-[var(--panel)]">
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              selectedCategory === 'all' ? 'text-white' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-            }`}
-            style={
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               selectedCategory === 'all'
-                ? {
-                    background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-                    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-                  }
-                : {}
-            }
+                ? 'text-white shadow-sm'
+                : 'text-[var(--mute)] hover:text-[var(--text)]'
+            }`}
+            style={{
+              background:
+                selectedCategory === 'all'
+                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                  : 'transparent',
+            }}
           >
             All Courses ({courses.length})
           </button>
@@ -72,22 +72,21 @@ export function MaterialsDirectory({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  isSelected ? 'text-white' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                }`}
-                style={
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   isSelected
-                    ? {
-                        background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
-                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
-                      }
-                    : {}
-                }
+                    ? 'text-white shadow-sm'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
+                }`}
+                style={{
+                  background: isSelected
+                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
+                    : 'transparent',
+                }}
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--border)]'
                   }`}
                 >
                   {count}
@@ -99,19 +98,19 @@ export function MaterialsDirectory({
 
         {/* Search Filter */}
         <div className="relative min-w-[220px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search courses..."
-            className="w-full pl-8 pr-7 py-1.5 border border-slate-200/80 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white/90"
+            className="w-full pl-9 pr-8 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] bg-[var(--card)] placeholder:text-[var(--mute)]"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)]"
             >
               <X size={13} />
             </button>
@@ -126,7 +125,7 @@ export function MaterialsDirectory({
             <Link
               key={course.id}
               href={`/courses/${encodeURIComponent(course.id)}/materials`}
-              className="stat-card flex flex-col justify-between group cursor-pointer"
+              className="rounded-[22px] bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
               style={{
                 textDecoration: 'none',
               }}
@@ -134,7 +133,7 @@ export function MaterialsDirectory({
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
                       getCategoryBadgeStyle(course.categoryName).bg
                     }`}
                   >
@@ -150,16 +149,16 @@ export function MaterialsDirectory({
                 </div>
 
                 <div className="mt-4">
-                  <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors text-base line-clamp-1">
+                  <h3 className="font-bold text-[var(--text-heading)] group-hover:text-[var(--g1)] transition-colors text-base line-clamp-1">
                     {course.name}
                   </h3>
-                  <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-2">
-                    <span className="flex items-center gap-1 font-medium text-slate-600">
-                      <Clock size={12} className="text-slate-400" />
+                  <div className="flex items-center gap-2.5 text-xs text-[var(--mute)] mt-2">
+                    <span className="flex items-center gap-1 font-medium">
+                      <Clock size={12} className="text-[var(--mute)]" />
                       {course.duration}
                     </span>
                     <span>•</span>
-                    <span className="flex items-center gap-1 font-semibold text-indigo-600">
+                    <span className="flex items-center gap-1 font-semibold text-[var(--g1)]">
                       <FileText size={12} />
                       {course.materialsCount} {course.materialsCount === 1 ? 'file' : 'files'}
                     </span>
@@ -167,7 +166,7 @@ export function MaterialsDirectory({
                 </div>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600 group-hover:text-indigo-800">
+              <div className="mt-5 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs font-semibold text-[var(--g1)]">
                 <span>Access study resources</span>
                 <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </div>
