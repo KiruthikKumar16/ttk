@@ -212,10 +212,10 @@ export function Sidebar({
             type="button"
             onClick={() => void handleSignOut()}
             className="nav-item cursor-pointer text-left w-full text-rose-500 hover:text-rose-600 hover:bg-rose-50/50"
-            title="Sign out"
+            title="Log out"
           >
             <LogOut size={16} />
-            {!collapsed && <span className="flex-1 text-left">Sign out</span>}
+            {!collapsed && <span className="flex-1 text-left">Log out</span>}
           </button>
         </div>
 
@@ -235,8 +235,10 @@ export function Sidebar({
           <div className="avatar">{role.slice(0, 1).toUpperCase()}</div>
           {!collapsed && (
             <div>
-              <strong>{role[0].toUpperCase() + role.slice(1)} account</strong>
-              <small>{brand.displayName}</small>
+              <strong className="text-xs font-semibold text-[var(--text-heading)]">
+                {role[0].toUpperCase() + role.slice(1)} account
+              </strong>
+              <small className="text-[11px] text-slate-700 block mt-0.5">{brand.displayName}</small>
             </div>
           )}
         </div>

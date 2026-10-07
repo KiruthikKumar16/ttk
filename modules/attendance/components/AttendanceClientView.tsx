@@ -649,7 +649,7 @@ export function AttendanceClientView({
             <div className="data-wrap">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold uppercase text-slate-600 tracking-wider">
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold uppercase text-slate-900 tracking-wider">
                     <th className="py-3 px-4">Course Curriculum</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4 text-center">Students</th>
@@ -758,7 +758,7 @@ export function AttendanceClientView({
               <div className="data-wrap">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold uppercase text-slate-600 tracking-wider">
+                    <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold uppercase text-slate-900 tracking-wider">
                       <th className="py-3 px-4">Register ID</th>
                       <th className="py-3 px-4">Student Name</th>
                       <th className="py-3 px-4 text-center">Sessions Held</th>

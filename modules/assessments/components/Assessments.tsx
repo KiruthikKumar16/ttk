@@ -884,27 +884,27 @@ export function Assessments({
                 <table className="w-full min-w-[700px] text-left">
                   <thead className="bg-slate-50/90 border-b border-slate-200">
                     <tr>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-28">
+                      <th scope="col" className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider w-28">
                         Date
                       </th>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-48">
+                      <th scope="col" className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider w-48">
                         Curriculum
                       </th>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">
+                      <th scope="col" className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider">
                         Assessment Title
                       </th>
                       <th
                         scope="col"
-                        className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-24 text-center"
+                        className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider w-24 text-center"
                       >
                         Max Score
                       </th>
-                      <th scope="col" className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
+                      <th scope="col" className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider w-36">
                         Google Form
                       </th>
                       <th
                         scope="col"
-                        className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider text-right w-36"
+                        className="p-4 font-bold text-slate-900 text-xs uppercase tracking-wider text-right w-36"
                       >
                         Actions
                       </th>

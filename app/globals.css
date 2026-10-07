@@ -409,12 +409,12 @@ nav {
 }
 .account strong {
   font-size: var(--text-xs);
-  color: #e2e8f0;
+  color: var(--text-heading);
   font-weight: 600;
 }
 .account small {
-  color: #64748b;
-  font-size: 10px;
+  color: #475569;
+  font-size: 11px;
   margin-top: 2px;
 }
 .account svg {
