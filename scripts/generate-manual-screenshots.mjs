@@ -11,8 +11,8 @@ fs.mkdirSync(STAFF_DIR, { recursive: true })
 
 async function annotate(page, targets) {
   await page.evaluate(() => {
-    document.querySelectorAll('.doc-step-marker').forEach(e => e.remove())
-    document.querySelectorAll('[data-doc-highlight]').forEach(e => {
+    document.querySelectorAll('.doc-step-marker').forEach((e) => e.remove())
+    document.querySelectorAll('[data-doc-highlight]').forEach((e) => {
       e.style.outline = ''
       e.style.boxShadow = ''
       e.removeAttribute('data-doc-highlight')
@@ -54,10 +54,11 @@ async function annotate(page, targets) {
         left += box.width / 2 - 14
       }
 
-      await page.evaluate(({ top, left, step, label }) => {
-        const wrapper = document.createElement('div')
-        wrapper.className = 'doc-step-marker'
-        wrapper.innerHTML = `
+      await page.evaluate(
+        ({ top, left, step, label }) => {
+          const wrapper = document.createElement('div')
+          wrapper.className = 'doc-step-marker'
+          wrapper.innerHTML = `
           <div style="
             position: absolute;
             top: ${top + window.scrollY}px;
@@ -83,7 +84,9 @@ async function annotate(page, targets) {
               box-shadow: 0 0 0 3px #ffffff, 0 3px 8px rgba(0,0,0,0.5);
               border: 2px solid #be123c;
             ">${step}</div>
-            ${label ? `<div style="
+            ${
+              label
+                ? `<div style="
               background: #0f172a;
               color: #f8fafc;
               font-size: 11px;
@@ -93,11 +96,15 @@ async function annotate(page, targets) {
               border: 1px solid rgba(255,255,255,0.25);
               white-space: nowrap;
               box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-            ">${label}</div>` : ''}
+            ">${label}</div>`
+                : ''
+            }
           </div>
         `
-        document.body.appendChild(wrapper)
-      }, { top, left, step, label })
+          document.body.appendChild(wrapper)
+        },
+        { top, left, step, label },
+      )
     } catch (e) {
       console.warn(`Could not annotate target [${step}]: ${selector}`, e.message)
     }
@@ -112,7 +119,7 @@ async function run() {
   // SECTION A: PUBLIC & ONBOARDING
   // ----------------------------------------------------
   const publicPage = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-  
+
   // 1. Login Page
   await publicPage.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' })
   await annotate(publicPage, [
@@ -163,9 +170,17 @@ async function run() {
   // 1. Executive Dashboard (Financial Tab)
   await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' })
   await annotate(page, [
-    { selector: 'a[href="/students"]:has-text("Add"), a.btn-primary:has-text("student")', step: 1, label: 'Add Student CTA' },
+    {
+      selector: 'a[href="/students"]:has-text("Add"), a.btn-primary:has-text("student")',
+      step: 1,
+      label: 'Add Student CTA',
+    },
     { selector: '.stats-grid', step: 2, label: 'Executive Revenue & Due KPIs' },
-    { selector: 'button:has-text("Staff & Academic"), [role="tab"]:has-text("Staff")', step: 3, label: 'Toggle Academic Tab' },
+    {
+      selector: 'button:has-text("Staff & Academic"), [role="tab"]:has-text("Staff")',
+      step: 3,
+      label: 'Toggle Academic Tab',
+    },
     { selector: 'aside.sidebar', step: 4, label: 'Master Navigation Sidebar' },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '02_executive_dashboard.png') })
@@ -176,9 +191,7 @@ async function run() {
   if (await acadTab.isVisible()) {
     await acadTab.click()
     await page.waitForTimeout(600)
-    await annotate(page, [
-      { selector: '.stats-grid, table', step: 1, label: 'Academic & Cohort Analytics' },
-    ])
+    await annotate(page, [{ selector: '.stats-grid, table', step: 1, label: 'Academic & Cohort Analytics' }])
     await page.screenshot({ path: path.join(ADMIN_DIR, '03_dashboard_academic_tab.png') })
     console.log('✓ Captured 03_dashboard_academic_tab.png')
   }
@@ -190,7 +203,11 @@ async function run() {
     await page.waitForTimeout(600)
     await annotate(page, [
       { selector: 'input[placeholder*="Search" i]', step: 1, label: 'Global Instant Search' },
-      { selector: 'div[role="menu"], .notification-panel, [data-state="open"]', step: 2, label: 'Notifications Center' },
+      {
+        selector: 'div[role="menu"], .notification-panel, [data-state="open"]',
+        step: 2,
+        label: 'Notifications Center',
+      },
       { selector: 'a[href="/settings/user"], button:has-text("Settings")', step: 3, label: 'Account Settings' },
       { selector: 'button:has-text("Sign out"), a[href*="logout"]', step: 4, label: 'Secure Sign Out' },
     ])
@@ -204,7 +221,11 @@ async function run() {
   await page.goto(`${BASE_URL}/settings/users`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1000)
   await annotate(page, [
-    { selector: 'button:has-text("Generate Invite Code"), button:has-text("New Code")', step: 1, label: 'Generate OTP Passcode' },
+    {
+      selector: 'button:has-text("Generate Invite Code"), button:has-text("New Code")',
+      step: 1,
+      label: 'Generate OTP Passcode',
+    },
     { selector: 'table, .user-list', step: 2, label: 'User Directory & Roster' },
     { selector: 'button:has-text("Approve as Admin")', step: 3, label: 'Approve as Admin' },
     { selector: 'button:has-text("Approve as Staff")', step: 4, label: 'Approve as Staff' },
@@ -238,8 +259,16 @@ async function run() {
     await page.waitForTimeout(800)
     await annotate(page, [
       { selector: 'input[placeholder*="+91" i]', step: 1, label: 'Contact Phone Numbers' },
-      { selector: 'button:has-text("View User Log"), a:has-text("View User Log")', step: 2, label: 'Deep Link to Audit Log' },
-      { selector: 'button:has-text("Revoke Access"), button:has-text("Set Pending")', step: 3, label: 'Revoke Access (Set Pending)' },
+      {
+        selector: 'button:has-text("View User Log"), a:has-text("View User Log")',
+        step: 2,
+        label: 'Deep Link to Audit Log',
+      },
+      {
+        selector: 'button:has-text("Revoke Access"), button:has-text("Set Pending")',
+        step: 3,
+        label: 'Revoke Access (Set Pending)',
+      },
       { selector: 'button:has-text("Remove User")', step: 4, label: 'Permanently Delete User' },
       { selector: 'button[type="submit"]:has-text("Save")', step: 5, label: 'Save Profile Changes' },
     ])
@@ -270,7 +299,11 @@ async function run() {
       { selector: 'select, [role="combobox"]', step: 2, label: 'Course Selection & Fee Auto-fill' },
       { selector: 'input[type="date"]', step: 3, label: 'Batch Start Date' },
       { selector: 'input[placeholder*="Phone" i]', step: 4, label: 'Student & Guardian Contact' },
-      { selector: 'button[type="submit"]:has-text("Save"), button:has-text("Add")', step: 5, label: 'Create Record & Issue Bill' },
+      {
+        selector: 'button[type="submit"]:has-text("Save"), button:has-text("Add")',
+        step: 5,
+        label: 'Create Record & Issue Bill',
+      },
     ])
     await page.screenshot({ path: path.join(ADMIN_DIR, '08_add_student_modal.png') })
     console.log('✓ Captured 08_add_student_modal.png')
@@ -283,9 +316,17 @@ async function run() {
   await page.waitForTimeout(1000)
   await annotate(page, [
     { selector: 'button:has-text("Record"), a:has-text("Record")', step: 1, label: 'Record Fee Payment CTA' },
-    { selector: 'button:has-text("All"), button:has-text("Paid"), button:has-text("Overdue")', step: 2, label: 'Billing Status Tabs' },
+    {
+      selector: 'button:has-text("All"), button:has-text("Paid"), button:has-text("Overdue")',
+      step: 2,
+      label: 'Billing Status Tabs',
+    },
     { selector: 'table', step: 3, label: 'GST Tax Invoices Table' },
-    { selector: 'button:has-text("Download"), button[aria-label*="download" i]', step: 4, label: 'Download PDF Invoice' },
+    {
+      selector: 'button:has-text("Download"), button[aria-label*="download" i]',
+      step: 4,
+      label: 'Download PDF Invoice',
+    },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '09_invoices_ledger.png') })
   console.log('✓ Captured 09_invoices_ledger.png')
@@ -298,9 +339,17 @@ async function run() {
     await annotate(page, [
       { selector: 'select, input[placeholder*="student" i]', step: 1, label: 'Select Student Debtor' },
       { selector: 'input[type="number"], input[placeholder*="Amount" i]', step: 2, label: 'Installment Amount (INR)' },
-      { selector: 'select:has-text("UPI"), select:has-text("Cash"), select[name*="mode" i]', step: 3, label: 'Mode (UPI / Cash / Bank)' },
+      {
+        selector: 'select:has-text("UPI"), select:has-text("Cash"), select[name*="mode" i]',
+        step: 3,
+        label: 'Mode (UPI / Cash / Bank)',
+      },
       { selector: 'input[placeholder*="UTR"], input[placeholder*="ref" i]', step: 4, label: 'Transaction Reference #' },
-      { selector: 'button[type="submit"]:has-text("Record"), button[type="submit"]:has-text("Save")', step: 5, label: 'Save Payment & Update Dues' },
+      {
+        selector: 'button[type="submit"]:has-text("Record"), button[type="submit"]:has-text("Save")',
+        step: 5,
+        label: 'Save Payment & Update Dues',
+      },
     ])
     await page.screenshot({ path: path.join(ADMIN_DIR, '10_record_payment_modal.png') })
     console.log('✓ Captured 10_record_payment_modal.png')
@@ -312,14 +361,20 @@ async function run() {
   await page.goto(`${BASE_URL}/courses`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1000)
   await annotate(page, [
-    { selector: 'button:has-text("Create"), button:has-text("New Course"), a:has-text("New Course")', step: 1, label: 'Add New Course CTA' },
+    {
+      selector: 'button:has-text("Create"), button:has-text("New Course"), a:has-text("New Course")',
+      step: 1,
+      label: 'Add New Course CTA',
+    },
     { selector: '.courses-grid, table, .grid', step: 2, label: 'Course Catalog & Pricing' },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '11_courses_catalog.png') })
   console.log('✓ Captured 11_courses_catalog.png')
 
   // 12. Create Course Modal
-  const createCourseBtn = page.locator('button:has-text("Create"), button:has-text("New Course"), a:has-text("New Course")').first()
+  const createCourseBtn = page
+    .locator('button:has-text("Create"), button:has-text("New Course"), a:has-text("New Course")')
+    .first()
   if (await createCourseBtn.isVisible()) {
     await createCourseBtn.click()
     await page.waitForTimeout(800)
@@ -328,7 +383,11 @@ async function run() {
       { selector: 'input[name="code"], input[placeholder*="Code" i]', step: 2, label: 'Short Code (e.g. FS-MERN)' },
       { selector: 'select', step: 3, label: 'Category Tier (Elite / Essential)' },
       { selector: 'input[type="number"], input[placeholder*="Fee" i]', step: 4, label: 'Standard Tuition Fee' },
-      { selector: 'button[type="submit"]:has-text("Save"), button[type="submit"]:has-text("Create")', step: 5, label: 'Publish to Catalog' },
+      {
+        selector: 'button[type="submit"]:has-text("Save"), button[type="submit"]:has-text("Create")',
+        step: 5,
+        label: 'Publish to Catalog',
+      },
     ])
     await page.screenshot({ path: path.join(ADMIN_DIR, '12_create_course_modal.png') })
     console.log('✓ Captured 12_create_course_modal.png')
@@ -352,7 +411,11 @@ async function run() {
   await page.waitForTimeout(1000)
   await annotate(page, [
     { selector: 'select, input[type="date"]', step: 1, label: 'Batch & Session Date' },
-    { selector: 'button:has-text("Present"), button:has-text("All Present")', step: 2, label: 'Bulk "Mark All Present"' },
+    {
+      selector: 'button:has-text("Present"), button:has-text("All Present")',
+      step: 2,
+      label: 'Bulk "Mark All Present"',
+    },
     { selector: 'table, .attendance-grid', step: 3, label: 'Roll-Call Roster' },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '14_attendance_tracker.png') })
@@ -378,7 +441,11 @@ async function run() {
       { selector: 'input[placeholder*="docs.google.com/forms"]', step: 1, label: 'Google Form URL' },
       { selector: 'input[placeholder*="docs.google.com/spreadsheets"]', step: 2, label: 'Google Sheet Responses URL' },
       { selector: 'select', step: 3, label: 'Map to Course' },
-      { selector: 'button[type="submit"]:has-text("Import"), button:has-text("Sync")', step: 4, label: 'Import Scores' },
+      {
+        selector: 'button[type="submit"]:has-text("Import"), button:has-text("Sync")',
+        step: 4,
+        label: 'Import Scores',
+      },
     ])
     await page.screenshot({ path: path.join(ADMIN_DIR, '16_google_forms_modal.png') })
     console.log('✓ Captured 16_google_forms_modal.png')
@@ -394,8 +461,16 @@ async function run() {
     await annotate(page, [
       { selector: 'input[type="number"], input[placeholder*="score" i]', step: 1, label: 'Enter Score / Marks' },
       { selector: 'textarea, input[placeholder*="feedback" i]', step: 2, label: 'Qualitative Feedback Remarks' },
-      { selector: 'button:has-text("Save"), button:has-text("Submit Grade")', step: 3, label: 'Save Student Evaluation' },
-      { selector: 'button[title*="Delete"], button[aria-label*="delete" i]', step: 4, label: 'Delete Single Submission' },
+      {
+        selector: 'button:has-text("Save"), button:has-text("Submit Grade")',
+        step: 3,
+        label: 'Save Student Evaluation',
+      },
+      {
+        selector: 'button[title*="Delete"], button[aria-label*="delete" i]',
+        step: 4,
+        label: 'Delete Single Submission',
+      },
     ])
     await page.screenshot({ path: path.join(ADMIN_DIR, '17_grading_studio.png') })
     console.log('✓ Captured 17_grading_studio.png')
@@ -407,7 +482,11 @@ async function run() {
   await annotate(page, [
     { selector: 'button:has-text("Issue"), button:has-text("Generate")', step: 1, label: 'Issue Certificate CTA' },
     { selector: 'table, .cert-list', step: 2, label: 'Eligible & Issued Registry' },
-    { selector: 'button:has-text("Download"), a:has-text("Download")', step: 3, label: 'Download Official PDF with QR' },
+    {
+      selector: 'button:has-text("Download"), a:has-text("Download")',
+      step: 3,
+      label: 'Download Official PDF with QR',
+    },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '18_certificates_issuance.png') })
   console.log('✓ Captured 18_certificates_issuance.png')
@@ -416,7 +495,11 @@ async function run() {
   await page.goto(`${BASE_URL}/reports`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1000)
   await annotate(page, [
-    { selector: 'button:has-text("Financial"), [role="tab"]:has-text("Financial")', step: 1, label: 'Financial Revenue Reports' },
+    {
+      selector: 'button:has-text("Financial"), [role="tab"]:has-text("Financial")',
+      step: 1,
+      label: 'Financial Revenue Reports',
+    },
     { selector: 'button:has-text("Export"), button:has-text("CSV")', step: 2, label: 'Export Accounting CSV' },
   ])
   await page.screenshot({ path: path.join(ADMIN_DIR, '20_reports_financial.png') })
@@ -544,7 +627,11 @@ async function run() {
   await staffPage.goto(`${BASE_URL}/attendance`, { waitUntil: 'networkidle' })
   await annotate(staffPage, [
     { selector: 'select, input[type="date"]', step: 1, label: 'Select Batch & Date' },
-    { selector: 'button:has-text("Present"), button:has-text("All Present")', step: 2, label: 'One-Click Mark All Present' },
+    {
+      selector: 'button:has-text("Present"), button:has-text("All Present")',
+      step: 2,
+      label: 'One-Click Mark All Present',
+    },
     { selector: 'table', step: 3, label: 'Daily Roll-Call Grid' },
   ])
   await staffPage.screenshot({ path: path.join(STAFF_DIR, '05_staff_attendance.png') })
@@ -554,7 +641,11 @@ async function run() {
   await staffPage.goto(`${BASE_URL}/assessments`, { waitUntil: 'networkidle' })
   await annotate(staffPage, [
     { selector: 'button:has-text("Create"), button:has-text("New Assessment")', step: 1, label: 'New Test CTA' },
-    { selector: 'button:has-text("Google Forms"), button:has-text("Import")', step: 2, label: 'Import Google Form Responses' },
+    {
+      selector: 'button:has-text("Google Forms"), button:has-text("Import")',
+      step: 2,
+      label: 'Import Google Form Responses',
+    },
     { selector: 'button:has-text("Grade"), a:has-text("Grade")', step: 3, label: 'Enter Grading Studio' },
   ])
   await staffPage.screenshot({ path: path.join(STAFF_DIR, '06_staff_assessments.png') })
@@ -594,7 +685,7 @@ async function run() {
   console.log('\n🎉 ALL 38 Screenshots across both roles captured and annotated!')
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error('Fatal error during comprehensive capture:', err)
   process.exit(1)
 })

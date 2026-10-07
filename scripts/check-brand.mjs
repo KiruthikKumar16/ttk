@@ -16,6 +16,8 @@ const excludedDirectories = new Set([
   '.agents',
   '.claude',
   'memory',
+  'out',
+  'scenarios',
 ])
 const forbiddenBrand = new RegExp(['ely', 'sium'].join(''), 'i')
 const gstinLiteral = /\b\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]\b/

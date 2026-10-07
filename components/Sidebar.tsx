@@ -60,6 +60,8 @@ export function Sidebar({
           </div>
         )}
       </Link>
+
+      {!collapsed && <p className="nav-group-label">MAIN MENU</p>}
       <nav aria-label="Main navigation">
         {nav
           .filter((item) => can(role, item.resource, 'read'))
@@ -79,14 +81,19 @@ export function Sidebar({
                 className={`nav-item${active ? ' active' : ''}`}
                 title={label}
               >
-                <Icon size={18} className="mr-2" />
+                <Icon size={16} />
                 {!collapsed && <span className="flex-1 text-left">{label}</span>}
               </Link>
             )
           })}
       </nav>
+
       <div className="sidebar-bottom">
-        {!collapsed && <p className="eyebrow px-3">SETTINGS</p>}
+        {!collapsed && (
+          <p className="nav-group-label" style={{ marginTop: 8 }}>
+            SETTINGS
+          </p>
+        )}
         {can(role, 'gst', 'read') && (
           <Link
             href="/settings/gst"
@@ -95,7 +102,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/gst') ? ' active' : ''}`}
             title="GST Settings"
           >
-            <Settings size={18} className="mr-2" />
+            <Settings size={16} />
             {!collapsed && <span className="flex-1 text-left">GST Settings</span>}
           </Link>
         )}
@@ -107,7 +114,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/users') ? ' active' : ''}`}
             title="Users and roles"
           >
-            <Users size={18} className="mr-2" />
+            <Users size={16} />
             {!collapsed && <span className="flex-1 text-left">Users and roles</span>}
           </Link>
         )}
@@ -119,7 +126,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/trainers') ? ' active' : ''}`}
             title="Instructor assignments"
           >
-            <Users size={18} className="mr-2" />
+            <Users size={16} />
             {!collapsed && <span className="flex-1 text-left">Instructor assignments</span>}
           </Link>
         )}
@@ -131,7 +138,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/course-categories') ? ' active' : ''}`}
             title="Course categories"
           >
-            <Layers size={18} className="mr-2" />
+            <Layers size={16} />
             {!collapsed && <span className="flex-1 text-left">Course categories</span>}
           </Link>
         )}
@@ -143,7 +150,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/skills') ? ' active' : ''}`}
             title="Skill tags"
           >
-            <Tags size={18} className="mr-2" />
+            <Tags size={16} />
             {!collapsed && <span className="flex-1 text-left">Skill tags</span>}
           </Link>
         )}
@@ -155,7 +162,7 @@ export function Sidebar({
             className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
             title="Brand information"
           >
-            <Building2 size={18} className="mr-2" />
+            <Building2 size={16} />
             {!collapsed && <span className="flex-1 text-left">Brand information</span>}
           </Link>
         )}
@@ -167,7 +174,7 @@ export function Sidebar({
             className={`nav-item${pathname === '/settings/user' || pathname.startsWith('/settings/user/') ? ' active' : ''}`}
             title="User settings"
           >
-            <UserCog size={18} className="mr-2" />
+            <UserCog size={16} />
             {!collapsed && <span className="flex-1 text-left">User settings</span>}
           </Link>
         )}

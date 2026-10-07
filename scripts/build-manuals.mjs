@@ -1,1897 +1,1778 @@
 import { chromium } from 'playwright'
 import fs from 'node:fs'
 import path from 'node:path'
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'
 
 const MANUALS_DIR = path.resolve('docs/manuals')
-const ADMIN_IMG_DIR = path.resolve('docs/manuals/screenshots/admin')
-const STAFF_IMG_DIR = path.resolve('docs/manuals/screenshots/staff')
+const JSON_DATA = path.resolve('docs/manuals/extracted_dom_and_api.json')
 
 fs.mkdirSync(MANUALS_DIR, { recursive: true })
 
-function getBase64Img(filePath) {
-  if (!fs.existsSync(filePath)) {
-    console.warn('Image not found:', filePath)
-    return ''
+const extractedData = JSON.parse(fs.readFileSync(JSON_DATA, 'utf8'))
+
+function domSummary(dom) {
+  const parts = []
+  if (dom.buttons && dom.buttons.length > 0) {
+    const btns = dom.buttons.filter((b) => !['Toggle navigation', '9+', 'Sign out'].includes(b.label))
+    if (btns.length > 0)
+      parts.push(
+        '<div class="dom-section"><strong>Buttons:</strong> ' +
+          btns
+            .map((b) => `<span class="dom-chip btn-chip">${b.label}${b.disabled ? ' [disabled]' : ''}</span>`)
+            .join(' ') +
+          '</div>',
+      )
   }
-  const ext = path.extname(filePath).slice(1)
-  const b64 = fs.readFileSync(filePath).toString('base64')
-  return `data:image/${ext};base64,${b64}`
+  if (dom.inputs && dom.inputs.length > 0) {
+    const inputs = dom.inputs.filter((i) => i.placeholder !== 'Search student name\u2026')
+    if (inputs.length > 0)
+      parts.push(
+        '<div class="dom-section"><strong>Inputs:</strong> ' +
+          inputs
+            .map((i) => `<span class="dom-chip input-chip">${i.placeholder || i.ariaLabel || i.name || i.type}</span>`)
+            .join(' ') +
+          '</div>',
+      )
+  }
+  if (dom.selects && dom.selects.length > 0)
+    parts.push(
+      '<div class="dom-section"><strong>Selects:</strong> ' +
+        dom.selects
+          .map(
+            (s) =>
+              `<span class="dom-chip select-chip">${s.id}: [${(s.options || []).slice(0, 4).join(', ')}${(s.options || []).length > 4 ? '..' : ''}]</span>`,
+          )
+          .join(' ') +
+        '</div>',
+    )
+  if (dom.tabs && dom.tabs.length > 0)
+    parts.push(
+      '<div class="dom-section"><strong>Tabs:</strong> ' +
+        dom.tabs.map((t) => `<span class="dom-chip tab-chip">${t}</span>`).join(' > ') +
+        '</div>',
+    )
+  return parts.length ? `<div class="dom-summary">${parts.join('')}</div>` : ''
 }
 
-const sharedCss = `
-  @page {
-    size: A4 portrait;
-    margin: 12mm 12mm 14mm 12mm;
-    @bottom-right {
-      content: counter(page);
-    }
-  }
-  * {
-    box-sizing: border-box;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+const CSS = `
+:root {
+  --bg-body: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --text-main: #1e293b;
+  --text-title: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #cbd5e1;
+  --border-subtle: #e2e8f0;
+  --table-stripe: #f8fafc;
+  --table-border: #e2e8f0;
+  --card-shadow: 0 4px 20px rgba(0,0,0,.08);
+  --cover-bg: linear-gradient(145deg, #f8fafc 0%, #f0f4ff 100%);
+  --chip-border: #cbd5e1;
+  --code-bg: #f1f5f9;
+}
+
+[data-theme="dark"] {
+  --bg-body: #0b0f19;
+  --bg-card: #151d2f;
+  --bg-subtle: #1c263c;
+  --text-main: #cbd5e1;
+  --text-title: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --border-subtle: #1e293b;
+  --table-stripe: #192238;
+  --table-border: #29354f;
+  --card-shadow: 0 6px 25px rgba(0,0,0,.5);
+  --cover-bg: linear-gradient(145deg, #101726 0%, #17223b 100%);
+  --chip-border: #334155;
+  --code-bg: #0d1321;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 14mm 16mm 14mm;
+}
+@page:first {
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
+  background: var(--bg-card);
+  line-height: 1.5;
+  font-size: 11.5px;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.page-break {
+  page-break-before: always;
+  break-before: page;
+}
+.avoid-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+h1, h2, h3, h4, .section-title, .flow-title, .sub-title {
+  page-break-after: avoid;
+  break-after: avoid;
+}
+table, tr, td, th {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.cover {
+  min-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 32px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--cover-bg);
+}
+.logo-badge {
+  background: #1e3a8a;
+  color: #fff;
+  padding: 10px 18px;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 2px;
+  border-radius: 8px;
+  display: inline-block;
+}
+.cover-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.cover-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.cover h1 {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--text-title);
+  line-height: 1.2;
+  margin: 0 0 14px 0;
+}
+.cover-subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 580px;
+}
+.cover-meta {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: var(--bg-card);
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+.meta-item strong {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.meta-item span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.cover-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+.toc-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-title);
+  margin: 0 0 18px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-subtle);
+}
+.toc-section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.toc-section a {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.toc-section a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.toc-dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--border-color);
+  margin: 0 8px;
+}
+.toc-page {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.toc-sub {
+  margin-left: 16px;
+  margin-top: 2px;
+}
+.toc-sub a {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+h2.section-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-title);
+  margin: 32px 0 8px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-num {
+  background: #2563eb;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 5px;
+  min-width: 28px;
+  text-align: center;
+}
+h3.flow-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-title);
+  margin: 18px 0 5px 0;
+}
+h4.sub-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 12px 0 4px 0;
+}
+p.desc {
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+}
+.route-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.route-pill:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.permission-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-left: 8px;
+}
+.permission-admin { background: #fef2f2; color: #dc2626; }
+.permission-staff { background: #f0fdf4; color: #16a34a; }
+.permission-both { background: #eff6ff; color: #2563eb; }
+.screenshot-box {
+  margin: 12px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  cursor: zoom-in;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.screenshot-box:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+.screenshot-box img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.screenshot-caption {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.zoom-hint {
+  font-size: 9px;
+  font-weight: 600;
+  color: #2563eb;
+  opacity: 0.85;
+}
+[data-theme="dark"] .zoom-hint {
+  color: #60a5fa;
+}
+table.steps-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 11px;
+}
+table.steps-table th {
+  background: var(--bg-subtle);
+  color: var(--text-title);
+  text-align: left;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  font-weight: 700;
+  font-size: 10.5px;
+}
+table.steps-table td {
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  vertical-align: top;
+  color: var(--text-main);
+}
+table.steps-table tr:nth-child(even) td {
+  background: var(--table-stripe);
+}
+.badge-callout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  background: #e11d48;
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 10.5px;
+}
+.btn-name {
+  font-weight: 700;
+  color: var(--text-title);
+}
+table.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 10.5px;
+}
+table.api-table th {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 5px 10px;
+  text-align: left;
+  font-size: 10px;
+}
+table.api-table td {
+  padding: 5px 10px;
+  border: 1px solid var(--border-subtle);
+  font-family: monospace;
+  color: var(--text-main);
+}
+table.api-table tr:nth-child(even) td {
+  background: var(--table-stripe);
+}
+.method-get { background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 9.5px; }
+.method-post { background: #dbeafe; color: #1e40af; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 9.5px; }
+.method-delete { background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 9.5px; }
+.method-put { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 9.5px; }
+.dom-summary {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 10.5px;
+}
+.dom-section { margin-bottom: 5px; }
+.dom-chip { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; margin: 1px 2px; }
+.btn-chip { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.input-chip { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.select-chip { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.tab-chip { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+.callout-box { padding: 9px 13px; border-radius: 6px; margin: 10px 0; font-size: 11px; }
+.callout-tip { background: #f0fdf4; border-left: 4px solid #16a34a; color: #166534; }
+.callout-warning { background: #fefce8; border-left: 4px solid #ca8a04; color: #854d0e; }
+.callout-important { background: #eff6ff; border-left: 4px solid #2563eb; color: #1e40af; }
+[data-theme="dark"] .callout-tip { background: #064e3b; color: #a7f3d0; border-left-color: #10b981; }
+[data-theme="dark"] .callout-warning { background: #451a03; color: #fde68a; border-left-color: #f59e0b; }
+[data-theme="dark"] .callout-important { background: #172554; color: #bfdbfe; border-left-color: #3b82f6; }
+.callout-title { font-weight: 700; margin-bottom: 2px; }
+.sitemap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 12px 0; }
+.sitemap-node { border: 1px solid var(--border-color); border-radius: 6px; padding: 9px 11px; background: var(--bg-subtle); }
+.sitemap-node-header { font-weight: 700; font-size: 11.5px; color: #2563eb; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+.sitemap-node-path { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+.sitemap-node ul { margin: 4px 0 0 14px; padding: 0; font-size: 10.5px; color: var(--text-main); }
+.modal-spec { background: var(--bg-subtle); border: 1px solid #e9d5ff; border-radius: 6px; padding: 10px 12px; margin: 10px 0; }
+.modal-spec h4 { color: #9333ea; margin: 0 0 8px 0; font-size: 12px; }
+.field-list { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0; }
+.field-tag { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; border-radius: 10px; padding: 1px 8px; font-size: 10px; }
+
+/* Process Flowchart Pipelines */
+.diagram-wrapper {
+  margin: 14px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.diagram-header {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.3px;
+}
+[data-theme="dark"] .diagram-header {
+  color: #60a5fa;
+}
+.flow-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-card);
+}
+.flow-step-card {
+  flex: 1 1 110px;
+  min-width: 105px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.flow-step-card:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+.flow-step-icon {
+  font-size: 18px;
+  line-height: 1.2;
+}
+.flow-step-card strong {
+  font-size: 10.5px;
+  color: var(--text-title);
+  display: block;
+}
+.flow-step-card span {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+.flow-step-arrow {
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: bold;
+  user-select: none;
+  padding: 0 2px;
+}
+
+/* Reading Progress Bar */
+.reading-progress-container {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: transparent;
+  z-index: 10000;
+  pointer-events: none;
+}
+.reading-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #2563eb, #6366f1);
+  transition: width 0.08s ease-out;
+}
+
+/* In-Page Search Highlighting & Match Controls */
+mark.search-match {
+  background: #fde047;
+  color: #0f172a;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-weight: 600;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+mark.search-match.current {
+  background: #f97316;
+  color: #ffffff;
+  outline: 2px solid #ea580c;
+}
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+.search-count {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+  min-width: 32px;
+  text-align: center;
+}
+.search-nav-btn {
+  background: #334155;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+.search-nav-btn:hover {
+  background: #475569;
+}
+.kbd-hint {
+  font-family: monospace;
+  font-size: 9px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+.sidebar-link.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+  border-left: 3px solid #2563eb;
+  padding-left: 7px;
+}
+[data-theme="dark"] .sidebar-link.active {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border-left-color: #60a5fa;
+}
+
+/* Interactive Web Experience */
+@media screen {
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #1e293b;
-    background: #ffffff;
-    line-height: 1.5;
-    font-size: 12px;
-    margin: 0;
-    padding: 0;
+    padding-top: 56px;
+    background: var(--bg-body);
   }
-  .page-break {
-    page-break-before: always;
-  }
-  .avoid-break {
-    page-break-inside: avoid;
-  }
-  
-  /* Cover Page */
-  .cover {
-    min-height: 94vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 40px 30px;
-    border: 1px solid #cbd5e1;
+  .manual-wrapper {
+    max-width: 980px;
+    margin: 20px auto 40px auto;
+    background: var(--bg-card);
+    padding: 32px 40px;
     border-radius: 12px;
-    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-subtle);
   }
-  .cover-header {
+  .interactive-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: #0f172a;
+    color: #fff;
     display: flex;
     align-items: center;
-    gap: 16px;
-  }
-  .logo-badge {
-    background: #1e3a8a;
-    color: #ffffff;
-    padding: 10px 18px;
-    font-weight: 900;
-    font-size: 22px;
-    letter-spacing: 2px;
-    border-radius: 8px;
-  }
-  .cover-title-group {
-    margin-top: 50px;
-  }
-  .cover-tag {
-    display: inline-block;
-    padding: 4px 12px;
-    background: #dbeafe;
-    color: #1d4ed8;
-    font-weight: 800;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 6px;
-    margin-bottom: 14px;
-  }
-  .cover h1 {
-    font-size: 32px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.2;
-    margin: 0 0 16px 0;
-  }
-  .cover-subtitle {
-    font-size: 15px;
-    color: #475569;
-    max-width: 620px;
-    line-height: 1.5;
-  }
-  .cover-meta {
-    margin-top: 36px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-  }
-  .meta-item strong {
-    display: block;
-    font-size: 10.5px;
-    text-transform: uppercase;
-    color: #64748b;
-    margin-bottom: 3px;
-  }
-  .meta-item span {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #1e293b;
-  }
-  .cover-footer {
-    border-top: 1px solid #cbd5e1;
-    padding-top: 16px;
-    font-size: 11px;
-    color: #64748b;
-    display: flex;
     justify-content: space-between;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
   }
-
-  /* Headings & Section Styling */
-  h2.section-title {
-    font-size: 18px;
+  .interactive-header .brand {
     font-weight: 800;
-    color: #0f172a;
-    margin: 28px 0 8px 0;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #e2e8f0;
+    font-size: 13.5px;
+    letter-spacing: 1px;
+    color: #38bdf8;
     display: flex;
     align-items: center;
     gap: 10px;
   }
-  .section-num {
-    background: #2563eb;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 5px;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-  h3.flow-title {
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 18px 0 6px 0;
+  .interactive-header .search-box {
+    display: flex;
+    align-items: center;
+    background: #1e293b;
+    border-radius: 6px;
+    padding: 4px 10px;
+    border: 1px solid #334155;
   }
-  p.desc {
-    color: #475569;
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 12px;
-  }
-  .route-pill {
-    display: inline-block;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    color: #334155;
-    font-family: monospace;
-    font-size: 10.5px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-  }
-
-  /* Screenshot Figure */
-  .screenshot-box {
-    margin: 14px 0;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #f8fafc;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-  }
-  .screenshot-box img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  .screenshot-caption {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: #475569;
-    padding: 7px 12px;
-    background: #f1f5f9;
-    border-top: 1px solid #e2e8f0;
-  }
-
-  /* Numbered Steps Table */
-  table.steps-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
+  .interactive-header .search-box input {
+    background: transparent;
+    border: none;
+    color: #f8fafc;
     font-size: 11.5px;
+    outline: none;
+    width: 240px;
   }
-  table.steps-table th {
-    background: #f1f5f9;
-    color: #334155;
-    text-align: left;
-    padding: 7px 10px;
-    border: 1px solid #cbd5e1;
-    font-weight: 700;
+  .interactive-header .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  table.steps-table td {
-    padding: 8px 10px;
-    border: 1px solid #e2e8f0;
-    vertical-align: top;
-  }
-  table.steps-table tr:nth-child(even) td {
-    background: #f8fafc;
-  }
-  .badge-callout {
+  .interactive-header .nav-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    background: #e11d48;
-    color: #ffffff;
-    border-radius: 50%;
-    font-weight: 800;
-    font-size: 11px;
-    margin-right: 5px;
-    box-shadow: 0 2px 4px rgba(225,29,72,0.3);
+    gap: 6px;
+    transition: background 0.15s ease;
   }
-  .btn-name {
-    font-weight: 700;
-    color: #0f172a;
-  }
+  .interactive-header .nav-btn:hover { background: #1d4ed8; }
+  .interactive-header .outline-btn { background: #334155; }
+  .interactive-header .outline-btn:hover { background: #475569; }
+  .interactive-header .theme-btn { background: #1e293b; border: 1px solid #334155; }
+  .interactive-header .theme-btn:hover { background: #334155; }
+  .interactive-header .switch-btn { background: #334155; color: #e2e8f0; }
+  .interactive-header .switch-btn:hover { background: #475569; }
 
-  /* Callout Boxes */
-  .callout-box {
-    padding: 10px 14px;
-    border-radius: 6px;
-    margin: 12px 0;
-    font-size: 11.5px;
+  /* Lightbox Modal */
+  .lightbox-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 15, 26, 0.92);
+    backdrop-filter: blur(6px);
+    z-index: 100000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
   }
-  .callout-tip {
-    background: #f0fdf4;
-    border-left: 4px solid #16a34a;
-    color: #166534;
+  .lightbox-modal.active {
+    display: flex;
   }
-  .callout-warning {
-    background: #fefce8;
-    border-left: 4px solid #ca8a04;
-    color: #854d0e;
+  .lightbox-container {
+    max-width: 95vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .callout-important {
-    background: #eff6ff;
-    border-left: 4px solid #2563eb;
-    color: #1e40af;
+  @keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
   }
-  .callout-title {
-    font-weight: 700;
-    margin-bottom: 2px;
+  .lightbox-container img {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .lightbox-caption {
+    margin-top: 10px;
+    color: #f1f5f9;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .lightbox-close:hover {
+    background: rgba(255,255,255,0.3);
   }
 
-  /* Sitemap Cards */
-  .sitemap-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 14px 0;
+  /* Sidebar Drawer */
+  .sidebar-drawer {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    bottom: 0;
+    width: 320px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .sitemap-node {
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 10px;
-    background: #f8fafc;
+  .sidebar-drawer.open {
+    transform: translateX(0);
   }
-  .sitemap-node-header {
-    font-weight: 700;
-    font-size: 12px;
-    color: #1e3a8a;
-    margin-bottom: 3px;
+  .sidebar-overlay {
+    position: fixed;
+    top: 52px; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 9997;
+    display: none;
+  }
+  .sidebar-overlay.active {
+    display: block;
+  }
+  .sidebar-header {
+    padding: 14px 18px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .sitemap-node-path {
-    font-family: monospace;
-    font-size: 10px;
-    color: #64748b;
+  .sidebar-header h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-title);
   }
-  .sitemap-node ul {
-    margin: 6px 0 0 14px;
-    padding: 0;
-    font-size: 10.5px;
-    color: #334155;
+  .sidebar-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
   }
+  .sidebar-search {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .sidebar-search input {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-subtle);
+    color: var(--text-main);
+    font-size: 11px;
+    outline: none;
+  }
+  .sidebar-nav-list {
+    padding: 10px 8px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .sidebar-link {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-bottom: 2px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-link:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+  }
+  [data-theme="dark"] .sidebar-link:hover {
+    background: #1e3a8a;
+    color: #93c5fd;
+  }
+
+  /* Copy toast */
+  .copy-toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border: 1px solid #38bdf8;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    z-index: 100001;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+  }
+  .copy-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  .back-to-top {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #2563eb;
+    color: #fff;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 800;
+    z-index: 999;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .back-to-top:hover {
+    transform: translateY(-3px);
+    background: #1d4ed8;
+  }
+}
+
+@media print {
+  :root, [data-theme="dark"] {
+    --bg-body: #ffffff !important;
+    --bg-card: #ffffff !important;
+    --bg-subtle: #f8fafc !important;
+    --text-main: #1e293b !important;
+    --text-title: #0f172a !important;
+    --text-muted: #64748b !important;
+    --border-color: #cbd5e1 !important;
+    --border-subtle: #e2e8f0 !important;
+    --table-stripe: #f8fafc !important;
+    --table-border: #e2e8f0 !important;
+    --card-shadow: none !important;
+    --cover-bg: linear-gradient(145deg, #f8fafc 0%, #f0f4ff 100%) !important;
+  }
+  .no-print, .interactive-header, .back-to-top, .sidebar-drawer, .sidebar-overlay, .lightbox-modal, .copy-toast, .zoom-hint, .reading-progress-container, .search-controls, .kbd-hint {
+    display: none !important;
+  }
+  body {
+    padding-top: 0 !important;
+    background: #fff !important;
+    color: #1e293b !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+  }
+  .manual-wrapper {
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+  .cover {
+    height: 96vh !important;
+    min-height: 96vh !important;
+    max-height: 98vh !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    margin-bottom: 0 !important;
+    padding: 36px 28px !important;
+  }
+  .page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+  }
+  h1, h2, h3, h4, .section-title, .flow-title, .sub-title {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  h2.section-title {
+    margin-top: 14px !important;
+    margin-bottom: 6px !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .op-unit {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 8px 0 12px 0 !important;
+  }
+  .screenshot-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 6px auto 8px auto !important;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    text-align: center !important;
+  }
+  .screenshot-box img {
+    max-height: 72mm !important;
+    max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+  }
+  .screenshot-caption {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+    background: #f1f5f9 !important;
+    border-top: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+  }
+  table.steps-table, table.api-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 6px 0 10px 0 !important;
+    font-size: 9.5px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  table.steps-table thead, table.api-table thead {
+    display: table-header-group !important;
+  }
+  table.steps-table tr, table.api-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  table.steps-table td, table.steps-table th, table.api-table td, table.api-table th {
+    padding: 4px 7px !important;
+  }
+  .badge-callout {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+  }
+  .diagram-wrapper, .modal-spec, .callout-box, .sitemap-node, .dom-summary {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 6px 0 !important;
+  }
+  .sitemap-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    page-break-inside: avoid !important;
+  }
+}
 `
 
-async function buildAdminManual() {
-  console.log('Assembling Full Comprehensive Admin Manual...')
-  
-  const imgLogin = getBase64Img(path.join(ADMIN_IMG_DIR, '01_login.png'))
-  const imgDash = getBase64Img(path.join(ADMIN_IMG_DIR, '02_executive_dashboard.png'))
-  const imgDashAcad = getBase64Img(path.join(ADMIN_IMG_DIR, '03_dashboard_academic_tab.png'))
-  const imgTopbar = getBase64Img(path.join(ADMIN_IMG_DIR, '29_topbar_notifications.png'))
-  const imgUsers = getBase64Img(path.join(ADMIN_IMG_DIR, '04_users_and_roles.png'))
-  const imgModal = getBase64Img(path.join(ADMIN_IMG_DIR, '05_invite_modal.png'))
-  const imgUserEdit = getBase64Img(path.join(ADMIN_IMG_DIR, '06_user_edit_modal.png'))
-  const imgStudents = getBase64Img(path.join(ADMIN_IMG_DIR, '07_students_directory.png'))
-  const imgAddStudent = getBase64Img(path.join(ADMIN_IMG_DIR, '08_add_student_modal.png'))
-  const imgInvoices = getBase64Img(path.join(ADMIN_IMG_DIR, '09_invoices_ledger.png'))
-  const imgRecordPay = getBase64Img(path.join(ADMIN_IMG_DIR, '10_record_payment_modal.png'))
-  const imgCourses = getBase64Img(path.join(ADMIN_IMG_DIR, '11_courses_catalog.png'))
-  const imgMaterials = getBase64Img(path.join(ADMIN_IMG_DIR, '13_course_materials.png'))
-  const imgAttendance = getBase64Img(path.join(ADMIN_IMG_DIR, '14_attendance_tracker.png'))
-  const imgAssessments = getBase64Img(path.join(ADMIN_IMG_DIR, '15_assessments_studio.png'))
-  const imgCerts = getBase64Img(path.join(ADMIN_IMG_DIR, '18_certificates_issuance.png'))
-  const imgVerify = getBase64Img(path.join(ADMIN_IMG_DIR, '19_verify_public_portal.png'))
-  const imgReportsFin = getBase64Img(path.join(ADMIN_IMG_DIR, '20_reports_financial.png'))
-  const imgReportsAcad = getBase64Img(path.join(ADMIN_IMG_DIR, '21_reports_academic.png'))
-  const imgAudit = getBase64Img(path.join(ADMIN_IMG_DIR, '22_audit_log.png'))
-  const imgGst = getBase64Img(path.join(ADMIN_IMG_DIR, '23_gst_settings.png'))
-  const imgBrand = getBase64Img(path.join(ADMIN_IMG_DIR, '24_brand_settings.png'))
-  const imgTrainers = getBase64Img(path.join(ADMIN_IMG_DIR, '25_instructor_assignments.png'))
-  const imgCats = getBase64Img(path.join(ADMIN_IMG_DIR, '26_course_categories.png'))
-  const imgSkills = getBase64Img(path.join(ADMIN_IMG_DIR, '27_skill_tags.png'))
-  const imgSettings = getBase64Img(path.join(ADMIN_IMG_DIR, '28_user_settings.png'))
+function buildHtml(role) {
+  const pages = role === 'admin' ? extractedData.adminPages : extractedData.staffPages
+  const p = {}
+  pages.forEach((page) => {
+    p[page.pageName] = page
+  })
 
-  const html = `<!DOCTYPE html>
+  // Use relative image links
+  const relPath = (file) => `screenshots/${role}/${file}`
+
+  const I =
+    role === 'admin'
+      ? {
+          login: relPath('admin_01_login.png'),
+          dash: relPath('admin_02_executive_dashboard.png'),
+          dashAcad: relPath('admin_03_dashboard_academic.png'),
+          topbar: relPath('admin_04_topbar.png'),
+          users: relPath('admin_05_users.png'),
+          inviteModal: relPath('admin_06_invite_modal.png'),
+          userEdit: relPath('admin_07_user_edit_modal.png'),
+          students: relPath('admin_08_students.png'),
+          addStudent: relPath('admin_09_add_student.png'),
+          invoices: relPath('admin_10_invoices.png'),
+          recordPay: relPath('admin_11_record_payment.png'),
+          courses: relPath('admin_12_courses.png'),
+          materials: relPath('admin_13_materials.png'),
+          attendance: relPath('admin_14_attendance.png'),
+          assessments: relPath('admin_15_assessments.png'),
+          certs: relPath('admin_16_certificates.png'),
+          verify: relPath('admin_17_verify_portal.png'),
+          reportsFin: relPath('admin_18_reports_financial.png'),
+          reportsAcad: relPath('admin_19_reports_academic.png'),
+          audit: relPath('admin_20_audit_log.png'),
+          gst: relPath('admin_21_gst.png'),
+          brand: relPath('admin_22_brand.png'),
+          trainers: relPath('admin_23_trainers.png'),
+          cats: relPath('admin_24_course_categories.png'),
+          skills: relPath('admin_25_skills.png'),
+          settings: relPath('admin_26_settings_user.png'),
+        }
+      : {
+          signup: relPath('staff_01_signup.png'),
+          login: relPath('staff_02_login.png'),
+          topbar: relPath('staff_03_topbar.png'),
+          dashA: relPath('staff_04_dashboard.png'),
+          dashB: relPath('staff_05_watchlist.png'),
+          studentsDir: relPath('staff_06_students.png'),
+          addStudent: relPath('staff_07_add_student.png'),
+          studentDossier: relPath('staff_08_student_dossier.png'),
+          attendancePicker: relPath('staff_09_attendance_picker.png'),
+          attendanceMarking: relPath('staff_10_attendance_marking.png'),
+          assessmentsStudio: relPath('staff_11_assessments_catalog.png'),
+          createAssessment: relPath('staff_12_create_assessment.png'),
+          googleFormsImport: relPath('staff_13_google_forms_import.png'),
+          classroomQr: relPath('staff_14_classroom_qr.png'),
+          gradingStudio: relPath('staff_15_grading_studio.png'),
+          materialsDir: relPath('staff_16_materials_dir.png'),
+          materialsView: relPath('staff_17_materials_view.png'),
+          uploadMaterial: relPath('staff_18_materials_upload.png'),
+          reportsAcad: relPath('staff_19_reports_academic.png'),
+          reportsAssessments: relPath('staff_20_reports_assessments.png'),
+          settingsProfile: relPath('staff_21_settings_profile.png'),
+          settingsJson: relPath('staff_22_settings_json.png'),
+        }
+
+  // Read pre-built HTML content
+  const contentFile = path.resolve(`scripts/manual-content-${role}.html`)
+  if (!fs.existsSync(contentFile)) {
+    throw new Error(`Content file not found: ${contentFile}`)
+  }
+  let content = fs.readFileSync(contentFile, 'utf8')
+
+  // Replace image tokens
+  Object.entries(I).forEach(([key, val]) => {
+    content = content.replaceAll(`{{IMG:${key}}}`, val)
+  })
+
+  // Replace extracted DOM tokens
+  Object.entries(p).forEach(([pageName, pageData]) => {
+    const safeKey = pageName.replace(/[^a-zA-Z0-9]/g, '_')
+    const domHtml = domSummary(pageData.dom)
+    content = content.replaceAll(`{{DOM:${safeKey}}}`, domHtml)
+    const apiHtml = pageData.apiCalls
+      .map(
+        (c) =>
+          `<tr><td><code class="method-${c.method.toLowerCase()}">${c.method}</code></td><td><code>${c.url}</code></td></tr>`,
+      )
+      .join('')
+    content = content.replaceAll(`{{API:${safeKey}}}`, apiHtml)
+  })
+
+  // Replace API catalog token
+  const apiCatalog = extractedData.apiCatalog
+    .map(
+      (api) =>
+        `<tr><td><code class="method-get">GET/POST</code></td><td><code>${api.route}</code></td><td>${api.tables.join(', ') || 'N/A'}</td><td>${api.permission}</td></tr>`,
+    )
+    .join('')
+  content = content.replaceAll('{{API_CATALOG}}', apiCatalog)
+
+  const otherRole = role === 'admin' ? 'staff' : 'admin'
+  const otherRoleLabel = role === 'admin' ? 'Staff Manual' : 'Admin Manual'
+  const otherRoleHref = role === 'admin' ? 'Thoorigai_Staff_User_Manual.html' : 'Thoorigai_Admin_User_Manual.html'
+
+  const interactiveHeader = `
+  <div class="reading-progress-container no-print">
+    <div id="reading-progress-bar" class="reading-progress-bar"></div>
+  </div>
+  <header class="interactive-header no-print">
+    <div class="header-left">
+      <button class="nav-btn outline-btn" onclick="toggleSidebar()" title="Toggle Section Outline (Key: O)">&#9776; Outline</button>
+      <div class="brand">
+        <span>THOORIGAI ACADEMY</span>
+        <span class="permission-badge ${role === 'admin' ? 'permission-admin' : 'permission-staff'}">${role.toUpperCase()} MANUAL</span>
+      </div>
+    </div>
+    <div class="search-box">
+      <input type="text" id="manual-search" placeholder="Search manual (Press '/' to focus)..." oninput="handleSearchInput(this.value)" onkeydown="handleSearchKey(event)" />
+      <div class="search-controls">
+        <span id="search-count" class="search-count"></span>
+        <button class="search-nav-btn" id="search-prev-btn" onclick="navigateSearch(-1)" title="Previous match (Shift+Enter)">&uarr;</button>
+        <button class="search-nav-btn" id="search-next-btn" onclick="navigateSearch(1)" title="Next match (Enter)">&darr;</button>
+        <span class="kbd-hint">/</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="theme-toggle-btn" class="nav-btn theme-btn" onclick="toggleTheme()" title="Switch Theme (Key: D)">&#127769; Theme</button>
+      <a href="${otherRoleHref}" class="nav-btn switch-btn">&larr; Switch to ${otherRoleLabel}</a>
+      <button onclick="window.print()" class="nav-btn">&#128438; Print / Save PDF</button>
+    </div>
+  </header>
+
+  <!-- Sidebar Outline Drawer -->
+  <aside id="sidebar-drawer" class="sidebar-drawer no-print">
+    <div class="sidebar-header">
+      <h3>Table of Contents Outline</h3>
+      <button class="sidebar-close-btn" onclick="toggleSidebar(false)" title="Close">&times;</button>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="sidebar-search-input" placeholder="Quick find section..." oninput="filterSidebar(this.value)" />
+    </div>
+    <nav id="sidebar-nav-list" class="sidebar-nav-list"></nav>
+  </aside>
+  <div id="sidebar-overlay" class="sidebar-overlay no-print" onclick="toggleSidebar(false)"></div>
+
+  <!-- Screenshot Zoom Lightbox Modal -->
+  <div id="lightbox-modal" class="lightbox-modal no-print" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox()" title="Close (Esc)">&times;</button>
+    <div class="lightbox-container" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" alt="Enlarged screenshot" />
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <!-- Clipboard Toast -->
+  <div id="copy-toast" class="copy-toast no-print">Copied to clipboard!</div>
+
+  <a href="#top" class="back-to-top no-print" title="Back to top (Key: T)">&uarr;</a>
+  `
+
+  const clientScript = `
+  <script>
+    // Theme Management
+    function initTheme() {
+      let saved = 'light';
+      try {
+        saved = localStorage.getItem('thoorigai_manual_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      } catch(e){}
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('thoorigai_manual_theme', next); } catch(e){}
+      updateThemeBtn(next);
+    }
+    function updateThemeBtn(theme) {
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.innerHTML = theme === 'dark' ? '&#9728; Light' : '&#127769; Dark';
+    }
+
+    // Reading Progress Bar
+    function updateReadingProgress() {
+      const bar = document.getElementById('reading-progress-bar');
+      if (!bar) return;
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight <= 0) {
+        bar.style.width = '0%';
+        return;
+      }
+      const progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
+      bar.style.width = progress + '%';
+    }
+
+    // Sidebar Outline Management
+    function toggleSidebar(forceState) {
+      const drawer = document.getElementById('sidebar-drawer');
+      const overlay = document.getElementById('sidebar-overlay');
+      const isOpen = drawer.classList.contains('open');
+      const next = typeof forceState === 'boolean' ? forceState : !isOpen;
+      if (next) {
+        drawer.classList.add('open');
+        overlay.classList.add('active');
+        document.getElementById('sidebar-search-input')?.focus();
+      } else {
+        drawer.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+    }
+
+    function populateSidebar() {
+      const nav = document.getElementById('sidebar-nav-list');
+      if (!nav) return;
+      nav.innerHTML = '';
+      const titles = document.querySelectorAll('h2.section-title');
+      titles.forEach((h, idx) => {
+        let targetId = h.id;
+        if (!targetId) {
+          const prev = h.previousElementSibling;
+          if (prev && prev.id) {
+            targetId = prev.id;
+          } else {
+            targetId = 'sec-heading-' + idx;
+            h.id = targetId;
+          }
+        }
+        const a = document.createElement('a');
+        a.href = '#' + targetId;
+        a.className = 'sidebar-link';
+        a.textContent = h.textContent.replace(/\\s+/g, ' ').trim();
+        a.onclick = () => { toggleSidebar(false); };
+        nav.appendChild(a);
+      });
+    }
+
+    function filterSidebar(query) {
+      const q = query.trim().toLowerCase();
+      const links = document.querySelectorAll('.sidebar-link');
+      links.forEach(l => {
+        l.style.display = (!q || l.textContent.toLowerCase().includes(q)) ? '' : 'none';
+      });
+    }
+
+    // Scrollspy with IntersectionObserver
+    function initScrollspy() {
+      const titles = document.querySelectorAll('h2.section-title');
+      const links = document.querySelectorAll('.sidebar-link');
+      if (!titles.length || !links.length) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            links.forEach(l => {
+              if (l.getAttribute('href') === '#' + id) {
+                l.classList.add('active');
+                l.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              } else {
+                l.classList.remove('active');
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-60px 0px -70% 0px' });
+
+      titles.forEach(t => observer.observe(t));
+    }
+
+    // In-Page Search Highlighting & Match Cycling
+    let searchMatches = [];
+    let currentMatchIndex = -1;
+
+    function clearSearchHighlighting() {
+      const marks = document.querySelectorAll('mark.search-match');
+      marks.forEach(m => {
+        const parent = m.parentNode;
+        parent.replaceChild(document.createTextNode(m.textContent), m);
+        parent.normalize();
+      });
+      searchMatches = [];
+      currentMatchIndex = -1;
+      const countEl = document.getElementById('search-count');
+      if (countEl) countEl.textContent = '';
+    }
+
+    function highlightMatches(query) {
+      clearSearchHighlighting();
+      const q = query.trim();
+      if (!q || q.length < 2) return;
+
+      const main = document.querySelector('.manual-wrapper');
+      if (!main) return;
+
+      const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+          const parent = node.parentElement;
+          if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE' || parent.tagName === 'MARK' || parent.classList.contains('no-print'))) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+
+      const textNodes = [];
+      let n;
+      while ((n = walker.nextNode())) {
+        if (n.textContent.toLowerCase().includes(q.toLowerCase())) {
+          textNodes.push(n);
+        }
+      }
+
+      textNodes.forEach(node => {
+        const text = node.textContent;
+        const lower = text.toLowerCase();
+        const qLower = q.toLowerCase();
+        let index = lower.indexOf(qLower);
+        if (index === -1) return;
+
+        const fragment = document.createDocumentFragment();
+        let lastIdx = 0;
+        while (index !== -1) {
+          if (index > lastIdx) {
+            fragment.appendChild(document.createTextNode(text.substring(lastIdx, index)));
+          }
+          const mark = document.createElement('mark');
+          mark.className = 'search-match';
+          mark.textContent = text.substr(index, q.length);
+          fragment.appendChild(mark);
+          searchMatches.push(mark);
+          lastIdx = index + q.length;
+          index = lower.indexOf(qLower, lastIdx);
+        }
+        if (lastIdx < text.length) {
+          fragment.appendChild(document.createTextNode(text.substring(lastIdx)));
+        }
+        node.parentNode.replaceChild(fragment, node);
+      });
+
+      const countEl = document.getElementById('search-count');
+      if (searchMatches.length > 0) {
+        currentMatchIndex = 0;
+        updateCurrentMatch();
+      } else if (countEl) {
+        countEl.textContent = '0 found';
+      }
+    }
+
+    function updateCurrentMatch() {
+      searchMatches.forEach((m, idx) => {
+        if (idx === currentMatchIndex) {
+          m.classList.add('current');
+          m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          m.classList.remove('current');
+        }
+      });
+      const countEl = document.getElementById('search-count');
+      if (countEl) {
+        countEl.textContent = (currentMatchIndex + 1) + '/' + searchMatches.length;
+      }
+    }
+
+    function navigateSearch(delta) {
+      if (!searchMatches.length) return;
+      currentMatchIndex = (currentMatchIndex + delta + searchMatches.length) % searchMatches.length;
+      updateCurrentMatch();
+    }
+
+    function filterManual(query) {
+      const q = query.trim().toLowerCase();
+      const sections = document.querySelectorAll('.toc-section');
+      sections.forEach(s => {
+        if (!q) { s.style.display = ''; return; }
+        s.style.display = s.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    function handleSearchInput(val) {
+      filterManual(val);
+      highlightMatches(val);
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        navigateSearch(e.shiftKey ? -1 : 1);
+      } else if (e.key === 'Escape') {
+        const input = document.getElementById('manual-search');
+        if (input) {
+          input.value = '';
+          handleSearchInput('');
+          input.blur();
+        }
+      }
+    }
+
+    // Lightbox Modal Management
+    function openLightbox(src, caption) {
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const cap = document.getElementById('lightbox-caption');
+      if (!modal || !img) return;
+      img.src = src;
+      cap.textContent = caption || '';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox(e) {
+      if (e && e.target && e.target.closest && e.target.closest('.lightbox-container') && !e.target.classList.contains('lightbox-close')) return;
+      const modal = document.getElementById('lightbox-modal');
+      if (!modal) return;
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Clipboard and Toast Feedback
+    function showToast(msg) {
+      const t = document.getElementById('copy-toast');
+      if (!t) return;
+      t.textContent = msg || 'Copied to clipboard!';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function copyText(txt) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => showToast('Copied: "' + (txt.length > 30 ? txt.slice(0,30) + '...' : txt) + '"'));
+      } else {
+        const el = document.createElement('textarea');
+        el.value = txt;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast('Copied: "' + (txt.length > 30 ? txt.slice(0,30) + '...' : txt) + '"');
+      }
+    }
+
+    // Initialize all interactive behaviors on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      populateSidebar();
+      initScrollspy();
+      updateReadingProgress();
+
+      window.addEventListener('scroll', updateReadingProgress, { passive: true });
+
+      // Enable Lightbox on all screenshot boxes
+      const boxes = document.querySelectorAll('.screenshot-box');
+      boxes.forEach(box => {
+        const img = box.querySelector('img');
+        const cap = box.querySelector('.screenshot-caption');
+        if (img) {
+          box.onclick = (e) => {
+            if (e.target.tagName !== 'A') openLightbox(img.src, cap ? cap.innerText.replace('Click to zoom', '').trim() : '');
+          };
+          if (cap && !cap.querySelector('.zoom-hint')) {
+            const hint = document.createElement('span');
+            hint.className = 'zoom-hint no-print';
+            hint.innerHTML = '&#128269; Click to zoom';
+            cap.appendChild(hint);
+          }
+        }
+      });
+
+      // Enable quick-copy on route pills
+      const pills = document.querySelectorAll('.route-pill');
+      pills.forEach(p => {
+        p.title = 'Click to copy route';
+        p.onclick = (e) => {
+          e.stopPropagation();
+          copyText(p.textContent.trim());
+        };
+      });
+
+      // Enable quick-copy on API codes
+      const apiCodes = document.querySelectorAll('table.api-table td:nth-child(2) code');
+      apiCodes.forEach(c => {
+        c.style.cursor = 'pointer';
+        c.title = 'Click to copy endpoint';
+        c.onclick = (e) => {
+          e.stopPropagation();
+          copyText(c.textContent.trim());
+        };
+      });
+
+      // Global Keydown Listeners
+      document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const isInput = activeTag === 'input' || activeTag === 'textarea';
+
+        if (e.key === 'Escape') {
+          closeLightbox();
+          toggleSidebar(false);
+          const sInput = document.getElementById('manual-search');
+          if (sInput && sInput.value) {
+            sInput.value = '';
+            handleSearchInput('');
+            sInput.blur();
+          }
+          return;
+        }
+
+        if (!isInput) {
+          if (e.key === '/') {
+            e.preventDefault();
+            const sInput = document.getElementById('manual-search');
+            sInput?.focus();
+            sInput?.select();
+          } else if (e.key === 'd' || e.key === 'D') {
+            toggleTheme();
+          } else if (e.key === 'o' || e.key === 'O') {
+            toggleSidebar();
+          } else if (e.key === 't' || e.key === 'T') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
+      });
+    });
+  </script>
+  `
+
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ThoorigAI Infotech - Administrator Operations Manual</title>
-  <style>${sharedCss}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${role === 'admin' ? 'Administrator' : 'Staff'} Operations Manual - ThoorigAI Infotech</title>
+  <style>${CSS}</style>
 </head>
-<body>
-
-  <!-- COVER PAGE -->
-  <div class="cover">
-    <div>
-      <div class="cover-header">
-        <div class="logo-badge">THOORIGAI</div>
-        <div>
-          <strong style="display:block; font-size: 16px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
-          <span style="font-size: 12px; color: #64748b;">Enterprise Academy Administration & Operating System</span>
-        </div>
-      </div>
-
-      <div class="cover-title-group">
-        <span class="cover-tag">Executive Operations Handbook</span>
-        <h1>ADMINISTRATOR COMPLETE OPERATIONS MANUAL</h1>
-        <p class="cover-subtitle">
-          An exhaustive, screen-by-screen, button-by-button manual covering 100% of academy features: onboarding, role security, student admissions, fee invoicing, attendance tracking, assessment grading, certification, financial reporting, and compliance audit trail.
-        </p>
-      </div>
-
-      <div class="cover-meta">
-        <div class="meta-item">
-          <strong>Document Scope</strong>
-          <span>Complete A-to-Z Feature Reference</span>
-        </div>
-        <div class="meta-item">
-          <strong>Software Version</strong>
-          <span>Thoorigai Core Production v1.0.0</span>
-        </div>
-        <div class="meta-item">
-          <strong>Authorized Roles</strong>
-          <span>Executive Administrator (role='admin')</span>
-        </div>
-        <div class="meta-item">
-          <strong>Verification Standard</strong>
-          <span>E2E Playwright Audited & Verified</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="cover-footer">
-      <span>ThoorigAI Infotech LLP &bull; Confidential & Proprietary</span>
-      <span>Document Ref: THOOR-ADM-EXP-2026-v2</span>
-    </div>
-  </div>
-
-  <!-- SITEMAP & ARCHITECTURE -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">00</span> Complete Administrator Sitemap & Route Directory</h2>
-  <p class="desc">
-    Below is the complete architectural layout of every accessible administrative view, URL, and operational capability in the system.
-  </p>
-
-  <div class="sitemap-grid">
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>1. Executive Dashboard</span>
-        <span class="route-pill">/</span>
-      </div>
-      <div class="sitemap-node-path">Central command & financial overview</div>
-      <ul>
-        <li>8 Real-time KPI Metric cards</li>
-        <li>Financial Overview vs Academic View toggle</li>
-        <li>Course mix table & active batch counter</li>
-        <li>Add Student executive quick-action</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>2. Students Directory</span>
-        <span class="route-pill">/students</span>
-      </div>
-      <div class="sitemap-node-path">Comprehensive learner registry</div>
-      <ul>
-        <li>Filter tabs: All, Active, Completed, Paused</li>
-        <li>Add student multi-step modal</li>
-        <li>Tuition fee concession calculator</li>
-        <li>Installment schedule & balance tracking</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>3. Invoices & Billing</span>
-        <span class="route-pill">/invoices</span>
-      </div>
-      <div class="sitemap-node-path">Tax-compliant billing ledger</div>
-      <ul>
-        <li>Paid, Partially Paid & Overdue filters</li>
-        <li>Record offline payment modal (UPI/Cash/NEFT)</li>
-        <li>Download official GST PDF invoices</li>
-        <li>Automated CGST/SGST/IGST calculation</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>4. Courses & Curriculum</span>
-        <span class="route-pill">/courses</span>
-      </div>
-      <div class="sitemap-node-path">Program catalog & pricing tiers</div>
-      <ul>
-        <li>Create course & set duration/tuition</li>
-        <li>Tiers: Essential, Elite, Internship</li>
-        <li>Assign primary certified trainers</li>
-        <li>Map competencies & skill tags</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>5. Course Materials</span>
-        <span class="route-pill">/materials</span>
-      </div>
-      <div class="sitemap-node-path">Encrypted digital file repository</div>
-      <ul>
-        <li>Filter assets by course module</li>
-        <li>Upload lecture slides & code files (up to 50MB)</li>
-        <li>Downloadable curriculum documents</li>
-        <li>Secure presigned cloud storage bucket</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>6. Attendance Roster</span>
-        <span class="route-pill">/attendance</span>
-      </div>
-      <div class="sitemap-node-path">Daily cohort roll-call management</div>
-      <ul>
-        <li>Batch & date picker controls</li>
-        <li>One-click "Mark All Present" shortcut</li>
-        <li>Status toggles: Present, Absent, Late, Excused</li>
-        <li>Debounced automated database saving</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>7. Assessments Studio</span>
-        <span class="route-pill">/assessments</span>
-      </div>
-      <div class="sitemap-node-path">Academic grading & Google Forms sync</div>
-      <ul>
-        <li>Create tests, assignments & capstones</li>
-        <li>Sync Google Forms & Sheets response URLs</li>
-        <li>Grading Studio: marks & qualitative remarks</li>
-        <li>Single-result deletion & re-evaluation</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>8. Certificates Registry</span>
-        <span class="route-pill">/certificates</span>
-      </div>
-      <div class="sitemap-node-path">Official credentialing & verification</div>
-      <ul>
-        <li>Automated eligibility checks (fees + marks)</li>
-        <li>Generate tamper-proof verification ID</li>
-        <li>Download printable high-res PDF certificate</li>
-        <li>Public /verify portal with scan-to-verify QR</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>9. Reports & Analytics</span>
-        <span class="route-pill">/reports</span>
-      </div>
-      <div class="sitemap-node-path">Financial & academic business intelligence</div>
-      <ul>
-        <li>Monthly revenue collection run-rate</li>
-        <li>Course profitability & GST summary</li>
-        <li>Academic pass rates & attendance stats</li>
-        <li>One-click CSV exports for accounting</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>10. Audit Log Forensics</span>
-        <span class="route-pill">/audit-log</span>
-      </div>
-      <div class="sitemap-node-path">Immutable chronological database trail</div>
-      <ul>
-        <li>Real-time database trigger logging</li>
-        <li>Actor, action, entity & timestamp tracking</li>
-        <li>Trace actions by Correlation ID</li>
-        <li>Inspect raw JSON modification payload</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>11. Access & Role Security</span>
-        <span class="route-pill">/settings/users</span>
-      </div>
-      <div class="sitemap-node-path">User accounts & OTP invite protocol</div>
-      <ul>
-        <li>Approve pending signups as Admin or Staff</li>
-        <li>Generate single-use OTP codes (1h-7d expiry)</li>
-        <li>Edit user metadata & phone contacts</li>
-        <li>Danger Zone: Revoke access or remove user</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>12. System Configuration</span>
-        <span class="route-pill">/settings/*</span>
-      </div>
-      <div class="sitemap-node-path">Tax, brand & academic taxonomies</div>
-      <ul>
-        <li>GST Settings (/settings/gst)</li>
-        <li>Brand Information (/settings/brand)</li>
-        <li>Trainer Assignments (/settings/trainers)</li>
-        <li>Course Categories & Skill Tags</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- SECTION 1: AUTHENTICATION -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">01</span> System Authentication & Login Flow</h2>
-  <span class="route-pill">Route: /login</span>
-  <p class="desc">
-    Administrators access the enterprise portal through email and password authentication. The server sets an encrypted, HttpOnly session cookie and verifies executive role permissions.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgLogin}" alt="Administrator Sign-In Portal" />
-    <div class="screenshot-caption">Figure 1.1: Sign-In portal with email, password fields, and submit action.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control / Action</th>
-        <th style="width: 32%;">Input / Details</th>
-        <th style="width: 35%;">System Outcome</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Work Email Input</span></td>
-        <td>Enter registered admin email (e.g. <code>admin@thoorigai.test</code>).</td>
-        <td>Validates RFC 5322 syntax; flags malformed inputs.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Password Input</span></td>
-        <td>Enter confidential administrator password.</td>
-        <td>Masked entry with support for secure password managers.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Sign In Button</span></td>
-        <td>Click to submit credentials to <code>/api/auth/login</code>.</td>
-        <td>Authenticates against Supabase Auth, updates JWT app_metadata with profile role, and redirects to Dashboard.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 2: TOPBAR & NOTIFICATIONS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">02</span> Global Header, Quick Search & Notifications</h2>
-  <span class="route-pill">Global Topbar Component</span>
-  <p class="desc">
-    Present across every administrative page, the topbar provides instant global student search, unread system alerts, user settings access, and session termination.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgTopbar}" alt="Topbar and Notifications" />
-    <div class="screenshot-caption">Figure 2.1: Global Topbar displaying instant search bar, notification dropdown, and account actions.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Interaction</th>
-        <th style="width: 35%;">Action Performed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Global Instant Search</span></td>
-        <td>Click search bar or press keyboard shortcut <code>Ctrl+K</code> / <code>Cmd+K</code>.</td>
-        <td>Instant typeahead queries students by name, register ID, phone, or invoices without page reload.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Notifications Center</span></td>
-        <td>Click the bell icon to toggle the notification drawer.</td>
-        <td>Displays system alerts (pending approvals, new registrations, payment receipts) with "Mark All Read".</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Account Settings</span></td>
-        <td>Click the profile avatar or settings icon.</td>
-        <td>Navigates directly to <code>/settings/user</code> to update credentials or personal contact details.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Secure Sign Out</span></td>
-        <td>Click "Sign out" button on top-right.</td>
-        <td>Calls <code>/api/auth/logout</code>, purges session cookies, and safely redirects to <code>/login</code>.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 3: EXECUTIVE DASHBOARD -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">03</span> Executive Dashboard & KPI Intelligence</h2>
-  <span class="route-pill">Route: /</span>
-  <p class="desc">
-    The Executive Dashboard aggregates high-level institutional metrics: revenue collections, pending student balances, collection efficiency, active enrollments, and academic progress.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgDash}" alt="Executive Dashboard" />
-    <div class="screenshot-caption">Figure 3.1: Executive Dashboard with live KPI cards, tab toggles, and enrollment quick-action.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Element</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Workflow Triggered</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Add Student CTA</span></td>
-        <td>Top-right primary button on executive header.</td>
-        <td>Triggers enrollment modal instantly from any view without switching pages.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Financial KPI Cards</span></td>
-        <td>Live cards: Revenue Collected, Enrolled Cohort Value, Pending Balance, Collection Efficiency (%).</td>
-        <td>Aggregates payment ledgers directly from Postgres database in real time.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Academic Tab Toggle</span></td>
-        <td>Click "Staff & Academic Data" toggle button.</td>
-        <td>Switches dashboard view to classroom operational metrics (active cohorts, attendance rates).</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Master Navigation Sidebar</span></td>
-        <td>Persistent left command bar.</td>
-        <td>Provides one-click navigation to all 10 core administrative sections and settings modules.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="flow-title avoid-break">Staff & Academic Data View</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgDashAcad}" alt="Academic Dashboard Tab" />
-    <div class="screenshot-caption">Figure 3.2: Academic view displaying cohort attendance, upcoming sessions, and pending test grading.</div>
-  </div>
-
-  <!-- SECTION 4: USERS & ROLES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">04</span> User Management & Security Access Control</h2>
-  <span class="route-pill">Route: /settings/users</span>
-  <p class="desc">
-    Full identity and access management: reviewing pending signups, generating time-bound OTP invite codes, editing staff metadata, or revoking access.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgUsers}" alt="Users and Roles Roster" />
-    <div class="screenshot-caption">Figure 4.1: Users directory displaying active accounts, pending registrations, and role approval actions.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Target</th>
-        <th style="width: 35%;">Security Outcome</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Generate Invite Code</span></td>
-        <td>Top CTA button above user directory.</td>
-        <td>Opens the OTP configuration dialog to create single-use registration tokens.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">User Directory Roster</span></td>
-        <td>Interactive table of registered staff and admins.</td>
-        <td>Click "Settings & Info" on any row to edit contact details, phone, or departmental info.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Approve as Admin</span></td>
-        <td>Approval button next to pending user registration.</td>
-        <td>Elevates user to full Administrator; updates JWT metadata and grants unrestricted access.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Approve as Staff</span></td>
-        <td>Approval button next to pending user registration.</td>
-        <td>Activates user as Staff; restricts access to classroom, attendance, and assessment tools.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- INVITE MODAL -->
-  <h3 class="flow-title avoid-break">Generating Single-Use OTP Passcodes</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgModal}" alt="Generate Invite Modal" />
-    <div class="screenshot-caption">Figure 4.2: Scoped invitation modal with color-coded Staff vs Admin selection and expiration windows.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Instructions</th>
-        <th style="width: 35%;">Behavior</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Staff Access Card</span></td>
-        <td>Select for instructional staff &amp; trainers.</td>
-        <td>Generates <code>STAFF-XXXX</code> code. Confers standard classroom permissions.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Admin Access Card</span></td>
-        <td>Select for executive administrators (royal purple theme).</td>
-        <td>Generates <code>ADMIN-XXXX</code> code. Grants complete executive permissions.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Expiration Window</span></td>
-        <td>Choose validity: 1 Hour (Express), 24 Hours, 3 Days, or 7 Days.</td>
-        <td>Tokens automatically expire and burn after this timestamp.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Email Restriction</span></td>
-        <td>Optional: enter candidate's exact work email.</td>
-        <td>Enforces that only this exact email address can redeem the generated invite code.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">5</span></td>
-        <td><span class="btn-name">Generate Code CTA</span></td>
-        <td>Click to generate cryptographic token.</td>
-        <td>Copies single-use link: <code>https://app/signup?code=...</code> to clipboard.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- USER EDIT & DANGER ZONE -->
-  <div class="page-break"></div>
-  <h3 class="flow-title avoid-break">User Details & Danger Zone Actions</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgUserEdit}" alt="User Edit Modal" />
-    <div class="screenshot-caption">Figure 4.3: User metadata editor and Account Danger Zone (Revoke Access / Remove User).</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Element</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Action Performed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Phone Numbers</span></td>
-        <td>Primary mobile, alternate phone, and emergency contact.</td>
-        <td>Updates trainer contact card used in classroom coordination.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">View User Log</span></td>
-        <td>Button deep-linking to <code>/audit-log</code>.</td>
-        <td>Filters the entire database audit trail to show all actions performed by this user.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Revoke Access</span></td>
-        <td>Click "Revoke Access (Set Pending)".</td>
-        <td>Immediately demotes user to <code>pending</code>, invalidating active sessions.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Remove User</span></td>
-        <td>Destructive action button.</td>
-        <td>Prompts confirmation dialog; permanently purges profile and auth credentials.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">5</span></td>
-        <td><span class="btn-name">Save Changes</span></td>
-        <td>Click "Save User Details".</td>
-        <td>Persists profile updates to database with immediate UI confirmation.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 5: STUDENTS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">05</span> Student Lifecycle & Enrollment Management</h2>
-  <span class="route-pill">Route: /students</span>
-  <p class="desc">
-    Master learner registry managing enrollment, tuition fee installments, course batch assignments, and academic status.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgStudents}" alt="Students Directory" />
-    <div class="screenshot-caption">Figure 5.1: Student Directory with search bar, course filters, and enrollment triggers.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Input / Details</th>
-        <th style="width: 35%;">Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Search Filter</span></td>
-        <td>Search by Student Name, Register Number (e.g. <code>STU-2026-001</code>), or Phone.</td>
-        <td>Instant client-side filter displaying matching learners in real time.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Add Student Button</span></td>
-        <td>Click primary action button.</td>
-        <td>Opens the multi-step learner enrollment and billing form.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Master Registry Table</span></td>
-        <td>Displays Register ID, Name, Course, Batch Date, Total Fees, Balance, and Status.</td>
-        <td>Click any student row to view payment history, attendance records, or issue certificates.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- ADD STUDENT MODAL -->
-  <h3 class="flow-title avoid-break">Adding a New Student & Billing Setup</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAddStudent}" alt="Add Student Modal" />
-    <div class="screenshot-caption">Figure 5.2: Student admission form with demographic inputs, course selection, and initial installment.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Form Section</th>
-        <th style="width: 32%;">Fields &amp; Validations</th>
-        <th style="width: 35%;">System Consequence</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Student Legal Name</span></td>
-        <td>Full name as it should appear on official completion certificates.</td>
-        <td>Validated against minimum 2 characters; creates unique registration profile.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Course Selection</span></td>
-        <td>Choose target program from course catalog dropdown.</td>
-        <td>Automatically populates standard tuition fee and duration.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Batch Start Date</span></td>
-        <td>Calendar date picker for session commencement.</td>
-        <td>Assigns learner to the active cohort schedule for roll-call attendance.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Contact Information</span></td>
-        <td>Primary mobile (+91), email, guardian name, guardian mobile, city, and area.</td>
-        <td>Enables automated WhatsApp / email attendance notifications.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">5</span></td>
-        <td><span class="btn-name">Save Record CTA</span></td>
-        <td>Click "Save Student &amp; Create Invoice".</td>
-        <td>Generates student registration ID, creates billing ledger row, and logs audit event.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 6: INVOICES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">06</span> Invoicing, Payment Recording & GST Compliance</h2>
-  <span class="route-pill">Route: /invoices</span>
-  <p class="desc">
-    Financial ledger compliant with Indian GST laws (HSN/SAC 999293). Record offline tuition fee payments, track installment schedules, and issue digital tax invoices.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgInvoices}" alt="Invoices Ledger" />
-    <div class="screenshot-caption">Figure 6.1: Financial billing ledger with status filters, payment CTA, and invoice download buttons.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Action / Output</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Record Payment CTA</span></td>
-        <td>Primary button above billing ledger.</td>
-        <td>Opens payment recording modal to log incoming offline fee installments.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Billing Status Tabs</span></td>
-        <td>Tabs: All Invoices, Paid, Partially Paid, Overdue.</td>
-        <td>Filters ledger rows instantly based on outstanding fee balance.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">GST Tax Invoices Table</span></td>
-        <td>Displays Invoice #, Student Name, Total Billed, Paid Amount, and Balance.</td>
-        <td>Maintains an immutable record of all institutional receivables and tax liabilities.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Download PDF Invoice</span></td>
-        <td>Download button next to each invoice row.</td>
-        <td>Generates official PDF tax invoice with ThoorigAI GSTIN, CGST/SGST breakdown, and QR code.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- RECORD PAYMENT MODAL -->
-  <h3 class="flow-title avoid-break">Recording an Offline Fee Installment</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgRecordPay}" alt="Record Payment Modal" />
-    <div class="screenshot-caption">Figure 6.2: Offline payment recording modal with student selector and payment mode options.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Field</th>
-        <th style="width: 32%;">Input Required</th>
-        <th style="width: 35%;">Financial Accounting Effect</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Select Student</span></td>
-        <td>Search student by name or register ID.</td>
-        <td>Displays current outstanding balance and course fee breakdown.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Installment Amount</span></td>
-        <td>Enter payment amount in Indian Rupees (INR).</td>
-        <td>Validates amount cannot exceed outstanding balance unless advance.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Payment Mode</span></td>
-        <td>Select: UPI (GPay/PhonePe), Cash, Bank Transfer (NEFT/IMPS), or Cheque.</td>
-        <td>Classifies payment method for accounting ledger export.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Transaction Reference</span></td>
-        <td>Enter UPI UTR Number, Bank Transaction Ref, or Cash Receipt #.</td>
-        <td>Stores unique transaction audit reference to prevent double entry.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">5</span></td>
-        <td><span class="btn-name">Save Payment CTA</span></td>
-        <td>Click "Save Payment &amp; Issue Receipt".</td>
-        <td>Deducts balance, updates invoice status, and records transaction in audit log.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 7: COURSES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">07</span> Course Catalog & Curriculum Configuration</h2>
-  <span class="route-pill">Route: /courses</span>
-  <p class="desc">
-    Configure the academy course catalog, pricing tiers (Essential, Elite, Internship), syllabus duration, and assign certified trainers.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgCourses}" alt="Courses Catalog" />
-    <div class="screenshot-caption">Figure 7.1: Course catalog with tier badges, student counts, and course creation triggers.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Element</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Action Performed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Add New Course CTA</span></td>
-        <td>Top-right button triggering the course builder.</td>
-        <td>Opens modal to create a new academic course in the curriculum catalog.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Course Catalog & Pricing</span></td>
-        <td>Grid of all active courses with duration, fee, and enrolled students.</td>
-        <td>Click any card to modify syllabus modules, adjust pricing, or archive programs.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 8: MATERIALS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">08</span> Course Materials & Digital Asset Repository</h2>
-  <span class="route-pill">Route: /materials</span>
-  <p class="desc">
-    Digital asset management backed by encrypted cloud storage. Upload presentation slides, lab code files, syllabus guides, and reference documents.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgMaterials}" alt="Course Materials" />
-    <div class="screenshot-caption">Figure 8.1: Materials repository with course module filter and secure upload dropzone.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Interaction</th>
-        <th style="width: 35%;">Storage Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Course Module Filter</span></td>
-        <td>Select course from dropdown.</td>
-        <td>Filters file list to show materials assigned to the selected topic.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Upload Materials CTA</span></td>
-        <td>Click or drag &amp; drop files (PDF, PPT, ZIP up to 50MB).</td>
-        <td>Uploads to private Supabase Storage bucket with presigned download URLs.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Uploaded Digital Files</span></td>
-        <td>Table of files with title, size, upload date, and uploader name.</td>
-        <td>Provides instant download link or deletion action for obsolete assets.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 9: ATTENDANCE -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">09</span> Daily Attendance Tracking & Roll-Call</h2>
-  <span class="route-pill">Route: /attendance</span>
-  <p class="desc">
-    Daily roll-call attendance system with real-time automated saving. Tracks attendance percentages required for certificate issuance eligibility (75% threshold).
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAttendance}" alt="Attendance Tracker" />
-    <div class="screenshot-caption">Figure 9.1: Attendance roll-call roster with date picker, quick-mark actions, and student grid.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Action Performed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Batch & Session Date</span></td>
-        <td>Select target course batch and choose attendance date.</td>
-        <td>Renders official student roster for the selected cohort session.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Bulk "Mark All Present"</span></td>
-        <td>One-click green action button at top of roster.</td>
-        <td>Instantly marks every student in the cohort as "Present" with a single click.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Roll-Call Roster</span></td>
-        <td>Individual student rows: click [Present], [Absent], [Late], or [Excused].</td>
-        <td>Changes trigger debounced autosave; green confirmation badge verifies database write.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 10: ASSESSMENTS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">10</span> Assessments Studio & Google Forms Sync</h2>
-  <span class="route-pill">Route: /assessments</span>
-  <p class="desc">
-    Create academic tests, sync Google Forms and Sheets responses, input evaluation marks, and record qualitative trainer remarks in the Grading Studio.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAssessments}" alt="Assessments Studio" />
-    <div class="screenshot-caption">Figure 10.1: Assessments Studio with test creation CTA, Google Forms import, and Grading Studio.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">New Test CTA</span></td>
-        <td>Click "Create Assessment". Enter title, max score, pass threshold, and course.</td>
-        <td>Publishes assessment to course syllabus and initiates student evaluation tracking.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Import Google Forms</span></td>
-        <td>Click "Import" to link a Google Form or Google Sheet URL.</td>
-        <td>Preserves form/sheet links and imports student score columns automatically.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Open Grading Studio</span></td>
-        <td>Click "Grade" next to any test to open the evaluation interface.</td>
-        <td>Review student submissions, input marks, type qualitative feedback, and save evaluations.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 11: CERTIFICATES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">11</span> Certificate Issuance & QR Verification</h2>
-  <span class="route-pill">Routes: /certificates &amp; /verify</span>
-  <p class="desc">
-    Issue officially authenticated completion certificates. The system automatically enforces two prerequisites: (1) 100% tuition fees cleared, and (2) Assessment pass threshold met.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgCerts}" alt="Certificates Registry" />
-    <div class="screenshot-caption">Figure 11.1: Certificate registry displaying issued credentials, verification codes, and PDF generation.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Prerequisites &amp; Action</th>
-        <th style="width: 35%;">Output</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Issue Certificate CTA</span></td>
-        <td>Click button next to an eligible student with cleared balance.</td>
-        <td>Generates unique verification code (e.g. <code>VREF-CERT-1048-A9B8</code>) with timestamp.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Eligible & Issued Registry</span></td>
-        <td>Table displaying student name, course, issue date, and certificate ID.</td>
-        <td>Maintains an immutable record of all certified graduates.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Official PDF with QR</span></td>
-        <td>Click "Download" to generate vector-grade certificate PDF.</td>
-        <td>Renders printable certificate with ThoorigAI seal, signature, and scan-to-verify QR code.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="flow-title avoid-break">Public Certificate Verification Portal</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgVerify}" alt="Public Verify Portal" />
-    <div class="screenshot-caption">Figure 11.2: Public verification portal at /verify allowing employers and students to validate credentials.</div>
-  </div>
-
-  <!-- SECTION 12: REPORTS & AUDIT -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">12</span> Business Intelligence, Reports & Audit Log</h2>
-  <span class="route-pill">Routes: /reports &amp; /audit-log</span>
-  <p class="desc">
-    Export financial and academic analytics, and inspect the chronological database audit trail with correlation IDs.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgReportsFin}" alt="Financial Reports" />
-    <div class="screenshot-caption">Figure 12.1: Financial reports tab showing monthly collection run-rates and GST tax liabilities.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Tab / Report</th>
-        <th style="width: 32%;">Metrics Provided</th>
-        <th style="width: 35%;">Export Capability</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Financial Revenue Reports</span></td>
-        <td>Tuition collected, course revenue breakdown, and GST tax collected summary.</td>
-        <td>Click "Export CSV" to download accounting spreadsheets ready for Tally/Excel.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Export Accounting CSV</span></td>
-        <td>Top CTA button generating structured CSV ledger.</td>
-        <td>Exports transaction records with invoice IDs, student details, and tax breakdowns.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="flow-title avoid-break">Academic Cohort Performance Analytics</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgReportsAcad}" alt="Academic Reports" />
-    <div class="screenshot-caption">Figure 12.2: Academic reports tab displaying cohort pass rates, average test scores, and attendance.</div>
-  </div>
-
-  <h3 class="flow-title avoid-break">System Forensics & Audit Trail</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAudit}" alt="Audit Log Trail" />
-    <div class="screenshot-caption">Figure 12.3: Immutable Audit Log recording every administrative and security action.</div>
-  </div>
-
-  <!-- SECTION 13: SETTINGS MODULES -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">13</span> Academy Settings & System Configuration</h2>
-  <span class="route-pill">Routes: /settings/*</span>
-  <p class="desc">
-    Exhaustive configuration for GST compliance, academy brand identity, trainer mappings, course tiers, skill tags, and personal credentials.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgGst}" alt="GST Settings" />
-    <div class="screenshot-caption">Figure 13.1: Tax compliance settings configuring GSTIN, legal business name, and tax breakdown.</div>
-  </div>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgBrand}" alt="Brand Settings" />
-    <div class="screenshot-caption">Figure 13.2: Brand identity settings: academy display name, logo upload, and contact info.</div>
-  </div>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgTrainers}" alt="Instructor Assignments" />
-    <div class="screenshot-caption">Figure 13.3: Trainer assignment settings mapping instructors to specific courses and batches.</div>
-  </div>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgCats}" alt="Course Categories" />
-    <div class="screenshot-caption">Figure 13.4: Course categories manager defining catalog tiers (Essential, Elite, Internship).</div>
-  </div>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgSkills}" alt="Skill Tags" />
-    <div class="screenshot-caption">Figure 13.5: Skill tags taxonomy managing technical competencies mapped to courses.</div>
-  </div>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgSettings}" alt="User Settings" />
-    <div class="screenshot-caption">Figure 13.6: Personal profile and password update settings for administrators.</div>
-  </div>
-
+<body id="top">
+  ${interactiveHeader}
+  <main class="manual-wrapper">
+    ${content}
+  </main>
+  ${clientScript}
 </body>
 </html>`
-
-  const htmlPath = path.join(MANUALS_DIR, 'Thoorigai_Admin_User_Manual.html')
-  fs.writeFileSync(htmlPath, html, 'utf8')
-  console.log('✓ Wrote Thoorigai_Admin_User_Manual.html')
-  return htmlPath
 }
 
-async function buildStaffManual() {
-  console.log('Assembling Full Comprehensive Staff Manual...')
+const adminTitles = [
+  ['s00', 'System Architecture & Complete Sitemap'],
+  ['s01', 'System Authentication & Login'],
+  ['s02', 'Top Navigation Bar & Notifications'],
+  ['s03', 'Executive Dashboard'],
+  ['s04', 'Users & Roles Management'],
+  ['s05', 'Students Directory'],
+  ['s06', 'Invoices & Billing Ledger'],
+  ['s07', 'Courses & Curriculum Management'],
+  ['s08', 'Course Materials Repository'],
+  ['s09', 'Daily Attendance Tracker'],
+  ['s10', 'Assessments Studio'],
+  ['s11', 'Certificates Registry & Issuance'],
+  ['s12', 'Reports & Business Analytics'],
+  ['s13', 'Audit Log Forensics'],
+  ['s14', 'GST Compliance Settings'],
+  ['s15', 'Brand Information Settings'],
+  ['s16', 'Instructor Assignments'],
+  ['s17', 'Course Categories'],
+  ['s18', 'Skill Tags Management'],
+  ['s19', 'Personal Account Settings'],
+  ['s20', 'Public Certificate Verification Portal'],
+  ['s21', 'Complete API Endpoint Reference'],
+  ['s22', 'Role & Permissions Authority Matrix'],
+  ['s23', 'Keyboard Shortcuts & Accessibility Guide'],
+  ['s24', 'Disaster Recovery & Offline Data Export SOP'],
+  ['s25', 'System Requirements & Browser Compatibility'],
+  ['s26', 'Institutional Terminology & Glossary'],
+  ['s27', 'Operational Troubleshooting & FAQ Matrix'],
+]
 
-  const imgLogin = getBase64Img(path.join(STAFF_IMG_DIR, '01_login.png'))
-  const imgSignup = getBase64Img(path.join(STAFF_IMG_DIR, '02_signup_onboarding.png'))
-  const imgDash = getBase64Img(path.join(STAFF_IMG_DIR, '03_staff_dashboard.png'))
-  const imgStudents = getBase64Img(path.join(STAFF_IMG_DIR, '04_staff_students.png'))
-  const imgAttendance = getBase64Img(path.join(STAFF_IMG_DIR, '05_staff_attendance.png'))
-  const imgAssessments = getBase64Img(path.join(STAFF_IMG_DIR, '06_staff_assessments.png'))
-  const imgMaterials = getBase64Img(path.join(STAFF_IMG_DIR, '07_staff_materials.png'))
-  const imgReports = getBase64Img(path.join(STAFF_IMG_DIR, '08_staff_academic_reports.png'))
-  const imgSettings = getBase64Img(path.join(STAFF_IMG_DIR, '09_staff_settings.png'))
+const staffTitles = [
+  ['ss00', 'System Architecture & Complete Staff Portal Sitemap'],
+  ['ss01', 'Onboarding: Receiving & Validating Single-Use OTP Invite Codes'],
+  ['ss02', 'Account Registration & Password Configuration'],
+  ['ss03', 'Daily Authentication & Multi-Tab Session Security'],
+  ['ss04', 'Global Shell Controls: Topbar, Search & Notifications'],
+  ['ss05', 'Staff Classroom Dashboard Overview & Quick Actions Dock'],
+  ['ss06', 'Classroom Attendance Health, Watchlist & Faculty SOP Checklist'],
+  ['ss07', 'Student Roster Management & Directory Filtering'],
+  ['ss08', 'Student Enrollment & New Admission Modal'],
+  ['ss09', 'Comprehensive Student Dossier & Academic History'],
+  ['ss10', 'Daily Attendance Session Picker & Date Controls'],
+  ['ss11', 'Live Daily Attendance Marking Sheet'],
+  ['ss12', 'Assessments Studio Catalog & Evaluation Overview'],
+  ['ss13', 'Creating a New Course Assessment & Google Quiz Setup'],
+  ['ss14', 'Google Forms & Sheets Response Import Synchronization'],
+  ['ss15', 'Instant Classroom Live QR Code Projection Modal'],
+  ['ss16', 'Inline Evaluation & Grading Studio Workflow'],
+  ['ss17', 'Course Materials Repository Directory'],
+  ['ss18', 'Managing Program Materials & Presigned Cloud Downloads'],
+  ['ss19', 'Uploading Lesson Materials Modal'],
+  ['ss20', 'Academic Reports: Attendance Trends & Date Filters'],
+  ['ss21', 'Academic Reports: Examination Analytics & Score Rosters'],
+  ['ss22', 'Instructor Account & Personal Profile Settings'],
+  ['ss23', 'Custom Profile Metadata & Structured JSON Inspector'],
+  ['ss24', 'Complete Staff REST API & Permissions Endpoint Matrix'],
+  ['ss25', 'Role Authority Matrix & Faculty Security Boundaries'],
+  ['ss26', 'Faculty Keyboard Shortcuts & Rapid Roll-Call Navigation'],
+  ['ss27', 'Classroom Hardware, Tablet & Network Matrix'],
+  ['ss28', 'Institutional Terminology & Academic Glossary'],
+  ['ss29', 'Faculty Classroom Emergency Playbook & Quick-Fix Matrix'],
+]
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ThoorigAI Infotech - Staff & Instructor User Manual</title>
-  <style>${sharedCss}</style>
-</head>
-<body>
+export async function getExactSectionPages(pdfPath, titles, skipTocPages = 4) {
+  const data = new Uint8Array(fs.readFileSync(pdfPath))
+  const loadingTask = pdfjs.getDocument({ data })
+  const doc = await loadingTask.promise
 
-  <!-- COVER PAGE -->
-  <div class="cover">
-    <div>
-      <div class="cover-header">
-        <div class="logo-badge">THOORIGAI</div>
-        <div>
-          <strong style="display:block; font-size: 16px; color: #0f172a;">THOORIGAI INFOTECH LLP</strong>
-          <span style="font-size: 12px; color: #64748b;">Instructional Operations & Classroom Management</span>
-        </div>
-      </div>
+  const pageMap = {}
+  for (let pageNum = skipTocPages; pageNum <= doc.numPages; pageNum++) {
+    const page = await doc.getPage(pageNum)
+    const content = await page.getTextContent()
+    const text = content.items.map((item) => item.str).join(' ')
 
-      <div class="cover-title-group">
-        <span class="cover-tag" style="background: #dcfce7; color: #15803d;">Staff &amp; Faculty Complete Guide</span>
-        <h1>STAFF &amp; INSTRUCTOR COMPLETE USER MANUAL</h1>
-        <p class="cover-subtitle">
-          An exhaustive, button-by-button operational handbook for Academy Faculty and Instructors. Covers the OTP invitation registration process, classroom operations, batch roll-call attendance, Google Forms assessment sync, grading studio evaluation, and learning asset uploads.
-        </p>
-      </div>
+    titles.forEach(([id, label], idx) => {
+      if (!pageMap[id]) {
+        const numStr = String(idx).padStart(2, '0')
+        const cleanLabel = label
+          .replace(/&amp;/g, '&')
+          .replace(/&mdash;/g, '—')
+          .replace(/\(.*?\)/g, '')
+          .trim()
+        const firstWord = cleanLabel.split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '')
 
-      <div class="cover-meta">
-        <div class="meta-item">
-          <strong>Audience</strong>
-          <span>Instructional Staff, Faculty &amp; Trainers</span>
-        </div>
-        <div class="meta-item">
-          <strong>Authorized Role</strong>
-          <span>Academy Staff (role='staff')</span>
-        </div>
-        <div class="meta-item">
-          <strong>Version</strong>
-          <span>Release 1.0 (Live Production)</span>
-        </div>
-        <div class="meta-item">
-          <strong>Coverage</strong>
-          <span>100% Staff Permitted Features</span>
-        </div>
-      </div>
-    </div>
+        const pattern = new RegExp(`\\b${numStr}\\s+${firstWord}`, 'i')
+        if (pattern.test(text)) {
+          pageMap[id] = pageNum
+        }
+      }
+    })
+  }
 
-    <div class="cover-footer">
-      <span>ThoorigAI Infotech LLP &bull; Faculty Resource</span>
-      <span>Document Ref: THOOR-STF-EXP-2026-v2</span>
-    </div>
-  </div>
-
-  <!-- SITEMAP & PERMISSIONS MATRIX -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">00</span> Staff Navigation Scope & Permissions Matrix</h2>
-  <p class="desc">
-    As instructional faculty, your dashboard is tailored specifically for classroom delivery, student progress tracking, and evaluations. Sensitive administrative functions (GST tax settings, tuition revenue, user role changes) are restricted to administrators.
-  </p>
-
-  <div class="sitemap-grid">
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Classroom Dashboard</span>
-        <span class="route-pill">/</span>
-      </div>
-      <div class="sitemap-node-path">Classroom operations hub</div>
-      <ul>
-        <li>Active enrolled students</li>
-        <li>Ongoing batches &amp; courses</li>
-        <li>Pending grading assignments</li>
-        <li>Quick roll-call triggers</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Student Rosters</span>
-        <span class="route-pill">/students</span>
-      </div>
-      <div class="sitemap-node-path">Cohort communication &amp; info</div>
-      <ul>
-        <li>Filter by assigned course</li>
-        <li>Learner contact email &amp; phone</li>
-        <li>Check batch enrollment dates</li>
-        <li>View individual attendance rate</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Attendance Tracker</span>
-        <span class="route-pill">/attendance</span>
-      </div>
-      <div class="sitemap-node-path">Daily roll-call registry</div>
-      <ul>
-        <li>Batch &amp; date roll-call roster</li>
-        <li>Mark Present, Absent, Late, Excused</li>
-        <li>Keyboard navigation shortcuts</li>
-        <li>Real-time automated saving</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Assessments Studio</span>
-        <span class="route-pill">/assessments</span>
-      </div>
-      <div class="sitemap-node-path">Grading &amp; evaluations</div>
-      <ul>
-        <li>Create assignments, quizzes &amp; tests</li>
-        <li>Link Google Forms &amp; Sheets scores</li>
-        <li>Grading studio &amp; feedback remarks</li>
-        <li>Publish scores to learner records</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Course Materials</span>
-        <span class="route-pill">/materials</span>
-      </div>
-      <div class="sitemap-node-path">Learning asset repository</div>
-      <ul>
-        <li>Upload lecture slides &amp; PDFs</li>
-        <li>Share code examples &amp; lab guides</li>
-        <li>Categorize by course topic</li>
-        <li>Download reference curriculum files</li>
-      </ul>
-    </div>
-
-    <div class="sitemap-node">
-      <div class="sitemap-node-header">
-        <span>Academic Reports</span>
-        <span class="route-pill">/reports</span>
-      </div>
-      <div class="sitemap-node-path">Classroom performance analytics</div>
-      <ul>
-        <li>Batch pass / fail percentages</li>
-        <li>Student test score distributions</li>
-        <li>Attendance compliance analytics</li>
-        <li>Export class grades to CSV</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- MODULE 1: ONBOARDING & SIGNUP -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">01</span> Staff Onboarding & Account Registration</h2>
-  <span class="route-pill">Route: /signup?code=STAFF-XXXX</span>
-  <p class="desc">
-    Instructors receive a secure, one-time invitation link or passcode from the Academy Administrator. Registering with an active code automatically validates your account as verified Staff.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgSignup}" alt="Staff Registration Screen" />
-    <div class="screenshot-caption">Figure 1.1: Registration portal highlighting required instructor fields and invitation passcode entry.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Field / Button</th>
-        <th style="width: 32%;">Instructions</th>
-        <th style="width: 35%;">Validation Rule</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Full Name Input</span></td>
-        <td>Enter your legal name as it should appear on student evaluation reports.</td>
-        <td>Minimum 2 characters; displayed on classroom notices.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Email Address Input</span></td>
-        <td>Enter your institutional or work email address.</td>
-        <td>Must match recipient restriction if configured by admin.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Create Password</span></td>
-        <td>Create a strong personal password.</td>
-        <td>Minimum 8 characters with numbers and special symbols.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">4</span></td>
-        <td><span class="btn-name">Enter Invite Code</span></td>
-        <td>Enter the <code>STAFF-XXXX</code> code provided by your administrator (pre-filled if using invite link).</td>
-        <td>Single-use code burned upon registration; elevates account instantly to Staff.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 2: STAFF DASHBOARD -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">02</span> Instructor Classroom Dashboard</h2>
-  <span class="route-pill">Route: /</span>
-  <p class="desc">
-    Your operational dashboard shows current batch progress, scheduled sessions, total students enrolled across your courses, and pending test grading tasks.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgDash}" alt="Staff Classroom Dashboard" />
-    <div class="screenshot-caption">Figure 2.1: Staff dashboard focused on classroom operations, active cohorts, and grading tasks.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Widget / Element</th>
-        <th style="width: 32%;">Information Provided</th>
-        <th style="width: 35%;">Recommended Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Classroom Operations Summary</span></td>
-        <td>Active Students enrolled in your courses, Ongoing Batches, and Pending Submissions awaiting evaluation.</td>
-        <td>Click cards to jump directly to attendance or grading tables.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Staff Navigation Sidebar</span></td>
-        <td>Streamlined sidebar displaying instructional tools: Students, Attendance, Assessments, Materials, Reports.</td>
-        <td>Use to transition between modules during lecture sessions.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 3: STUDENT DIRECTORY -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">03</span> Student Directory & Batch Communication</h2>
-  <span class="route-pill">Route: /students</span>
-  <p class="desc">
-    Access learner rosters for your assigned courses to coordinate batch communications, view student contact numbers, and monitor individual attendance rates.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgStudents}" alt="Staff Students View" />
-    <div class="screenshot-caption">Figure 3.1: Student Directory with search bar and batch cohort rosters.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Search Batch Students</span></td>
-        <td>Filter learners by typing their first or last name, register ID, or email.</td>
-        <td>Instant live search filter across all active cohort rosters.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Enrolled Student Cohort</span></td>
-        <td>Displays Register Number, Full Name, Course Name, Batch Start Date, and Status.</td>
-        <td>Click a student to view their attendance record and assessment scores.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 4: ATTENDANCE -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">04</span> Daily Attendance Roll-Call Workflow</h2>
-  <span class="route-pill">Route: /attendance</span>
-  <p class="desc">
-    Mark daily attendance with instant automated saving. Efficient one-click tools and keyboard navigation allow rapid roll-call during lecture commencement.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAttendance}" alt="Staff Attendance Marking" />
-    <div class="screenshot-caption">Figure 4.1: Daily roll-call interface with one-click bulk marking and status toggles.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Control</th>
-        <th style="width: 32%;">Action</th>
-        <th style="width: 35%;">System Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Select Batch &amp; Date</span></td>
-        <td>Select the course batch from dropdown and confirm the session date.</td>
-        <td>Loads the official class roster for that specific date.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">One-Click Mark All Present</span></td>
-        <td>Click the green "Mark All Present" button at the top of the roster.</td>
-        <td>Sets every student's status to "Present" in a single action.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Student Roll-Call Grid</span></td>
-        <td>Toggle individual exceptions: click [Absent] or [Late] for students not on time.</td>
-        <td>Changes trigger debounced autosave; green badge indicates data is persisted.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 5: ASSESSMENTS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">05</span> Assessments, Google Forms & Grading Studio</h2>
-  <span class="route-pill">Route: /assessments</span>
-  <p class="desc">
-    Create test milestones, sync external Google Forms and Google Sheets scores, evaluate student code submissions, and write qualitative performance feedback.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgAssessments}" alt="Staff Assessments Studio" />
-    <div class="screenshot-caption">Figure 5.1: Assessments Studio showing new test creation, Google Form syncing, and grading buttons.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Step Description</th>
-        <th style="width: 35%;">Output</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">New Classroom Test</span></td>
-        <td>Click "Create Assessment". Enter title (e.g. <code>React State Quiz</code>), max marks, and passing threshold.</td>
-        <td>Adds assessment entry to course syllabus.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Import Google Form Responses</span></td>
-        <td>Click "Import" to link a Google Form or Google Sheet URL.</td>
-        <td>Imports student score columns directly into the grading ledger.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Enter Grading Studio</span></td>
-        <td>Click "Grade" next to the test to evaluate individual student answers.</td>
-        <td>Enter score out of max marks, type instructor feedback remarks, and save grades.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 6: COURSE MATERIALS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">06</span> Course Materials & Learning Asset Uploads</h2>
-  <span class="route-pill">Route: /materials</span>
-  <p class="desc">
-    Distribute lesson presentations, lab exercises, sample project repositories, and reference cheat-sheets to your students.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgMaterials}" alt="Staff Materials Upload" />
-    <div class="screenshot-caption">Figure 6.1: Course materials repository with upload dropzone and module selector.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Instructions</th>
-        <th style="width: 35%;">Storage Details</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Select Target Course Module</span></td>
-        <td>Choose which course topic or week the file belongs to.</td>
-        <td>Filters existing assets and associates new uploads with the selected module.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Upload Lesson Assets</span></td>
-        <td>Drag &amp; drop PDF slides, ZIP archives, or code files up to 50MB.</td>
-        <td>Uploads to encrypted storage bucket and notifies enrolled students.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">3</span></td>
-        <td><span class="btn-name">Downloadable Class Files</span></td>
-        <td>View uploaded files with upload date and file size.</td>
-        <td>Click download icon to review files on classroom display systems.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- MODULE 7: ACADEMIC REPORTS & SETTINGS -->
-  <div class="page-break"></div>
-  <h2 class="section-title"><span class="section-num">07</span> Academic Reports & Personal Settings</h2>
-  <span class="route-pill">Routes: /reports &amp; /settings/user</span>
-  <p class="desc">
-    Review batch-wise test score distributions and manage your instructor profile and account password.
-  </p>
-
-  <div class="screenshot-box avoid-break">
-    <img src="${imgReports}" alt="Staff Academic Reports" />
-    <div class="screenshot-caption">Figure 7.1: Academic performance metrics showing cohort pass percentages and assessment averages.</div>
-  </div>
-
-  <table class="steps-table avoid-break">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Step</th>
-        <th style="width: 25%;">Action</th>
-        <th style="width: 32%;">Description</th>
-        <th style="width: 35%;">Benefit</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge-callout">1</span></td>
-        <td><span class="btn-name">Class Pass Rate & Performance</span></td>
-        <td>View overall pass percentage, average test scores, and completion trends.</td>
-        <td>Identify struggling learners early to provide remedial academic support.</td>
-      </tr>
-      <tr>
-        <td><span class="badge-callout">2</span></td>
-        <td><span class="btn-name">Download Roster Scores</span></td>
-        <td>Click "Export CSV" to download class marks in spreadsheet format.</td>
-        <td>Enables offline record keeping and semester grading archives.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="flow-title avoid-break">Instructor Profile & Credentials</h3>
-  <div class="screenshot-box avoid-break">
-    <img src="${imgSettings}" alt="Staff User Settings" />
-    <div class="screenshot-caption">Figure 7.2: Personal account settings for updating instructor display name and password.</div>
-  </div>
-
-</body>
-</html>`
-
-  const htmlPath = path.join(MANUALS_DIR, 'Thoorigai_Staff_User_Manual.html')
-  fs.writeFileSync(htmlPath, html, 'utf8')
-  console.log('✓ Wrote Thoorigai_Staff_User_Manual.html')
-  return htmlPath
+  return pageMap
 }
 
-async function convertHtmlToPdf(htmlPath, pdfPath, documentTitle) {
-  console.log(`Rendering PDF: ${pdfPath}...`)
-  const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage()
-  
-  await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(1000)
+function updateHtmlTocPages(htmlPath, pageMap) {
+  let html = fs.readFileSync(htmlPath, 'utf8')
+  let changed = false
 
-  await page.pdf({
-    path: pdfPath,
+  Object.entries(pageMap).forEach(([id, pageNum]) => {
+    const targetPattern = new RegExp(`(<span class="toc-page" id="toc-pg-${id}">Page )(\\d+)(</span>)`)
+    if (targetPattern.test(html)) {
+      const formattedPage = String(pageNum).padStart(2, '0')
+      html = html.replace(targetPattern, `$1${formattedPage}$3`)
+      changed = true
+    }
+  })
+
+  if (changed) {
+    fs.writeFileSync(htmlPath, html, 'utf8')
+  }
+  return changed
+}
+
+async function renderPdf(page, htmlPath, pdfPath, role) {
+  const url = 'file:///' + htmlPath.replace(/\\/g, '/')
+  await page.goto(url, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(2000)
+
+  const headerTitle = role === 'admin' ? 'Administrator Operations Manual' : 'Staff Operations Manual'
+  const pdfBytes = await page.pdf({
     format: 'A4',
     printBackground: true,
+    preferCSSPageSize: true,
     displayHeaderFooter: true,
-    headerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; text-align: right; padding-right: 12mm; font-family: sans-serif;">${documentTitle} &bull; ThoorigAI Infotech LLP</div>`,
-    footerTemplate: `<div style="font-size: 8px; color: #94a3b8; width: 100%; display: flex; justify-content: space-between; padding: 0 12mm; font-family: sans-serif;"><span>Confidential & Proprietary</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
     margin: {
-      top: '14mm',
-      bottom: '14mm',
+      top: '15mm',
+      bottom: '15mm',
       left: '12mm',
       right: '12mm',
     },
+    headerTemplate: `<div style="width:100%;font-family:sans-serif;font-size:8.5px;color:#94a3b8;display:flex;justify-content:space-between;padding:0 12mm;"><span>ThoorigAI Infotech LLP &bull; ${headerTitle}</span><span>CONFIDENTIAL</span></div>`,
+    footerTemplate: `<div style="width:100%;font-family:sans-serif;font-size:8.5px;color:#94a3b8;display:flex;justify-content:space-between;padding:0 12mm;"><span>ThoorigAI Infotech LLP &bull; Operations Manual &bull; Confidential</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
   })
-
-  await browser.close()
-  const stats = fs.statSync(pdfPath)
-  console.log(`✓ PDF Generated successfully: ${pdfPath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`)
+  fs.writeFileSync(pdfPath, pdfBytes)
+  return pdfBytes
 }
 
 async function main() {
-  const adminHtml = await buildAdminManual()
-  const staffHtml = await buildStaffManual()
+  const adminHtmlPath = path.join(MANUALS_DIR, 'Thoorigai_Admin_User_Manual.html')
+  const adminPdfPath = path.join(MANUALS_DIR, 'Thoorigai_Admin_User_Manual.pdf')
+  const staffHtmlPath = path.join(MANUALS_DIR, 'Thoorigai_Staff_User_Manual.html')
+  const staffPdfPath = path.join(MANUALS_DIR, 'Thoorigai_Staff_User_Manual.pdf')
 
-  const adminPdf = path.join(MANUALS_DIR, 'Thoorigai_Admin_User_Manual.pdf')
-  const staffPdf = path.join(MANUALS_DIR, 'Thoorigai_Staff_User_Manual.pdf')
+  // Generate initial HTML files
+  let adminHtml = buildHtml('admin')
+  fs.writeFileSync(adminHtmlPath, adminHtml, 'utf8')
+  console.log('Initial Admin HTML generated:', (adminHtml.length / 1024).toFixed(0), 'KB')
 
-  await convertHtmlToPdf(adminHtml, adminPdf, 'ADMINISTRATOR OPERATIONS MANUAL')
-  await convertHtmlToPdf(staffHtml, staffPdf, 'STAFF & INSTRUCTOR USER MANUAL')
+  let staffHtml = buildHtml('staff')
+  fs.writeFileSync(staffHtmlPath, staffHtml, 'utf8')
+  console.log('Initial Staff HTML generated:', (staffHtml.length / 1024).toFixed(0), 'KB')
 
-  console.log('\n🎉 Both PDF Manuals successfully generated and compiled!')
-  console.log('1. Admin Manual:', adminPdf)
-  console.log('2. Staff Manual:', staffPdf)
+  console.log('Launching browser for PDF export & TOC pagination calibration...')
+  const browser = await chromium.launch({ args: ['--no-sandbox'] })
+  const context = await browser.newContext()
+  const page = await context.newPage()
+
+  // --- PASS 1: ADMIN PDF & EXACT PAGE CALIBRATION ---
+  console.log('Admin Pass 1: Rendering PDF for exact pagination measurement...')
+  await renderPdf(page, adminHtmlPath, adminPdfPath, 'admin')
+  const adminExactPages = await getExactSectionPages(adminPdfPath, adminTitles, 4)
+  console.log('Admin exact measured section pages:', adminExactPages)
+  updateHtmlTocPages(adminHtmlPath, adminExactPages)
+
+  // Admin Pass 2: Final PDF with exact calibrated TOC
+  console.log('Admin Pass 2: Re-rendering final PDF with 100% synchronized TOC...')
+  const finalAdminPdf = await renderPdf(page, adminHtmlPath, adminPdfPath, 'admin')
+  console.log('Admin Final PDF generated:', (finalAdminPdf.length / 1024).toFixed(0), 'KB')
+
+  // --- PASS 1: STAFF PDF & EXACT PAGE CALIBRATION ---
+  console.log('Staff Pass 1: Rendering PDF for exact pagination measurement...')
+  await renderPdf(page, staffHtmlPath, staffPdfPath, 'staff')
+  const staffExactPages = await getExactSectionPages(staffPdfPath, staffTitles, 4)
+  console.log('Staff exact measured section pages:', staffExactPages)
+  updateHtmlTocPages(staffHtmlPath, staffExactPages)
+
+  // Staff Pass 2: Final PDF with exact calibrated TOC
+  console.log('Staff Pass 2: Re-rendering final PDF with 100% synchronized TOC...')
+  const finalStaffPdf = await renderPdf(page, staffHtmlPath, staffPdfPath, 'staff')
+  console.log('Staff Final PDF generated:', (finalStaffPdf.length / 1024).toFixed(0), 'KB')
+
+  await browser.close()
+
+  // Copy final deliverables to /out directory
+  const outDir = path.resolve('out')
+  fs.mkdirSync(outDir, { recursive: true })
+  fs.copyFileSync(adminPdfPath, path.join(outDir, 'admin_manual.pdf'))
+  fs.copyFileSync(staffPdfPath, path.join(outDir, 'staff_manual.pdf'))
+  console.log('Copied final PDFs to out/admin_manual.pdf and out/staff_manual.pdf')
+  console.log('All manual builds and 2-pass TOC calibrations completed successfully!')
 }
 
-main().catch(err => {
-  console.error('Fatal error building manuals:', err)
+main().catch((err) => {
+  console.error(err)
   process.exit(1)
 })

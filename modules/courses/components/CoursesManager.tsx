@@ -258,23 +258,23 @@ export function CoursesManager({
     <>
       <div className="page-heading">
         <div>
-          <h1>Manage Courses</h1>
-          <p>Configure academy curriculum programs, duration tiers, tuition fees, and GST pricing</p>
+          <p className="eyebrow">ACADEMY CURRICULUM</p>
+          <h1>Courses</h1>
+          <p className="subcopy">
+            Configure academy curriculum programs, duration tiers, tuition fees, and GST pricing.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {canManageCategories && (
-            <Link
-              href="/settings/course-categories"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-xs"
-            >
-              <Layers size={16} className="text-gray-500" />
-              Configure Categories
+            <Link href="/settings/course-categories" className="btn-secondary text-xs">
+              <Layers size={14} className="text-slate-500" />
+              <span>Configure Categories</span>
             </Link>
           )}
           {canCreate && (
-            <Button onClick={openAddModal} size="default" className="flex items-center gap-1.5">
-              <Plus size={16} />
-              Add Course
+            <Button onClick={openAddModal} className="btn-primary text-xs">
+              <Plus size={14} />
+              <span>Add Course</span>
             </Button>
           )}
         </div>

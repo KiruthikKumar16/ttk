@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Copy, Check, ExternalLink, QrCode, Smartphone } from 'lucide-react'
+import QRCode from 'qrcode'
 
 interface ClassroomQRModalProps {
   isOpen: boolean
@@ -13,6 +14,26 @@ interface ClassroomQRModalProps {
 
 export function ClassroomQRModal({ isOpen, onClose, formUrl, title, courseName }: ClassroomQRModalProps) {
   const [copied, setCopied] = useState(false)
+  const [qrImageUrl, setQrImageUrl] = useState<string>('')
+
+  useEffect(() => {
+    if (!formUrl) return
+    let isMounted = true
+    QRCode.toDataURL(formUrl, { width: 300, margin: 2, errorCorrectionLevel: 'M' })
+      .then((url) => {
+        if (isMounted) setQrImageUrl(url)
+      })
+      .catch(() => {
+        if (isMounted) {
+          setQrImageUrl(
+            `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=15&data=${encodeURIComponent(formUrl)}`,
+          )
+        }
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [formUrl])
 
   if (!isOpen || !formUrl) return null
 
@@ -25,10 +46,6 @@ export function ClassroomQRModal({ isOpen, onClose, formUrl, title, courseName }
       // Fallback
     }
   }
-
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=15&data=${encodeURIComponent(
-    formUrl,
-  )}`
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-xs animate-fade-in">

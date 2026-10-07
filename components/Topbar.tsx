@@ -258,8 +258,24 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
 
   return (
     <header className="topbar">
-      <button type="button" onClick={onMenu} className="btn-ghost p-1.5" aria-label="Toggle navigation">
-        <Menu size={20} />
+      <button
+        type="button"
+        onClick={onMenu}
+        aria-label="Toggle navigation"
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid rgba(226, 232, 240, 0.6)',
+          background: 'rgba(255, 255, 255, 0.5)',
+          color: '#475569',
+          cursor: 'pointer',
+          transition: 'all 0.15s',
+        }}
+      >
+        <Menu size={16} />
       </button>
 
       <nav className="breadcrumb-nav hidden md:flex" aria-label="Breadcrumb">
@@ -290,7 +306,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
       <div className="top-actions">
         <div className="top-search-wrap" ref={wrapRef}>
           <div className={'top-search' + (open ? ' is-open' : '')}>
-            <Search size={16} />
+            <Search size={14} />
             <input
               role="combobox"
               aria-autocomplete="list"
@@ -303,7 +319,7 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
                 loadSearchData()
                 setOpen(true)
               }}
-              placeholder="Search student name…"
+              placeholder="Search students…"
               aria-label="Search students"
               aria-expanded={open}
               aria-controls={open && query.trim() ? 'student-search-results' : undefined}
@@ -409,21 +425,42 @@ export function Topbar({ onMenu, role }: { onMenu: () => void; role: Role }) {
 
         <Link
           href="/settings/user"
-          className="btn-ghost inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900"
           title="User settings"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid rgba(226, 232, 240, 0.6)',
+            background: 'rgba(255, 255, 255, 0.5)',
+            color: '#64748b',
+            transition: 'all 0.15s',
+          }}
         >
-          <UserCog size={15} />
-          <span className="hidden sm:inline">Settings</span>
+          <UserCog size={14} />
         </Link>
 
         <button
           type="button"
-          className="btn-ghost inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900"
           onClick={() => void handleSignOut()}
           title="Sign out"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid rgba(226, 232, 240, 0.6)',
+            background: 'rgba(255, 255, 255, 0.5)',
+            color: '#64748b',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
         >
-          <LogOut size={15} />
-          <span className="hidden sm:inline">Sign out</span>
+          <LogOut size={14} />
         </button>
       </div>
     </header>

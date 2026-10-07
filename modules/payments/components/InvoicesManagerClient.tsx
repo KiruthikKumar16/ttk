@@ -147,25 +147,30 @@ export function InvoicesManagerClient({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="page-heading">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
-              Tax & Fee Collections
+            <span
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+              style={{
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#059669',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+              }}
+            >
+              Fee Collections & Billing
             </span>
+            <p className="eyebrow !p-0 !m-0">FINANCIAL LEDGER</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Invoices</h1>
-          <p className="text-xs text-gray-500 mt-1 max-w-xl">
+          <h1>Invoices</h1>
+          <p className="subcopy">
             Browse tax invoices, fee receipts, and installment milestones categorized by curriculum tier.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/invoices/record"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors shadow-2xs"
-          >
-            <Banknote size={15} className="text-gray-500" />
+          <Link href="/invoices/record" className="btn-primary flex items-center gap-2">
+            <Banknote size={15} />
             <span>Record Payment</span>
           </Link>
         </div>
@@ -173,47 +178,42 @@ export function InvoicesManagerClient({
 
       {/* Metric Cards Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0 border border-emerald-200/60">
-            <TrendingUp size={22} />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
-              Page Collections Volume
-            </span>
-            <div className="text-xl font-bold text-emerald-700 leading-tight mt-0.5">{money(totalVolume)}</div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0 border border-blue-200/60">
-            <Receipt size={22} />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
-              Total Invoices
-            </span>
-            <div className="text-xl font-bold text-gray-900 leading-tight mt-0.5">
-              {totalCount} <span className="text-xs text-gray-500 font-normal">Records</span>
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Page Collections Volume</span>
+            <div className="stat-icon icon-green">
+              <TrendingUp size={16} />
             </div>
           </div>
+          <div className="stat-value text-emerald-600">{money(totalVolume)}</div>
+          <p className="stat-sub">Aggregated payments on this page</p>
         </div>
 
-        <div className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold shrink-0 border border-purple-200/60">
-            <CreditCard size={22} />
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Total Invoices</span>
+            <div className="stat-icon icon-blue">
+              <Receipt size={16} />
+            </div>
           </div>
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 block">
-              Average Receipt
-            </span>
-            <div className="text-xl font-bold text-purple-700 leading-tight mt-0.5">{money(avgPayment)}</div>
+          <div className="stat-value">{totalCount}</div>
+          <p className="stat-sub">All-time issued invoices</p>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Average Receipt</span>
+            <div className="stat-icon icon-violet">
+              <CreditCard size={16} />
+            </div>
           </div>
+          <div className="stat-value">{money(avgPayment)}</div>
+          <p className="stat-sub">Average ticket size per transaction</p>
         </div>
       </div>
 
       {/* Search, Date Filter, Sort, and View Mode Toolbar */}
-      <div className="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-center gap-2.5 flex-1">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />

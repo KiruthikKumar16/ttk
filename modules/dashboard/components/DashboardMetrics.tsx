@@ -258,28 +258,58 @@ export function DashboardMetrics({
           <p className="subcopy">{greetingData.subcopy}</p>
         </div>
         {canCreateStudent && (
-          <Link href="/students/new" className="btn-primary">
+          <Link href="/students/new" className="btn-primary" style={{ gap: 6 }}>
+            <Plus size={14} />
             Add student
           </Link>
         )}
       </div>
 
       {pendingUsers.length > 0 && (
-        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/90 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs mb-6">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
+          style={{
+            padding: '14px 18px',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid rgba(245, 158, 11, 0.2)',
+            background: 'linear-gradient(135deg, rgba(255, 251, 235, 0.9), rgba(254, 243, 199, 0.6))',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-amber-100 text-amber-800 shrink-0">
-              <UserCheck size={20} />
+            <div
+              className="shrink-0"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(245, 158, 11, 0.12)',
+                display: 'grid',
+                placeItems: 'center',
+                color: '#b45309',
+              }}
+            >
+              <UserCheck size={18} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm">
-                  {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending Approval
+                <span className="font-bold text-sm" style={{ color: '#78350f' }}>
+                  {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold">
+                <span
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    color: '#92400e',
+                  }}
+                >
                   Action Required
                 </span>
               </div>
-              <p className="text-xs text-amber-800 mt-0.5">
+              <p className="text-xs mt-0.5" style={{ color: '#92400e' }}>
                 {pendingUsers
                   .map((u) => u.fullName)
                   .slice(0, 3)
@@ -291,19 +321,31 @@ export function DashboardMetrics({
           </div>
           <Link
             href="/settings/users?filter=pending"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-800 hover:bg-amber-900 text-white text-xs font-semibold shrink-0 transition-colors shadow-xs"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-xs font-semibold shrink-0 transition-all shadow-xs"
+            style={{ background: 'linear-gradient(135deg, #b45309, #92400e)' }}
           >
-            Review & Approve Users <ArrowRight size={13} />
+            Review & Approve <ArrowRight size={13} />
           </Link>
         </div>
       )}
 
       {/* Admin View Switcher Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 p-1.5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6"
+        style={{
+          padding: '6px 6px 6px 8px',
+          borderRadius: 'var(--radius-lg)',
+          background: 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(226, 232, 240, 0.5)',
+          boxShadow: 'var(--shadow-xs)',
+        }}
+      >
         <div
           role="tablist"
           aria-label="Dashboard view toggle"
-          className="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/70 shadow-2xs"
+          className="inline-flex items-center p-1 rounded-lg"
+          style={{ background: 'rgba(241, 245, 249, 0.6)' }}
         >
           <button
             type="button"
@@ -312,11 +354,15 @@ export function DashboardMetrics({
             aria-selected={activeView === 'financial'}
             aria-controls="admin-financial-panel"
             onClick={() => handleViewChange('financial')}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'financial' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer"
+            style={{
+              background:
+                activeView === 'financial' ? 'linear-gradient(135deg, var(--gold), var(--gold-deep))' : 'transparent',
+              color: activeView === 'financial' ? '#fff' : '#64748b',
+              boxShadow: activeView === 'financial' ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
+            }}
           >
-            <CircleDollarSign size={14} className={activeView === 'financial' ? 'text-white' : 'text-slate-500'} />
+            <CircleDollarSign size={13} />
             <span>Financial Overview</span>
           </button>
 
@@ -327,17 +373,23 @@ export function DashboardMetrics({
             aria-selected={activeView === 'staff'}
             aria-controls="admin-staff-panel"
             onClick={() => handleViewChange('staff')}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'staff' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer"
+            style={{
+              background:
+                activeView === 'staff' ? 'linear-gradient(135deg, var(--gold), var(--gold-deep))' : 'transparent',
+              color: activeView === 'staff' ? '#fff' : '#64748b',
+              boxShadow: activeView === 'staff' ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
+            }}
           >
-            <GraduationCap size={14} className={activeView === 'staff' ? 'text-white' : 'text-slate-500'} />
+            <GraduationCap size={13} />
             <span>Staff & Academic Data</span>
             {academicData && academicData.lowAttendanceStudents.length > 0 && (
               <span
-                className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeView === 'staff' ? 'bg-indigo-700 text-indigo-100' : 'bg-amber-100 text-amber-900'
-                }`}
+                className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                style={{
+                  background: activeView === 'staff' ? 'rgba(255,255,255,0.2)' : 'rgba(245, 158, 11, 0.12)',
+                  color: activeView === 'staff' ? '#fff' : '#92400e',
+                }}
               >
                 {academicData.lowAttendanceStudents.length}
               </span>
@@ -345,8 +397,8 @@ export function DashboardMetrics({
           </button>
         </div>
 
-        <div className="text-xs text-slate-500 px-2 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+        <div className="text-xs px-2 flex items-center gap-2" style={{ color: '#64748b' }}>
+          <span className="shrink-0" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
           <span>
             {activeView === 'financial'
               ? 'Displaying tuition revenue, fee balances & payments'
@@ -483,31 +535,50 @@ export function DashboardMetrics({
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <Link
               href="/attendance"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-white text-xs font-semibold transition-all"
+              style={{
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
+              }}
             >
-              <CalendarDays size={14} />
+              <CalendarDays size={13} />
               Mark / View Attendance
             </Link>
             <Link
               href="/assessments"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
+              style={{
+                border: '1px solid rgba(226, 232, 240, 0.6)',
+                background: 'rgba(255, 255, 255, 0.7)',
+                color: '#334155',
+              }}
             >
-              <ClipboardCheck size={14} className="text-indigo-600" />
+              <ClipboardCheck size={13} style={{ color: 'var(--gold)' }} />
               Assessments ({academicData?.assessmentCount ?? 0})
             </Link>
             <Link
               href="/materials"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
+              style={{
+                border: '1px solid rgba(226, 232, 240, 0.6)',
+                background: 'rgba(255, 255, 255, 0.7)',
+                color: '#334155',
+              }}
             >
-              <FolderOpen size={14} className="text-amber-600" />
+              <FolderOpen size={13} style={{ color: '#d97706' }} />
               Learning Materials ({academicData?.materialsCount ?? 0})
             </Link>
             {canCreateStudent && (
               <Link
                 href="/students/new"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  border: '1px solid rgba(226, 232, 240, 0.6)',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  color: '#334155',
+                }}
               >
-                <Plus size={14} className="text-emerald-600" />
+                <Plus size={13} style={{ color: '#10b981' }} />
                 Add Student
               </Link>
             )}
@@ -517,40 +588,60 @@ export function DashboardMetrics({
           {academicData && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
               {/* Today's Attendance Progress Box */}
-              <div className="p-5 rounded-xl border border-slate-200/80 bg-white shadow-2xs flex flex-col justify-between">
+              <div className="panel p-5 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 size={18} className="text-emerald-600" />
+                      <CheckCircle2 size={16} className="text-emerald-600" />
                       <h2 className="text-sm font-semibold text-slate-900">Today&apos;s Attendance Summary</h2>
                     </div>
                     <Link
                       href="/attendance"
-                      className="text-xs font-medium text-indigo-600 hover:underline flex items-center gap-1"
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                     >
-                      Attendance Registry <ArrowRight size={13} />
+                      Attendance Registry <ArrowRight size={12} />
                     </Link>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="p-3.5 rounded-lg bg-emerald-50/60 border border-emerald-100">
-                      <p className="text-xs font-medium text-emerald-800">Present / Late</p>
+                    <div
+                      className="p-3.5 rounded-xl border"
+                      style={{
+                        background: 'rgba(236, 253, 245, 0.6)',
+                        borderColor: 'rgba(167, 243, 208, 0.6)',
+                      }}
+                    >
+                      <p className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">
+                        Present / Late
+                      </p>
                       <p className="text-2xl font-bold text-emerald-900 mt-1">{academicData.todayAttendance.present}</p>
-                      <p className="text-[11px] text-emerald-700 mt-0.5">Students in session</p>
+                      <p className="text-[10px] text-emerald-700 mt-0.5">Students in session</p>
                     </div>
 
-                    <div className="p-3.5 rounded-lg bg-rose-50/60 border border-rose-100">
-                      <p className="text-xs font-medium text-rose-800">Absent</p>
+                    <div
+                      className="p-3.5 rounded-xl border"
+                      style={{
+                        background: 'rgba(255, 241, 242, 0.6)',
+                        borderColor: 'rgba(254, 205, 211, 0.6)',
+                      }}
+                    >
+                      <p className="text-[11px] font-semibold text-rose-800 uppercase tracking-wider">Absent</p>
                       <p className="text-2xl font-bold text-rose-900 mt-1">{academicData.todayAttendance.absent}</p>
-                      <p className="text-[11px] text-rose-700 mt-0.5">Marked absent today</p>
+                      <p className="text-[10px] text-rose-700 mt-0.5">Marked absent today</p>
                     </div>
 
-                    <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/70">
-                      <p className="text-xs font-medium text-slate-700">Total Marked</p>
+                    <div
+                      className="p-3.5 rounded-xl border"
+                      style={{
+                        background: 'rgba(248, 250, 252, 0.8)',
+                        borderColor: 'rgba(226, 232, 240, 0.8)',
+                      }}
+                    >
+                      <p className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Marked</p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">
                         {academicData.todayAttendance.totalMarked}
                       </p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Records logged today</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Records logged today</p>
                     </div>
                   </div>
                 </div>
@@ -561,44 +652,62 @@ export function DashboardMetrics({
                     <span>Classroom Attendance Health</span>
                     <span className="font-bold text-slate-900">{academicData.todayAttendance.rate}% Present</span>
                   </div>
-                  <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(0, academicData.todayAttendance.rate))}%` }}
+                      style={{
+                        width: `${Math.min(100, Math.max(0, academicData.todayAttendance.rate))}%`,
+                        boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
+                      }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Low Attendance Watchlist Card */}
-              <div className="p-5 rounded-xl border border-amber-200 bg-amber-50/40 shadow-2xs flex flex-col justify-between">
+              <div
+                className="p-5 rounded-2xl flex flex-col justify-between"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(254, 243, 199, 0.25), rgba(255, 255, 255, 0.85))',
+                  border: '1px solid rgba(245, 158, 11, 0.25)',
+                  boxShadow: 'var(--shadow-sm)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
                 <div>
-                  <div className="flex items-center justify-between pb-3 border-b border-amber-200/80">
+                  <div className="flex items-center justify-between pb-3 border-b border-amber-200/50">
                     <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
-                      <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                      <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                       <span>Attendance Watchlist (&lt; 75%)</span>
                     </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                    <span
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        color: '#92400e',
+                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                      }}
+                    >
                       {academicData.lowAttendanceStudents.length} Students
                     </span>
                   </div>
 
-                  <p className="text-xs text-amber-800 mt-2 mb-3">
+                  <p className="text-xs text-amber-800/90 mt-2 mb-3">
                     Learners below 75% attendance criteria requiring academy follow-up.
                   </p>
                 </div>
 
                 {academicData.lowAttendanceStudents.length === 0 ? (
-                  <div className="py-7 px-4 text-center text-xs text-emerald-800 bg-white/70 rounded-lg border border-emerald-100 flex-1 flex flex-col items-center justify-center">
+                  <div className="py-7 px-4 text-center text-xs text-emerald-800 bg-white/70 rounded-xl border border-emerald-100 flex-1 flex flex-col items-center justify-center">
                     <CheckCircle2 size={22} className="mx-auto mb-1.5 text-emerald-600" />
-                    <span>All active students meet the 75% attendance threshold!</span>
+                    <span className="font-medium">All active students meet the 75% attendance threshold!</span>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {academicData.lowAttendanceStudents.map((s) => (
                       <div
                         key={s.id}
-                        className="p-2.5 rounded-lg bg-white border border-amber-200/70 shadow-2xs flex items-center justify-between gap-2"
+                        className="p-2.5 rounded-xl bg-white/90 border border-amber-200/60 shadow-2xs flex items-center justify-between gap-2"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
@@ -608,7 +717,7 @@ export function DashboardMetrics({
                             >
                               {s.name}
                             </Link>
-                            <span className="text-[10px] text-slate-500 font-mono">#{s.registerId}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">#{s.registerId}</span>
                           </div>
                           <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.course}</p>
                           {s.phone && (
@@ -622,7 +731,7 @@ export function DashboardMetrics({
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/50">
                             {s.rate}%
                           </span>
                           <span className="block text-[10px] text-slate-500 mt-0.5">

@@ -266,87 +266,96 @@ export function AttendanceClientView({
   return (
     <div className="space-y-6">
       {/* 1. Header & KPI Statistics Tiles */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="page-heading">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Attendance Hub</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="eyebrow">CLASSROOM SESSIONS & ROSTER</p>
+          <h1>Attendance Hub</h1>
+          <p className="subcopy">
             Record student daily sessions, inspect curriculum attendance rates, and audit presence logs.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="panel p-4 flex items-center justify-between shadow-2xs">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Overall Rate</span>
-            <div className="text-2xl font-bold text-slate-900 mt-1 flex items-baseline gap-1.5">
-              <span>{kpiData.overallPct}%</span>
-              <span
-                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                  kpiData.overallPct >= 85
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : kpiData.overallPct >= 75
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'bg-rose-50 text-rose-700'
-                }`}
-              >
-                {kpiData.overallPct >= 85 ? 'Healthy' : kpiData.overallPct >= 75 ? 'Fair' : 'At Risk'}
+      <div className="reports-stats-grid">
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Overall Rate</span>
+            <div className="stat-icon icon-blue">
+              <TrendingUp size={16} />
+            </div>
+          </div>
+          <div className="stat-value flex items-baseline gap-2">
+            <span>{kpiData.overallPct}%</span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                kpiData.overallPct >= 85
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                  : kpiData.overallPct >= 75
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+              }`}
+            >
+              {kpiData.overallPct >= 85 ? 'Healthy' : kpiData.overallPct >= 75 ? 'Fair' : 'At Risk'}
+            </span>
+          </div>
+          <p className="stat-sub">Across all batches and recorded sessions</p>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Batches Tracked</span>
+            <div className="stat-icon icon-navy">
+              <GraduationCap size={16} />
+            </div>
+          </div>
+          <div className="stat-value">{kpiData.activeCoursesCount}</div>
+          <p className="stat-sub">Active course programs in session</p>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>Total Sessions</span>
+            <div className="stat-icon icon-violet">
+              <CalendarDays size={16} />
+            </div>
+          </div>
+          <div className="stat-value">{kpiData.totalSessions}</div>
+          <p className="stat-sub">Cumulative classroom hours marked</p>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-head">
+            <span>At-Risk Batches</span>
+            <div className={`stat-icon ${kpiData.atRiskCount > 0 ? 'icon-amber' : 'icon-green'}`}>
+              <AlertTriangle size={16} />
+            </div>
+          </div>
+          <div className="stat-value flex items-baseline gap-2">
+            <span>{kpiData.atRiskCount}</span>
+            {kpiData.atRiskCount > 0 ? (
+              <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                &lt;75% Attendance
               </span>
-            </div>
+            ) : (
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Optimal
+              </span>
+            )}
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <TrendingUp size={20} />
-          </div>
-        </div>
-
-        <div className="panel p-4 flex items-center justify-between shadow-2xs">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Batches Tracked</span>
-            <div className="text-2xl font-bold text-slate-900 mt-1">{kpiData.activeCoursesCount}</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <GraduationCap size={20} />
-          </div>
-        </div>
-
-        <div className="panel p-4 flex items-center justify-between shadow-2xs">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Total Sessions</span>
-            <div className="text-2xl font-bold text-slate-900 mt-1">{kpiData.totalSessions}</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-            <CalendarDays size={20} />
-          </div>
-        </div>
-
-        <div className="panel p-4 flex items-center justify-between shadow-2xs">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">At-Risk Batches</span>
-            <div className="text-2xl font-bold text-slate-900 mt-1 flex items-baseline gap-1.5">
-              <span>{kpiData.atRiskCount}</span>
-              {kpiData.atRiskCount > 0 ? (
-                <span className="text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                  &lt;75% Attendance
-                </span>
-              ) : (
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  None
-                </span>
-              )}
-            </div>
-          </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              kpiData.atRiskCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
-            }`}
-          >
-            <AlertTriangle size={20} />
-          </div>
+          <p className="stat-sub">Programs needing faculty attention</p>
         </div>
       </div>
 
       {/* 2. Accessible Segmented Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/90 shadow-2xs">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-1.5 rounded-xl border"
+        style={{
+          background: 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(8px)',
+          borderColor: 'rgba(226, 232, 240, 0.6)',
+          boxShadow: 'var(--shadow-xs)',
+        }}
+      >
         <div
           role="tablist"
           aria-label="Attendance views"

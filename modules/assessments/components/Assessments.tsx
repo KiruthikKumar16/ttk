@@ -509,10 +509,11 @@ export function Assessments({
   return (
     <div className="space-y-6">
       {/* 1. Page Header & KPI Summary */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="page-heading">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Assessments</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="eyebrow">ACADEMIC EVALUATIONS & QUIZZES</p>
+          <h1>Assessments Studio</h1>
+          <p className="subcopy">
             Create evaluations, distribute Google Forms quizzes, and import graded responses in seconds.
           </p>
         </div>
@@ -521,90 +522,106 @@ export function Assessments({
           <Button
             variant="outline"
             onClick={() => setSelectedAssessmentId(null)}
-            className="self-start md:self-auto cursor-pointer"
+            className="btn-secondary self-start md:self-auto cursor-pointer"
           >
-            <ArrowLeft size={16} className="mr-2" />
-            Back to Assessments List
+            <ArrowLeft size={15} />
+            <span>Back to Assessments</span>
           </Button>
         ) : (
           <div className="flex items-center gap-2">
-            <Button
-              variant={activeTab === 'library' ? 'default' : 'outline'}
+            <button
+              type="button"
               onClick={() => setActiveTab('library')}
-              className="text-xs sm:text-sm font-semibold cursor-pointer"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'library' ? 'text-white' : 'btn-secondary'
+              }`}
+              style={
+                activeTab === 'library'
+                  ? {
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
+                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
+                    }
+                  : {}
+              }
             >
-              <ClipboardList size={15} className="mr-1.5" />
-              Assessments Library
-            </Button>
-            <Button
-              variant={activeTab === 'create' ? 'default' : 'outline'}
+              <ClipboardList size={14} />
+              <span>Catalog & Library</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('create')}
-              className="text-xs sm:text-sm font-semibold cursor-pointer"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'create' ? 'text-white' : 'btn-secondary'
+              }`}
+              style={
+                activeTab === 'create'
+                  ? {
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-deep))',
+                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
+                    }
+                  : {}
+              }
             >
-              <Plus size={15} className="mr-1.5" />
-              Create Assessment
-            </Button>
+              <Plus size={14} />
+              <span>Create Assessment</span>
+            </button>
           </div>
         )}
       </div>
 
       {/* KPI Tiles (shown in library/create views) */}
       {!selectedAssessmentId && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="panel p-4 flex items-center justify-between shadow-2xs">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Total Assessments
-              </span>
-              <div className="text-2xl font-bold text-slate-900 mt-1">{kpis.total}</div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <ClipboardList size={20} />
-            </div>
-          </div>
-
-          <div className="panel p-4 flex items-center justify-between shadow-2xs">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Google Form Quizzes
-              </span>
-              <div className="text-2xl font-bold text-purple-700 mt-1 flex items-baseline gap-1.5">
-                <span>{kpis.withGoogleForms}</span>
-                <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                  Integrated
-                </span>
+        <div className="reports-stats-grid">
+          <div className="stat-card">
+            <div className="stat-head">
+              <span>Total Assessments</span>
+              <div className="stat-icon icon-blue">
+                <ClipboardList size={16} />
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <FileSpreadsheet size={20} />
-            </div>
+            <div className="stat-value">{kpis.total}</div>
+            <p className="stat-sub">Across active course batches</p>
           </div>
 
-          <div className="panel p-4 flex items-center justify-between shadow-2xs">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Batches Evaluated
-              </span>
-              <div className="text-2xl font-bold text-slate-900 mt-1">{kpis.uniqueCourses}</div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <GraduationCap size={20} />
-            </div>
-          </div>
-
-          <div className="panel p-4 flex items-center justify-between shadow-2xs">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Instant Grading
-              </span>
-              <div className="text-sm font-bold text-emerald-700 mt-1.5 flex items-center gap-1">
-                <CheckCircle2 size={16} />
-                <span>CSV / Sheets Ready</span>
+          <div className="stat-card">
+            <div className="stat-head">
+              <span>Google Form Quizzes</span>
+              <div className="stat-icon icon-violet">
+                <FileSpreadsheet size={16} />
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Award size={20} />
+            <div className="stat-value flex items-baseline gap-2">
+              <span>{kpis.withGoogleForms}</span>
+              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                Connected
+              </span>
             </div>
+            <p className="stat-sub">Live QR quiz integrations</p>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-head">
+              <span>Batches Evaluated</span>
+              <div className="stat-icon icon-navy">
+                <GraduationCap size={16} />
+              </div>
+            </div>
+            <div className="stat-value">{kpis.uniqueCourses}</div>
+            <p className="stat-sub">Programs with completed marks</p>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-head">
+              <span>Grading Pipeline</span>
+              <div className="stat-icon icon-green">
+                <Award size={16} />
+              </div>
+            </div>
+            <div className="stat-value text-emerald-600 text-lg flex items-center gap-1.5 mt-2">
+              <CheckCircle2 size={18} />
+              <span>Instant CSV</span>
+            </div>
+            <p className="stat-sub">Auto-score and sync responses</p>
           </div>
         </div>
       )}

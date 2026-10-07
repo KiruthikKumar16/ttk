@@ -35,3 +35,6 @@ tests/.auth/
 tsconfig.tsbuildinfo
 blob-report/
 docs/screenshots/responsive/
+out/
+scenarios/
+original-*.webp
