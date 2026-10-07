@@ -259,7 +259,7 @@ export function CoursesManager({
       <div className="page-heading">
         <div>
           <p className="eyebrow">ACADEMY CURRICULUM</p>
-          <h1>Courses</h1>
+          <h1>Manage Courses</h1>
           <p className="subcopy">
             Configure academy curriculum programs, duration tiers, tuition fees, and GST pricing.
           </p>

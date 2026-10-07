@@ -512,7 +512,7 @@ export function Assessments({
       <div className="page-heading">
         <div>
           <p className="eyebrow">ACADEMIC EVALUATIONS & QUIZZES</p>
-          <h1>Assessments Studio</h1>
+          <h1>Assessments</h1>
           <p className="subcopy">
             Create evaluations, distribute Google Forms quizzes, and import graded responses in seconds.
           </p>
