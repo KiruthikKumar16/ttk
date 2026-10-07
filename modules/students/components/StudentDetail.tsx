@@ -35,6 +35,7 @@ import { CategoryBadge } from '@/components/CategoryBadge'
 import { PaymentsTable } from '@/components/shared/PaymentsTable'
 import { differenceRupees, percentageOfRupees } from '@/lib/money'
 import { StudentPrintDossier } from './StudentPrintDossier'
+import { Gauge } from '@/components/ui/Gauge'
 
 function getMonday(d: Date): Date {
   const date = new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -668,41 +669,63 @@ export function StudentDetail({
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">Rate</span>
-                <strong
-                  className={`text-2xl font-bold mt-0.5 block ${
-                    attendanceRate >= 80
-                      ? 'text-emerald-600'
-                      : attendanceRate >= 70
-                        ? 'text-amber-600'
-                        : 'text-rose-600'
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              {/* Semicircle Gauge vs 75% threshold */}
+              <div className="flex flex-col items-center justify-center p-4 rounded-[22px] bg-[var(--panel)] border border-[var(--border)]">
+                <Gauge
+                  value={attendanceRate}
+                  size={150}
+                  label="Attendance Rate"
+                  sublabel={attendanceRate >= 75 ? 'Meets 75% minimum threshold' : 'Below 75% required threshold'}
+                />
+                <span
+                  className={`mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                    attendanceRate >= 75
+                      ? 'bg-[var(--success-bg)] text-[#1b7a4b]'
+                      : 'bg-[var(--danger-bg)] text-[#b53c37]'
                   }`}
                 >
-                  {totalSessions > 0 ? `${attendanceRate}%` : 'N/A'}
-                </strong>
-                <span className="text-[10px] text-slate-500 font-medium">Weighted presence</span>
-              </div>
-
-              <div className="p-3 rounded-lg bg-emerald-50/50 border border-emerald-100">
-                <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">
-                  Present
+                  {attendanceRate >= 75 ? 'Criterion Met (>= 75%)' : 'At-Risk (< 75%)'}
                 </span>
-                <strong className="text-2xl font-bold text-emerald-700 mt-0.5 block">{presentSessions}</strong>
-                <span className="text-[10px] text-emerald-600 font-medium">Full sessions</span>
               </div>
 
-              <div className="p-3 rounded-lg bg-amber-50/50 border border-amber-100">
-                <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider block">Late</span>
-                <strong className="text-2xl font-bold text-amber-700 mt-0.5 block">{lateSessions}</strong>
-                <span className="text-[10px] text-amber-600 font-medium">0.5 credit</span>
-              </div>
+              {/* Roster Metrics Breakdown */}
+              <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="p-3.5 rounded-[18px] bg-[var(--panel)] border border-[var(--border)]">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">Rate</span>
+                  <strong
+                    className={`text-2xl font-extrabold mt-0.5 block ${
+                      attendanceRate >= 80
+                        ? 'text-[#1b7a4b]'
+                        : attendanceRate >= 70
+                          ? 'text-[#a8710f]'
+                          : 'text-[#b53c37]'
+                    }`}
+                  >
+                    {totalSessions > 0 ? `${attendanceRate}%` : 'N/A'}
+                  </strong>
+                  <span className="text-[10px] text-[var(--mute)] font-medium">Weighted presence</span>
+                </div>
 
-              <div className="p-3 rounded-lg bg-rose-50/50 border border-rose-100">
-                <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider block">Absent</span>
-                <strong className="text-2xl font-bold text-rose-700 mt-0.5 block">{absentSessions}</strong>
-                <span className="text-[10px] text-rose-600 font-medium">Missed sessions</span>
+                <div className="p-3.5 rounded-[18px] bg-[var(--success-bg)] border border-emerald-200/60">
+                  <span className="text-[11px] font-semibold text-[#1b7a4b] uppercase tracking-wider block">
+                    Present
+                  </span>
+                  <strong className="text-2xl font-extrabold text-[#1b7a4b] mt-0.5 block">{presentSessions}</strong>
+                  <span className="text-[10px] text-[#1b7a4b] font-medium">Full sessions</span>
+                </div>
+
+                <div className="p-3.5 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60">
+                  <span className="text-[11px] font-semibold text-[#a8710f] uppercase tracking-wider block">Late</span>
+                  <strong className="text-2xl font-extrabold text-[#a8710f] mt-0.5 block">{lateSessions}</strong>
+                  <span className="text-[10px] text-[#a8710f] font-medium">0.5 credit</span>
+                </div>
+
+                <div className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60">
+                  <span className="text-[11px] font-semibold text-[#b53c37] uppercase tracking-wider block">Absent</span>
+                  <strong className="text-2xl font-extrabold text-[#b53c37] mt-0.5 block">{absentSessions}</strong>
+                  <span className="text-[10px] text-[#b53c37] font-medium">Missed sessions</span>
+                </div>
               </div>
             </div>
 

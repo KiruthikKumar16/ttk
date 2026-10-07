@@ -9,6 +9,7 @@ import type { Student, Course, CourseCategory, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { Status } from '@/components/Status'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { Avatar } from '@/components/ui/Avatar'
 
 export function StudentsView({
   students,
@@ -128,46 +129,48 @@ export function StudentsView({
 
   return (
     <>
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <p className="eyebrow">{isStaff ? 'ACADEMY ROSTER' : 'ACADEMY RECORDS'}</p>
-          <h1>Students</h1>
-          <p className="subcopy">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            {isStaff ? 'ACADEMY ROSTER' : 'ACADEMY RECORDS'}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">Students</h1>
+          <p className="text-sm text-[var(--mute)] mt-1">
             {isStaff
               ? 'Active student roster, batch schedules, contact records, and academic progress.'
               : 'Manage enrollment, fees, and student records.'}
           </p>
         </div>
         {canCreate && (
-          <Link href="/students/new" className="btn-primary flex items-center gap-2">
+          <Link href="/students/new" className="btn-primary" style={{ textDecoration: 'none' }}>
             <Plus size={16} />
             <span>Add student</span>
           </Link>
         )}
       </div>
 
-      <section className="panel">
+      <section className="rounded-[26px] bg-[var(--panel)] border border-[var(--border)] p-4 sm:p-6 mb-8">
         {/* Search & Cascading Filter Header */}
-        <div className="panel-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-[var(--border)]">
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
             {/* Search Input */}
             <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] max-w-xs">
               <Search
                 size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
               />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search name, phone, or register ID..."
-                className="w-full pl-9 pr-8 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                className="w-full pl-9 pr-8 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] placeholder:text-[var(--mute)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors bg-[var(--card)]"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)]"
                   aria-label="Clear search"
                 >
                   <X size={14} />
@@ -184,7 +187,7 @@ export function StudentsView({
                 id="category-filter"
                 value={categoryFilter}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer"
+                className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -204,7 +207,7 @@ export function StudentsView({
                 id="course-filter"
                 value={courseFilter}
                 onChange={(e) => handleCourseChange(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors cursor-pointer truncate"
+                className="w-full px-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--text)] bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer truncate"
               >
                 <option value="">{categoryFilter ? 'All Courses in Category' : 'All Courses'}</option>
                 {filteredCourseOptions.map((c) => (
@@ -220,7 +223,7 @@ export function StudentsView({
               <button
                 type="button"
                 onClick={handleClearAllFilters}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[var(--mute)] bg-[var(--panel)] hover:text-[var(--text)] transition-colors cursor-pointer border border-[var(--border)]"
                 title="Reset all filters"
               >
                 <X size={13} />
@@ -230,37 +233,39 @@ export function StudentsView({
           </div>
 
           <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="text-xs text-slate-500 whitespace-nowrap">
-              Total Enrolled: <strong className="text-slate-800">{totalCount}</strong>
+            <div className="text-xs text-[var(--mute)] whitespace-nowrap font-medium">
+              Total Enrolled: <strong className="text-[var(--text-heading)]">{totalCount}</strong>
             </div>
 
             {/* View Mode Toggle: Table List vs Grid Cards */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+            <div className="flex items-center bg-[var(--card)] p-1 rounded-full border border-[var(--border)] shrink-0 shadow-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`p-1.5 px-2.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   viewMode === 'table'
-                    ? 'bg-white text-indigo-600 shadow-2xs font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-[var(--g1)] text-white shadow-xs'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
                 title="Table List View"
                 aria-label="Table List View"
               >
-                <ListIcon size={15} />
+                <ListIcon size={14} />
+                <span className="hidden sm:inline">Table</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`p-1.5 px-2.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   viewMode === 'grid'
-                    ? 'bg-white text-indigo-600 shadow-2xs font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-[var(--g1)] text-white shadow-xs'
+                    : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
                 title="Cards Grid View"
                 aria-label="Cards Grid View"
               >
-                <LayoutGrid size={15} />
+                <LayoutGrid size={14} />
+                <span className="hidden sm:inline">Cards</span>
               </button>
             </div>
           </div>
@@ -320,14 +325,7 @@ export function StudentsView({
                             onClick={(e) => e.stopPropagation()}
                             className="student-cell flex items-center gap-2.5"
                           >
-                            <div className="mini-avatar">
-                              {s.name
-                                .split(' ')
-                                .map((x) => x[0])
-                                .join('')
-                                .slice(0, 2)
-                                .toUpperCase() || 'ST'}
-                            </div>
+                            <Avatar name={s.name} size="sm" />
                             <div>
                               <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
                                 {s.name}
@@ -410,14 +408,7 @@ export function StudentsView({
                           onClick={(e) => e.stopPropagation()}
                           className="student-cell flex items-center gap-2.5"
                         >
-                          <div className="mini-avatar">
-                            {s.name
-                              .split(' ')
-                              .map((x) => x[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase() || 'ST'}
-                          </div>
+                          <Avatar name={s.name} size="sm" />
                           <div>
                             <strong className="block text-sm font-semibold text-slate-900 hover:text-indigo-600">
                               {s.name}
@@ -478,25 +469,18 @@ export function StudentsView({
                     <div
                       key={s.registerId}
                       onClick={() => router.push(`/students/${s.registerId}`)}
-                      className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col justify-between"
+                      className="bg-[var(--card)] border border-[var(--border)] rounded-[22px] p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
                       title={`View student ${s.name}`}
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="mini-avatar shrink-0">
-                              {s.name
-                                .split(' ')
-                                .map((x) => x[0])
-                                .join('')
-                                .slice(0, 2)
-                                .toUpperCase() || 'ST'}
-                            </div>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar name={s.name} size="md" />
                             <div className="min-w-0">
-                              <strong className="block text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                              <strong className="block text-sm font-bold text-[var(--text-heading)] group-hover:text-[var(--g1)] transition-colors truncate">
                                 {s.name}
                               </strong>
-                              <span className="block text-xs font-mono text-slate-500">TAI-{s.registerId}</span>
+                              <span className="block text-xs font-mono text-[var(--mute)]">TAI-{s.registerId}</span>
                             </div>
                           </div>
                           <Status status={s.status} />
