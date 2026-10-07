@@ -527,24 +527,24 @@ export function UserRoles({
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       {/* Role Filter Tabs & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/80 pb-3">
-        <div className="flex flex-nowrap overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:pb-0 items-center gap-1.5 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-nowrap overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:pb-0 items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[var(--g1)] text-white shadow-xs'
+                : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
             <Users size={13} />
             All Users
             <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-[var(--panel)] text-[var(--mute)]'
               }`}
             >
               {counts.all}
@@ -554,20 +554,20 @@ export function UserRoles({
           <button
             type="button"
             onClick={() => setActiveTab('pending')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'pending'
-                ? 'bg-amber-500 text-white shadow-xs'
+                ? 'bg-[#a8710f] text-white shadow-xs'
                 : counts.pending > 0
-                  ? 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-[rgba(168,113,15,0.08)] text-[#a8710f] border border-[rgba(168,113,15,0.25)] hover:bg-[rgba(168,113,15,0.15)]'
+                  : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
-            <Clock size={13} className={counts.pending > 0 && activeTab !== 'pending' ? 'text-amber-600' : ''} />
+            <Clock size={13} className={counts.pending > 0 && activeTab !== 'pending' ? 'text-[#a8710f]' : ''} />
             Pending Approval
             {counts.pending > 0 && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  activeTab === 'pending' ? 'bg-amber-700 text-white' : 'bg-amber-500 text-white animate-pulse'
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === 'pending' ? 'bg-white/20 text-white' : 'bg-[#a8710f] text-white animate-pulse'
                 }`}
               >
                 {counts.pending}
@@ -578,17 +578,17 @@ export function UserRoles({
           <button
             type="button"
             onClick={() => setActiveTab('staff')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'staff'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[var(--g1)] text-white shadow-xs'
+                : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
             <UserCheck size={13} />
             Staff
             <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'staff' ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === 'staff' ? 'bg-white/20 text-white' : 'bg-[var(--panel)] text-[var(--mute)]'
               }`}
             >
               {counts.staff}
@@ -598,40 +598,40 @@ export function UserRoles({
           <button
             type="button"
             onClick={() => setActiveTab('admin')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'admin'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-[var(--ink)] text-[var(--bg)] shadow-xs'
+                : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
             <Shield size={13} />
             Admins
             <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'admin' ? 'bg-purple-700 text-white' : 'bg-slate-100 text-slate-600'
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === 'admin' ? 'bg-white/20 text-white' : 'bg-[var(--panel)] text-[var(--mute)]'
               }`}
             >
               {counts.admin}
             </span>
           </button>
 
-          <div className="h-4 w-px bg-slate-300 mx-1 hidden sm:block" />
+          <div className="h-4 w-px bg-[var(--border)] mx-1 hidden sm:block" />
 
           <button
             type="button"
             onClick={() => setActiveTab('invites')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'invites'
-                ? 'bg-teal-600 text-white shadow-xs'
-                : 'text-teal-700 bg-teal-50/60 border border-teal-200/80 hover:bg-teal-100/70'
+                ? 'bg-[var(--g1)] text-white shadow-xs'
+                : 'bg-[var(--card)] text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--panel)]'
             }`}
           >
             <KeyRound size={13} />
             One-Time Invite Codes
             {counts.activeInvites > 0 && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  activeTab === 'invites' ? 'bg-teal-800 text-white' : 'bg-teal-600 text-white'
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === 'invites' ? 'bg-white/20 text-white' : 'bg-[var(--g1)] text-white'
                 }`}
               >
                 {counts.activeInvites}
@@ -640,18 +640,17 @@ export function UserRoles({
           </button>
         </div>
 
-        <Button
+        <button
           type="button"
-          size="sm"
           onClick={() => {
             setGeneratedInvite(null)
             setShowGenerateModal(true)
           }}
-          className="text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-[var(--g1)] text-white hover:opacity-90 transition-opacity shadow-xs shrink-0 cursor-pointer"
         >
           <Plus size={14} className="mr-1" />
           Generate Invite Code
-        </Button>
+        </button>
       </div>
 
       {/* Notifications */}
@@ -881,19 +880,19 @@ export function UserRoles({
         /* VIEW B: USERS & ROLES TABLE */
         <>
           {/* Top Controls: Instructions, Search, and Save Button */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-xl border border-slate-200/80 bg-white/90 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-[22px] border border-[var(--border)] bg-[var(--card)] shadow-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
+                  className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`}
                 />
-                <span className="text-xs font-semibold text-slate-700">
+                <span className="text-xs font-semibold text-[var(--ink)]">
                   {hasChanges
                     ? `${changedCount} unsaved role ${changedCount === 1 ? 'change' : 'changes'}`
                     : 'All user roles synchronized'}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[var(--mute)]">
                 Role changes require an admin account. Your own role cannot be changed here, and at least one admin must
                 remain.
               </p>
@@ -903,39 +902,35 @@ export function UserRoles({
               <div className="relative">
                 <Search
                   size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                 />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search name, ID, or role..."
-                  className="w-full sm:w-60 pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                  className="w-full sm:w-60 pl-9 pr-3.5 py-2 border border-[var(--border)] rounded-full text-xs text-[var(--ink)] placeholder:text-[var(--mute)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors bg-[var(--panel)]"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 {hasChanges && (
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
                     onClick={handleDiscard}
                     disabled={saving || approvingId !== null}
-                    className="text-xs text-slate-600 hover:text-slate-900"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--panel)] transition-colors cursor-pointer"
                   >
                     <RotateCcw size={13} className="mr-1" />
                     Discard
-                  </Button>
+                  </button>
                 )}
 
-                <Button
+                <button
                   type="button"
-                  variant="default"
-                  size="sm"
                   onClick={handleSave}
                   disabled={!hasChanges || saving || approvingId !== null}
-                  className="text-xs font-semibold min-w-[110px] shadow-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-[var(--g1)] text-white hover:opacity-90 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {saving ? (
                     'Saving...'
@@ -945,14 +940,14 @@ export function UserRoles({
                       Save Changes
                     </>
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Table wrapper with card styling */}
           <div
-            className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-x-auto w-full"
+            className="bg-[var(--card)] rounded-[26px] shadow-xs border border-[var(--border)] overflow-x-auto w-full"
             role="region"
             aria-label="Users and roles"
             tabIndex={0}

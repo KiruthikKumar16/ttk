@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Card } from '@/components/ui/Card'
+import { PillButton } from '@/components/ui/PillButton'
+import { Tag } from '@/components/ui/Tag'
+import { UserCheck, BookOpen, Trash2 } from 'lucide-react'
 
 type Course = { id: string; name: string }
 type Trainer = { id: string; name: string }
@@ -63,17 +67,17 @@ export function TrainerAssignments({
 
   return (
     <section className="space-y-6">
-      {/* Assignment form */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <form onSubmit={assign} className="p-6 space-y-4 sm:grid sm:grid-cols-[1fr_1fr_auto] sm:gap-4 sm:items-end">
-          <div className="space-y-2">
-            <label htmlFor="trainer-course-select" className="text-sm font-medium text-gray-700 block">
+      {/* Assignment form card */}
+      <Card className="p-6">
+        <form onSubmit={assign} className="space-y-4 sm:grid sm:grid-cols-[1fr_1fr_auto] sm:gap-4 sm:items-end">
+          <div className="space-y-1.5">
+            <label htmlFor="trainer-course-select" className="text-xs font-semibold text-[var(--ink)] block">
               Course
             </label>
             <select
               id="trainer-course-select"
               aria-label="Course"
-              className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
+              className="w-full px-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer font-medium"
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               required
@@ -85,14 +89,14 @@ export function TrainerAssignments({
               ))}
             </select>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="trainer-person-select" className="text-sm font-medium text-gray-700 block">
+          <div className="space-y-1.5">
+            <label htmlFor="trainer-person-select" className="text-xs font-semibold text-[var(--ink)] block">
               Trainer
             </label>
             <select
               id="trainer-person-select"
               aria-label="Trainer"
-              className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs"
+              className="w-full px-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors cursor-pointer font-medium"
               value={trainerId}
               onChange={(e) => setTrainerId(e.target.value)}
               required
@@ -104,74 +108,82 @@ export function TrainerAssignments({
               ))}
             </select>
           </div>
-          <button disabled={!courseId || !trainerId} className="btn-primary min-h-10 px-4 py-2 text-sm font-medium">
-            Assign trainer
-          </button>
+          <div>
+            <PillButton
+              type="submit"
+              variant="primary"
+              disabled={!courseId || !trainerId}
+              icon={<UserCheck size={15} />}
+            >
+              Assign trainer
+            </PillButton>
+          </div>
         </form>
-      </div>
+      </Card>
 
       {/* Status / Error */}
       {error && (
-        <p role="alert" className="mb-3 text-sm text-red-700 bg-red-50 p-3 rounded">
+        <p role="alert" className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] font-medium">
           {error}
         </p>
       )}
       {status && (
-        <p role="status" aria-live="polite" className="mb-3 text-sm text-green-700 bg-green-50 p-3 rounded">
+        <p role="status" aria-live="polite" className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] font-medium">
           {status}
         </p>
       )}
 
       {/* Assignments table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Course
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Trainer
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {assignments.map((row) => (
-              <tr key={`${row.courseId}-${row.trainerId}`} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {courses.find((item) => item.id === row.courseId)?.name ?? row.courseId}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {trainers.find((item) => item.id === row.trainerId)?.name ?? 'Trainer unavailable'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <button className="btn-secondary min-h-9 px-3 text-xs font-medium" onClick={() => setRemove(row)}>
-                    Unassign
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {assignments.length === 0 && (
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-[26px] overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                  No trainer assignments yet.
-                </td>
+                <th scope="col" className="py-3 px-5">
+                  Course
+                </th>
+                <th scope="col" className="py-3 px-5">
+                  Trainer
+                </th>
+                <th scope="col" className="py-3 px-5 text-right">
+                  Action
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {assignments.map((row) => (
+                <tr key={`${row.courseId}-${row.trainerId}`} className="hover:bg-[var(--panel)] transition-colors">
+                  <td className="py-3.5 px-5 font-semibold text-[var(--ink)]">
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={14} className="text-[var(--g1)] shrink-0" />
+                      <span>{courses.find((item) => item.id === row.courseId)?.name ?? row.courseId}</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5 text-[var(--ink)] font-medium">
+                    {trainers.find((item) => item.id === row.trainerId)?.name ?? 'Trainer unavailable'}
+                  </td>
+                  <td className="py-3.5 px-5 text-right">
+                    <PillButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRemove(row)}
+                      icon={<Trash2 size={13} className="text-[#b53c37]" />}
+                    >
+                      Unassign
+                    </PillButton>
+                  </td>
+                </tr>
+              ))}
+              {assignments.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="py-12 text-center text-xs text-[var(--mute)]">
+                    No trainer assignments yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Confirmation dialog */}

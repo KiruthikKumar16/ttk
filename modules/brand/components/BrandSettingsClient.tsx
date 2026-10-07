@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import type { BrandSettings } from '@/lib/types'
-import { Button } from '@/components/ui/button'
 import {
   Building2,
   Sparkles,
@@ -22,6 +21,9 @@ import {
   AlertCircle,
   Lock,
 } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+import { PillButton } from '@/components/ui/PillButton'
+import { Tag } from '@/components/ui/Tag'
 
 export function BrandSettingsClient({ settings, editable }: { settings: BrandSettings; editable: boolean }) {
   const [formData, setFormData] = useState<BrandSettings>(settings)
@@ -110,10 +112,13 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
   return (
     <div className="space-y-6 pb-12 w-full">
       {/* Page Heading */}
-      <div className="page-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1>Brand information</h1>
-          <p className="subcopy">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Tag variant="neutral">CONFIGURATION</Tag>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">Brand information</h1>
+          <p className="text-xs text-[var(--mute)] mt-1">
             Configure core identity, official legal details, and public verification endpoints used across student
             invoices, completion certificates, and public portals.
           </p>
@@ -123,12 +128,12 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-xl bg-red-50/90 border border-red-200 p-4 text-sm text-red-800 shadow-xs animate-in fade-in"
+          className="flex items-start gap-3 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] p-4 text-xs text-[#b53c37]"
         >
-          <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
+          <AlertCircle size={18} className="text-[#b53c37] shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-red-900">Unable to save changes</p>
-            <p className="text-red-700 mt-0.5 text-xs">{error}</p>
+            <p className="font-bold text-[#b53c37]">Unable to save changes</p>
+            <p className="mt-0.5">{error}</p>
           </div>
         </div>
       )}
@@ -136,14 +141,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
       {success && (
         <div
           role="status"
-          className="flex items-center gap-3 rounded-xl bg-emerald-50/90 border border-emerald-200 p-4 text-sm text-emerald-900 shadow-xs animate-in fade-in"
+          className="flex items-center gap-3 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] p-4 text-xs text-[#1b7a4b]"
         >
-          <div className="rounded-full bg-emerald-500 text-white p-1">
+          <div className="rounded-full bg-[#1b7a4b] text-white p-1">
             <Check size={14} />
           </div>
           <div>
-            <p className="font-semibold text-emerald-900">Brand information updated successfully</p>
-            <p className="text-emerald-700 text-xs">
+            <p className="font-bold text-[#1b7a4b]">Brand information updated successfully</p>
+            <p className="mt-0.5">
               All dynamic documents and public verification links reflect these updates immediately.
             </p>
           </div>
@@ -154,21 +159,19 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* Left Column: Organization & Brand Identity */}
-            <div className="panel overflow-hidden border border-slate-200/70 shadow-xs bg-white/80 flex flex-col justify-between">
+            <Card className="p-0 overflow-hidden flex flex-col justify-between">
               <div>
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--panel)] flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <div className="p-2 rounded-xl bg-[var(--card)] text-[var(--g1)] border border-[var(--border)]">
                       <Building2 size={18} />
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-slate-800">Organization & Brand Identity</h2>
-                      <p className="text-xs text-slate-500">Public trade name, acronyms, and branding slogans</p>
+                      <h2 className="text-sm font-bold text-[var(--ink)]">Organization & Brand Identity</h2>
+                      <p className="text-xs text-[var(--mute)]">Public trade name, acronyms, and branding slogans</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                    Identity
-                  </span>
+                  <Tag variant="neutral">Identity</Tag>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -177,14 +180,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="space-y-1.5">
                       <label
                         htmlFor="displayName"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Display Name <span className="text-red-500">*</span>
+                        Display Name <span className="text-[#b53c37]">*</span>
                       </label>
                       <div className="relative">
                         <Building2
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                         />
                         <input
                           id="displayName"
@@ -193,10 +196,10 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           value={formData.displayName}
                           onChange={(e) => handleChange('displayName', e.target.value)}
                           placeholder="ThoorigAI Infotech"
-                          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-600">
+                      <p className="text-[11px] text-[var(--mute)]">
                         Primary academy title in navigation, portals, and headers
                       </p>
                     </div>
@@ -205,14 +208,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="space-y-1.5">
                       <label
                         htmlFor="shortName"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Short Name / Monogram <span className="text-red-500">*</span>
+                        Short Name / Monogram <span className="text-[#b53c37]">*</span>
                       </label>
                       <div className="relative">
                         <Sparkles
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                         />
                         <input
                           id="shortName"
@@ -221,10 +224,10 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           value={formData.shortName}
                           onChange={(e) => handleChange('shortName', e.target.value)}
                           placeholder="ThoorigAI"
-                          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-600">
+                      <p className="text-[11px] text-[var(--mute)]">
                         Compact wordmark or acronym for mobile views & badges
                       </p>
                     </div>
@@ -234,14 +237,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                   <div className="space-y-1.5">
                     <label
                       htmlFor="legalName"
-                      className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                      className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                     >
-                      Legal Registered Entity <span className="text-red-500">*</span>
+                      Legal Registered Entity <span className="text-[#b53c37]">*</span>
                     </label>
                     <div className="relative">
                       <ShieldCheck
                         size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                       />
                       <input
                         id="legalName"
@@ -250,10 +253,10 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         value={formData.legalName}
                         onChange={(e) => handleChange('legalName', e.target.value)}
                         placeholder="ThoorigAI Infotech LLP"
-                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white font-medium"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs font-medium text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-[var(--mute)]">
                       Formal company name printed on tax receipts, audit records, and certificates
                     </p>
                   </div>
@@ -262,14 +265,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                   <div className="space-y-1.5">
                     <label
                       htmlFor="tagline"
-                      className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                      className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                     >
                       Tagline / Motto
                     </label>
                     <div className="relative">
                       <FileText
                         size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                       />
                       <input
                         id="tagline"
@@ -277,34 +280,32 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         value={formData.tagline}
                         onChange={(e) => handleChange('tagline', e.target.value)}
                         placeholder="Professional Learning & Training"
-                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-[var(--mute)]">
                       Printed underneath academy logo on invoices, diplomas, and official letters
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Right Column: Billing Rules & Public Verification Portals */}
             <div className="space-y-6 flex flex-col justify-between">
               {/* Section 2: Invoicing & Communications */}
-              <div className="panel overflow-hidden border border-slate-200/70 shadow-xs bg-white/80">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <Card className="p-0 overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--panel)] flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    <div className="p-2 rounded-xl bg-[var(--card)] text-[var(--g1)] border border-[var(--border)]">
                       <Receipt size={18} />
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-slate-800">Billing & Invoicing Rules</h2>
-                      <p className="text-xs text-slate-500">Invoice number generation & billing contact channels</p>
+                      <h2 className="text-sm font-bold text-[var(--ink)]">Billing & Invoicing Rules</h2>
+                      <p className="text-xs text-[var(--mute)]">Invoice number generation & billing contact channels</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                    Billing
-                  </span>
+                  <Tag variant="neutral">Billing</Tag>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -313,14 +314,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="space-y-1.5">
                       <label
                         htmlFor="invoicePrefix"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Invoice Prefix <span className="text-red-500">*</span>
+                        Invoice Prefix <span className="text-[#b53c37]">*</span>
                       </label>
                       <div className="relative">
                         <Hash
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                         />
                         <input
                           id="invoicePrefix"
@@ -330,12 +331,12 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           onChange={(e) => handleChange('invoicePrefix', e.target.value.toUpperCase())}
                           placeholder="TAI"
                           maxLength={8}
-                          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white uppercase"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs font-mono font-bold uppercase text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                         />
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[11px] text-slate-600 font-medium">Sample:</span>
-                        <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">
+                        <span className="text-[11px] text-[var(--mute)] font-medium">Sample:</span>
+                        <code className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[var(--panel)] border border-[var(--border)] text-[var(--ink)] font-semibold">
                           {sampleInvoiceNum}
                         </code>
                       </div>
@@ -345,14 +346,14 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="space-y-1.5">
                       <label
                         htmlFor="supportEmail"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Support / Billing Email <span className="text-red-500">*</span>
+                        Support / Billing Email <span className="text-[#b53c37]">*</span>
                       </label>
                       <div className="relative">
                         <Mail
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                         />
                         <input
                           id="supportEmail"
@@ -361,32 +362,30 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                           value={formData.supportEmail}
                           onChange={(e) => handleChange('supportEmail', e.target.value)}
                           placeholder="support@thoorigai.in"
-                          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-600">Printed on student receipts for billing queries</p>
+                      <p className="text-[11px] text-[var(--mute)]">Printed on student receipts for billing queries</p>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
 
               {/* Section 3: Web Portals & Verification */}
-              <div className="panel overflow-hidden border border-slate-200/70 shadow-xs bg-white/80">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <Card className="p-0 overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--panel)] flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                    <div className="p-2 rounded-xl bg-[var(--card)] text-[var(--g1)] border border-[var(--border)]">
                       <Globe size={18} />
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-slate-800">Public Endpoints & Verification</h2>
-                      <p className="text-xs text-slate-500">
+                      <h2 className="text-sm font-bold text-[var(--ink)]">Public Endpoints & Verification</h2>
+                      <p className="text-xs text-[var(--mute)]">
                         Official URLs for verification QR codes & academy website
                       </p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                    Portals
-                  </span>
+                  <Tag variant="neutral">Portals</Tag>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -395,16 +394,16 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="flex items-center justify-between">
                       <label
                         htmlFor="websiteUrl"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Main Academy Website <span className="text-red-500">*</span>
+                        Main Academy Website <span className="text-[#b53c37]">*</span>
                       </label>
                       {formData.websiteUrl && (
                         <a
                           href={formData.websiteUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--g1)] hover:underline transition-colors"
                         >
                           <span>Visit site</span>
                           <ExternalLink size={12} />
@@ -414,7 +413,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="relative">
                       <Globe
                         size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                       />
                       <input
                         id="websiteUrl"
@@ -423,7 +422,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         value={formData.websiteUrl}
                         onChange={(e) => handleChange('websiteUrl', e.target.value)}
                         placeholder="https://thoorigai.in"
-                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white font-mono text-xs"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs font-mono text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                       />
                     </div>
                   </div>
@@ -433,16 +432,16 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="flex items-center justify-between">
                       <label
                         htmlFor="verifyBaseUrl"
-                        className="block text-xs font-semibold tracking-wide text-slate-700 uppercase"
+                        className="block text-xs font-semibold tracking-wide text-[var(--ink)] uppercase"
                       >
-                        Public Verification Portal URL <span className="text-red-500">*</span>
+                        Public Verification Portal URL <span className="text-[#b53c37]">*</span>
                       </label>
                       {formData.verifyBaseUrl && (
                         <a
                           href={formData.verifyBaseUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--g1)] hover:underline transition-colors"
                         >
                           <span>Open portal</span>
                           <ExternalLink size={12} />
@@ -452,7 +451,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <div className="relative">
                       <QrCode
                         size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] pointer-events-none"
                       />
                       <input
                         id="verifyBaseUrl"
@@ -461,178 +460,172 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                         value={formData.verifyBaseUrl}
                         onChange={(e) => handleChange('verifyBaseUrl', e.target.value)}
                         placeholder="https://ttk-lemon.vercel.app"
-                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors bg-white font-mono text-xs"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-full text-xs font-mono text-[var(--ink)] bg-[var(--panel)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                       />
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
 
           {/* Full-width Action Bar */}
-          <div className="p-4 rounded-xl border border-slate-200/80 bg-white/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+          <Card className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div
-                className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
+                className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`}
               />
-              <span className="text-xs font-medium text-slate-600">
+              <span className="text-xs font-medium text-[var(--mute)]">
                 {isDirty ? 'Unsaved changes pending' : 'All brand settings saved'}
               </span>
             </div>
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
               {isDirty && (
-                <Button
+                <PillButton
                   type="button"
                   variant="ghost"
-                  size="sm"
                   onClick={handleReset}
                   disabled={saving}
-                  className="text-slate-600 hover:text-slate-900"
+                  icon={<RotateCcw size={14} />}
                 >
-                  <RotateCcw size={14} className="mr-1.5" />
                   Discard changes
-                </Button>
+                </PillButton>
               )}
-              <Button
+              <PillButton
                 type="submit"
-                variant="default"
+                variant="primary"
                 disabled={saving || !isDirty}
-                className="min-w-[130px] shadow-sm font-semibold"
+                icon={<Save size={15} />}
               >
-                {saving ? (
-                  'Saving...'
-                ) : (
-                  <>
-                    <Save size={15} className="mr-1.5" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </PillButton>
             </div>
-          </div>
+          </Card>
         </form>
       ) : (
         /* Non-Admin Read-Only View: Rich Specs in 2-Column Grid */
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: Identity card */}
-            <div className="panel overflow-hidden border border-slate-200 shadow-sm bg-white/90 p-6 flex flex-col justify-between">
+            <Card className="p-6 flex flex-col justify-between">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white flex items-center justify-center font-bold text-xl shadow-md border border-indigo-500/20 shrink-0">
+                <div
+                  className="w-14 h-14 rounded-2xl text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0"
+                  style={{ background: 'var(--g-hero)' }}
+                >
                   {formData.shortName.slice(0, 2).toUpperCase() || 'AI'}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{formData.displayName}</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <h2 className="text-xl font-bold text-[var(--ink)]">{formData.displayName}</h2>
+                  <p className="text-xs text-[var(--mute)] mt-0.5">
                     {formData.tagline || 'Professional Learning & Training'}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      <Sparkles size={11} />
+                    <Tag variant="accent">
+                      <Sparkles size={11} className="inline mr-1" />
                       {formData.shortName}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100">
-                      <Check size={11} />
+                    </Tag>
+                    <Tag variant="success">
+                      <Check size={11} className="inline mr-1" />
                       Active Institution
-                    </span>
+                    </Tag>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
+              <div className="mt-6 pt-5 border-t border-[var(--border)] space-y-3">
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
                     Legal Registered Entity
                   </span>
-                  <span className="text-sm font-semibold text-slate-900 mt-0.5 block">{formData.legalName}</span>
+                  <span className="text-sm font-semibold text-[var(--ink)] mt-0.5 block">{formData.legalName}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
                     Tagline / Mission
                   </span>
-                  <span className="text-sm text-slate-600 mt-0.5 block">{formData.tagline || 'Not configured'}</span>
+                  <span className="text-sm text-[var(--mute)] mt-0.5 block">{formData.tagline || 'Not configured'}</span>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Right: Technical Specs & Endpoints */}
-            <div className="panel overflow-hidden border border-slate-200 shadow-sm bg-white/90 p-6 space-y-4">
+            <Card className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
+                <div className="p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--panel)]">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
                     Invoice Prefix
                   </span>
-                  <span className="text-sm font-mono font-bold text-indigo-700 mt-1 block">
+                  <span className="text-sm font-mono font-bold text-[var(--g1)] mt-1 block">
                     {formData.invoicePrefix}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
+                <div className="p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--panel)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                    <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider">
                       Support Email
                     </span>
                     <button
                       type="button"
                       onClick={() => handleCopy('supportEmail', formData.supportEmail)}
-                      className="text-slate-400 hover:text-indigo-600 transition-colors"
+                      className="text-[var(--mute)] hover:text-[var(--g1)] transition-colors cursor-pointer"
                       title="Copy email"
                     >
                       {copiedKey === 'supportEmail' ? (
-                        <CheckCheck size={14} className="text-emerald-600" />
+                        <CheckCheck size={14} className="text-[#1b7a4b]" />
                       ) : (
                         <Copy size={14} />
                       )}
                     </button>
                   </div>
-                  <span className="text-sm font-medium text-slate-900 mt-1 block truncate">
+                  <span className="text-sm font-medium text-[var(--ink)] mt-1 block truncate">
                     {formData.supportEmail}
                   </span>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
+              <div className="p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--panel)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider">
                     Official Website
                   </span>
                   <a
                     href={formData.websiteUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-indigo-600 transition-colors"
+                    className="text-[var(--mute)] hover:text-[var(--g1)] transition-colors"
                     title="Open website"
                   >
                     <ExternalLink size={14} />
                   </a>
                 </div>
-                <span className="text-xs font-mono text-slate-700 mt-1 block truncate">{formData.websiteUrl}</span>
+                <span className="text-xs font-mono text-[var(--ink)] mt-1 block truncate">{formData.websiteUrl}</span>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
+              <div className="p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--panel)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider">
                     Public Verification Endpoint
                   </span>
                   <a
                     href={formData.verifyBaseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-indigo-600 transition-colors"
+                    className="text-[var(--mute)] hover:text-[var(--g1)] transition-colors"
                     title="Open verification portal"
                   >
                     <ExternalLink size={14} />
                   </a>
                 </div>
-                <span className="text-xs font-mono text-slate-700 mt-1 block truncate">{formData.verifyBaseUrl}</span>
+                <span className="text-xs font-mono text-[var(--ink)] mt-1 block truncate">{formData.verifyBaseUrl}</span>
               </div>
-            </div>
+            </Card>
           </div>
 
-          <div className="px-6 py-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 text-xs text-slate-500">
-            <Lock size={14} className="text-slate-400 shrink-0" />
+          <div className="px-6 py-3.5 bg-[var(--panel)] rounded-2xl border border-[var(--border)] flex items-center gap-2 text-xs text-[var(--mute)]">
+            <Lock size={14} className="shrink-0" />
             <span>Only administrators have permission to modify brand identity and billing configuration.</span>
           </div>
         </div>

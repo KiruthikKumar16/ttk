@@ -16,12 +16,16 @@ export default async function UserSettingsPage() {
     .maybeSingle()
 
   return (
-    <main>
-      <div className="page-heading">
+    <main className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="eyebrow">SETTINGS</p>
-          <h1>User settings</h1>
-          <p className="subcopy">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--panel)] text-[var(--mute)] border border-[var(--border)]">
+              SETTINGS
+            </span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">User settings</h1>
+          <p className="text-xs text-[var(--mute)] mt-1">
             Manage your contact details, communication channels, and custom metadata attributes.
           </p>
         </div>

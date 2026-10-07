@@ -9,7 +9,6 @@ import {
   Building,
   Briefcase,
   IdCard,
-  FileText,
   Plus,
   Trash2,
   Save,
@@ -21,8 +20,10 @@ import {
   Clock,
   Code2,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import type { Role, UserContactDetails, UserMetadata } from '@/lib/types'
+import { Card } from '@/components/ui/Card'
+import { PillButton } from '@/components/ui/PillButton'
+import { Tag } from '@/components/ui/Tag'
 
 type UserSettingsViewProps = {
   initialProfile: {
@@ -177,75 +178,77 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="max-w-5xl space-y-6 pb-16">
       {/* Top Banner & Status Alerts */}
       {successMsg && (
         <div
           role="status"
-          className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm shadow-xs animate-in fade-in"
+          className="flex items-center gap-3 p-4 bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-[#1b7a4b] rounded-2xl text-xs font-medium"
         >
-          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
-          <p className="font-medium">{successMsg}</p>
+          <CheckCircle2 size={18} className="text-[#1b7a4b] shrink-0" />
+          <p>{successMsg}</p>
         </div>
       )}
 
       {errorMsg && (
         <div
           role="alert"
-          className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm shadow-xs animate-in fade-in"
+          className="flex items-center gap-3 p-4 bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-[#b53c37] rounded-2xl text-xs font-medium"
         >
-          <AlertCircle size={18} className="text-rose-600 shrink-0" />
-          <p className="font-medium">{errorMsg}</p>
+          <AlertCircle size={18} className="text-[#b53c37] shrink-0" />
+          <p>{errorMsg}</p>
         </div>
       )}
 
       {/* Profile Header Badge Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-teal-900 via-slate-900 to-indigo-950 p-6 sm:p-8 text-white shadow-md">
+      <div
+        className="relative overflow-hidden rounded-[26px] p-6 sm:p-8 text-white shadow-md"
+        style={{ background: 'var(--g-hero)' }}
+      >
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-white font-bold text-2xl shadow-inner border border-white/20">
+            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-white font-extrabold text-2xl shadow-inner border border-white/30 backdrop-blur-xs">
               {fullName ? fullName.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-2xl font-bold tracking-tight text-white">{fullName || 'User Profile'}</h2>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-400/30 uppercase tracking-wider">
-                  <Shield size={12} />
+                <h2 className="text-2xl font-extrabold tracking-tight text-white">{fullName || 'User Profile'}</h2>
+                <Tag variant="accent">
+                  <Shield size={11} className="inline mr-1" />
                   {initialProfile.role}
-                </span>
+                </Tag>
               </div>
-              <p className="text-xs text-slate-300 font-mono mt-1">ID: {initialProfile.id}</p>
+              <p className="text-xs text-white/80 font-mono mt-1">ID: {initialProfile.id}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-300 bg-white/10 px-3.5 py-2 rounded-xl backdrop-blur-xs border border-white/10">
-            <Clock size={14} className="text-teal-400" />
+          <div className="flex items-center gap-2 text-xs text-white/90 bg-white/10 px-3.5 py-2 rounded-full backdrop-blur-xs border border-white/20 font-medium">
+            <Clock size={14} />
             <span>
               Member since{' '}
               {initialProfile.createdAt ? new Date(initialProfile.createdAt).toLocaleDateString('en-IN') : 'Recently'}
             </span>
           </div>
         </div>
-        <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-6">
         {/* Section 1: Basic Identity Information */}
-        <section className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-7 space-y-6">
-          <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
-              <User size={18} />
+        <Card className="p-6 sm:p-7 space-y-6">
+          <div className="border-b border-[var(--border)] pb-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[var(--panel)] text-[var(--g1)] border border-[var(--border)] flex items-center justify-center font-bold">
+              <User size={16} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Personal Identity</h3>
-              <p className="text-xs text-slate-500">Your name and how you appear in logs and communications.</p>
+              <h3 className="text-sm font-bold text-[var(--ink)]">Personal Identity</h3>
+              <p className="text-xs text-[var(--mute)]">Your name and how you appear in logs and communications.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="user-full-name" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Full Name <span className="text-rose-500">*</span>
+              <label htmlFor="user-full-name" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
+                Full Name <span className="text-[#b53c37]">*</span>
               </label>
               <input
                 id="user-full-name"
@@ -254,12 +257,12 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Kiruthik Kumar"
-                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors bg-slate-50/50"
+                className="w-full px-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="user-role-display" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-role-display" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 System Role (Assigned)
               </label>
               <input
@@ -267,21 +270,21 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 type="text"
                 disabled
                 value={`${initialProfile.role.toUpperCase()} (Contact Admin to change)`}
-                className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed font-medium"
+                className="w-full px-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--mute)] cursor-not-allowed font-medium opacity-80"
               />
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Section 2: Contact Details */}
-        <section className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-7 space-y-6">
-          <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
-              <Phone size={18} />
+        <Card className="p-6 sm:p-7 space-y-6">
+          <div className="border-b border-[var(--border)] pb-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[var(--panel)] text-[var(--g1)] border border-[var(--border)] flex items-center justify-center font-bold">
+              <Phone size={16} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Contact Details</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-sm font-bold text-[var(--ink)]">Contact Details</h3>
+              <p className="text-xs text-[var(--mute)]">
                 Primary phone, communication email, location, and emergency contact numbers.
               </p>
             </div>
@@ -289,75 +292,75 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="user-phone" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-phone" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Primary Phone Number
               </label>
               <div className="relative">
-                <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="user-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +91 98765 43210"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="user-alt-phone" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-alt-phone" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Alternate Phone Number
               </label>
               <div className="relative">
-                <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="user-alt-phone"
                   type="tel"
                   value={altPhone}
                   onChange={(e) => setAltPhone(e.target.value)}
                   placeholder="e.g. +91 91234 56789"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="user-contact-email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-contact-email" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Notification / Contact Email
               </label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="user-contact-email"
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="e.g. staff.contact@thoorigai.infotech"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="user-city" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-city" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 City / Region
               </label>
               <div className="relative">
-                <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="user-city"
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g. Madurai, Tamil Nadu"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="user-address" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-address" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Office / Work Address
               </label>
               <input
@@ -366,12 +369,12 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="e.g. Branch Office, Thoorigai Infotech, Bye-pass Road"
-                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                className="w-full px-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="user-emergency" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="user-emergency" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Emergency Contact Details
               </label>
               <input
@@ -380,94 +383,93 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 value={emergencyContact}
                 onChange={(e) => setEmergencyContact(e.target.value)}
                 placeholder="e.g. Parent / Spouse Name: +91 99999 88888"
-                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                className="w-full px-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
               />
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Section 3: Metadata Attributes */}
-        <section className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-7 space-y-6">
-          <div className="border-b border-slate-100 pb-4 flex items-center justify-between flex-wrap gap-4">
+        <Card className="p-6 sm:p-7 space-y-6">
+          <div className="border-b border-[var(--border)] pb-4 flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
-                <Sparkles size={18} />
+              <div className="w-8 h-8 rounded-full bg-[var(--panel)] text-[var(--g1)] border border-[var(--border)] flex items-center justify-center font-bold">
+                <Sparkles size={16} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">User Metadata & Custom Attributes</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="text-sm font-bold text-[var(--ink)]">User Metadata &amp; Custom Attributes</h3>
+                <p className="text-xs text-[var(--mute)]">
                   Department, title, employee code, and dynamic custom key-value metadata.
                 </p>
               </div>
             </div>
 
-            <Button
+            <PillButton
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setShowJsonPreview(!showJsonPreview)}
-              className="text-xs border-slate-200 text-slate-600 hover:text-slate-900"
+              icon={<Code2 size={13} />}
             >
-              <Code2 size={13} className="mr-1.5" />
               {showJsonPreview ? 'Hide JSON' : 'Preview JSON'}
-            </Button>
+            </PillButton>
           </div>
 
           {/* Standard Metadata Presets */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="meta-department" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="meta-department" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Department
               </label>
               <div className="relative">
-                <Building size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Building size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="meta-department"
                   type="text"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   placeholder="e.g. Training & Academics, Accounts, Admissions"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="meta-designation" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="meta-designation" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Designation / Job Title
               </label>
               <div className="relative">
-                <Briefcase size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Briefcase size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="meta-designation"
                   type="text"
                   value={designation}
                   onChange={(e) => setDesignation(e.target.value)}
                   placeholder="e.g. Lead Instructor, Senior Coordinator"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="meta-emp-id" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="meta-emp-id" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Employee / Staff ID
               </label>
               <div className="relative">
-                <IdCard size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <IdCard size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)]" />
                 <input
                   id="meta-emp-id"
                   type="text"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
                   placeholder="e.g. EMP-2026-088"
-                  className="w-full pl-10 pr-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors font-mono"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="meta-timezone" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="meta-timezone" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Timezone
               </label>
               <input
@@ -476,12 +478,12 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
                 placeholder="e.g. Asia/Kolkata"
-                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                className="w-full px-3.5 py-2.5 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="meta-bio" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="meta-bio" className="block text-xs font-semibold text-[var(--ink)] mb-1.5">
                 Bio / Profile Description
               </label>
               <textarea
@@ -490,39 +492,38 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Brief professional bio or operational responsibilities..."
-                className="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-colors"
+                className="w-full px-4 py-3 text-xs rounded-2xl border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)] transition-colors"
               />
             </div>
           </div>
 
           {/* Dynamic Custom Key-Value Metadata Editor */}
-          <div className="pt-4 border-t border-slate-100 space-y-3">
+          <div className="pt-4 border-t border-[var(--border-subtle)] space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">Custom Metadata Fields</h4>
-                <p className="text-[11px] text-slate-400">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--ink)]">Custom Metadata Fields</h4>
+                <p className="text-[11px] text-[var(--mute)]">
                   Add arbitrary key-value pairs (e.g. slack_id, qualification, blood_group).
                 </p>
               </div>
-              <Button
+              <PillButton
                 type="button"
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={handleAddMetadataField}
-                className="text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200"
+                icon={<Plus size={13} />}
               >
-                <Plus size={13} className="mr-1" />
                 Add Field
-              </Button>
+              </PillButton>
             </div>
 
             {customMetadata.length === 0 ? (
-              <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 text-center">
-                <p className="text-xs text-slate-500">No custom metadata fields yet.</p>
+              <div className="p-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel)] text-center">
+                <p className="text-xs text-[var(--mute)]">No custom metadata fields yet.</p>
                 <button
                   type="button"
                   onClick={handleAddMetadataField}
-                  className="text-xs font-semibold text-teal-600 hover:underline mt-1"
+                  className="text-xs font-semibold text-[var(--g1)] hover:underline mt-1 cursor-pointer"
                 >
                   Click to add a custom attribute
                 </button>
@@ -536,19 +537,19 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
                       placeholder="Attribute Key (e.g. slack_handle)"
                       value={entry.key}
                       onChange={(e) => handleUpdateMetadataField(entry.id, 'key', e.target.value)}
-                      className="w-1/3 px-3 py-1.5 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                      className="w-1/3 px-3.5 py-2 text-xs font-mono rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)]"
                     />
                     <input
                       type="text"
                       placeholder="Attribute Value (string or JSON)"
                       value={entry.value}
                       onChange={(e) => handleUpdateMetadataField(entry.id, 'value', e.target.value)}
-                      className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600"
+                      className="flex-1 px-3.5 py-2 text-xs rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g1)]"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemoveMetadataField(entry.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="p-1.5 text-[var(--mute)] hover:text-[#b53c37] hover:bg-[var(--panel)] rounded-full transition-colors cursor-pointer"
                       title="Remove attribute"
                     >
                       <Trash2 size={14} />
@@ -562,41 +563,34 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
           {/* JSON Live Preview */}
           {showJsonPreview && (
             <div className="pt-2">
-              <label className="block text-xs font-mono text-slate-500 mb-1">Payload JSON Preview:</label>
-              <pre className="p-3 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto max-h-48 border border-slate-800">
+              <label className="block text-xs font-mono text-[var(--mute)] mb-1">Payload JSON Preview:</label>
+              <pre className="p-4 bg-[var(--panel)] text-[var(--ink)] rounded-2xl text-xs font-mono overflow-x-auto max-h-48 border border-[var(--border)]">
                 {JSON.stringify({ contactDetails: compiledContactDetails, metadata: compiledMetadata }, null, 2)}
               </pre>
             </div>
           )}
-        </section>
+        </Card>
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-2">
-          <Button
+          <PillButton
             type="button"
             variant="ghost"
             onClick={handleReset}
             disabled={saving}
-            className="text-xs text-slate-600 hover:text-slate-900"
+            icon={<RotateCcw size={13} />}
           >
-            <RotateCcw size={13} className="mr-1.5" />
             Reset to Saved
-          </Button>
+          </PillButton>
 
-          <Button
+          <PillButton
             type="submit"
+            variant="primary"
             disabled={saving}
-            className="text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white min-w-[130px] shadow-sm"
+            icon={<Save size={14} />}
           >
-            {saving ? (
-              'Saving Settings...'
-            ) : (
-              <>
-                <Save size={14} className="mr-1.5" />
-                Save Settings
-              </>
-            )}
-          </Button>
+            {saving ? 'Saving Settings...' : 'Save Settings'}
+          </PillButton>
         </div>
       </form>
     </div>
