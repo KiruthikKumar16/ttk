@@ -293,15 +293,9 @@ export function CoursesManager({
           <Link
             href={makeCategoryTabUrl(undefined)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-              !selectedCategoryId
-                ? 'text-white shadow-xs'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              !selectedCategoryId ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              !selectedCategoryId
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={!selectedCategoryId ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             All Courses
           </Link>
@@ -313,15 +307,9 @@ export function CoursesManager({
                 key={cat.id}
                 href={makeCategoryTabUrl(cat.id)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  isSelected
-                    ? 'text-white shadow-xs'
-                    : 'text-[var(--mute)] hover:text-[var(--text)]'
+                  isSelected ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
-                style={
-                  isSelected
-                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                    : {}
-                }
+                style={isSelected ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
               >
                 <span>{cat.name}</span>
                 <span
@@ -449,15 +437,9 @@ export function CoursesManager({
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'text-white shadow-2xs'
-                    : 'text-[var(--mute)] hover:text-[var(--text)]'
+                  viewMode === 'table' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
-                style={
-                  viewMode === 'table'
-                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                    : {}
-                }
+                style={viewMode === 'table' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
                 title="Table List View"
                 aria-label="Table List View"
               >
@@ -467,15 +449,9 @@ export function CoursesManager({
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'text-white shadow-2xs'
-                    : 'text-[var(--mute)] hover:text-[var(--text)]'
+                  viewMode === 'grid' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
-                style={
-                  viewMode === 'grid'
-                    ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                    : {}
-                }
+                style={viewMode === 'grid' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
                 title="Course Cards Grid View"
                 aria-label="Course Cards Grid View"
               >
@@ -490,11 +466,21 @@ export function CoursesManager({
             <table className="w-full text-left text-xs" style={{ whiteSpace: 'normal' }}>
               <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th className="py-3.5 px-4" style={{ width: '28%' }}>Course</th>
-                  <th className="py-3.5 px-4" style={{ width: '15%' }}>Category</th>
-                  <th className="py-3.5 px-4" style={{ width: '12%' }}>Duration</th>
-                  <th className="py-3.5 px-4" style={{ width: '13%' }}>Tax Mode</th>
-                  <th className="py-3.5 px-4" style={{ width: '20%' }}>Description</th>
+                  <th className="py-3.5 px-4" style={{ width: '28%' }}>
+                    Course
+                  </th>
+                  <th className="py-3.5 px-4" style={{ width: '15%' }}>
+                    Category
+                  </th>
+                  <th className="py-3.5 px-4" style={{ width: '12%' }}>
+                    Duration
+                  </th>
+                  <th className="py-3.5 px-4" style={{ width: '13%' }}>
+                    Tax Mode
+                  </th>
+                  <th className="py-3.5 px-4" style={{ width: '20%' }}>
+                    Description
+                  </th>
                   <th className="py-3.5 px-4 text-right" style={{ width: '12%', whiteSpace: 'nowrap' }}>
                     Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                   </th>
@@ -506,7 +492,9 @@ export function CoursesManager({
                     <td colSpan={6} className="text-center py-12 text-[var(--mute)]">
                       <BookOpen size={32} className="mx-auto text-[var(--mute)] mb-2" />
                       <p className="font-bold text-[var(--text)]">No courses found matching your criteria.</p>
-                      <p className="text-xs text-[var(--mute)] mt-1">Try switching categories or clearing search filters.</p>
+                      <p className="text-xs text-[var(--mute)] mt-1">
+                        Try switching categories or clearing search filters.
+                      </p>
                     </td>
                   </tr>
                 ) : (
@@ -664,7 +652,10 @@ export function CoursesManager({
                           )}
                         </div>
 
-                        <p className="text-[var(--mute)] text-xs line-clamp-2 leading-relaxed mb-3" title={c.description}>
+                        <p
+                          className="text-[var(--mute)] text-xs line-clamp-2 leading-relaxed mb-3"
+                          title={c.description}
+                        >
                           {c.description || 'No course description provided.'}
                         </p>
                       </div>
@@ -674,7 +665,9 @@ export function CoursesManager({
                           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--mute)] block">
                             Fee {gstRate > 0 ? `(${gstRate}% GST)` : ''}
                           </span>
-                          <div className="text-base font-extrabold text-[var(--text)] leading-tight">{money(courseTotal)}</div>
+                          <div className="text-base font-extrabold text-[var(--text)] leading-tight">
+                            {money(courseTotal)}
+                          </div>
                           {gstRate > 0 && (
                             <div className="text-[11px] text-[var(--mute)] mt-0.5">
                               {isInclusive ? (
@@ -875,7 +868,9 @@ export function CoursesManager({
                           {!gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">+GST added on top of fee</span>
+                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">
+                        +GST added on top of fee
+                      </span>
                     </button>
 
                     <button
@@ -897,7 +892,9 @@ export function CoursesManager({
                           {gstInclusive && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                       </div>
-                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">Fee already contains GST</span>
+                      <span className="text-[11px] text-[var(--mute)] mt-1 leading-tight">
+                        Fee already contains GST
+                      </span>
                     </button>
                   </div>
                 </div>

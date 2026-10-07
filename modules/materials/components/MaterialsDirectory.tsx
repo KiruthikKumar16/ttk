@@ -50,15 +50,10 @@ export function MaterialsDirectory({
             type="button"
             onClick={() => setSelectedCategory('all')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'text-white shadow-sm'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              selectedCategory === 'all' ? 'text-white shadow-sm' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                selectedCategory === 'all'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: selectedCategory === 'all' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             All Courses ({courses.length})
@@ -73,20 +68,18 @@ export function MaterialsDirectory({
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  isSelected
-                    ? 'text-white shadow-sm'
-                    : 'text-[var(--mute)] hover:text-[var(--text)]'
+                  isSelected ? 'text-white shadow-sm' : 'text-[var(--mute)] hover:text-[var(--text)]'
                 }`}
                 style={{
-                  background: isSelected
-                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                    : 'transparent',
+                  background: isSelected ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
                 }}
               >
                 <span>{cat.name}</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--border)]'
+                    isSelected
+                      ? 'bg-white/20 text-white'
+                      : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--border)]'
                   }`}
                 >
                   {count}

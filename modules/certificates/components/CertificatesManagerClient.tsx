@@ -319,11 +319,7 @@ export function CertificatesManagerClient({
                       {cert.certificate_id}
                     </span>
                   </div>
-                  {catName ? (
-                    <CategoryBadge categoryName={catName} />
-                  ) : (
-                    <Tag variant="neutral">Standard</Tag>
-                  )}
+                  {catName ? <CategoryBadge categoryName={catName} /> : <Tag variant="neutral">Standard</Tag>}
                 </div>
 
                 {/* Diploma Card Body */}
@@ -335,7 +331,9 @@ export function CertificatesManagerClient({
                     <h3 className="text-base font-bold text-[var(--ink)] group-hover:text-[var(--g1)] transition-colors mt-0.5 leading-snug">
                       {cert.student_name}
                     </h3>
-                    <div className="text-xs text-[var(--mute)] mt-1 font-medium">Student #{cert.student_register_id}</div>
+                    <div className="text-xs text-[var(--mute)] mt-1 font-medium">
+                      Student #{cert.student_register_id}
+                    </div>
 
                     <div className="mt-4 pt-3 border-t border-[var(--border-subtle)]">
                       <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
@@ -428,7 +426,9 @@ export function CertificatesManagerClient({
             })}`}
             aria-disabled={page <= 1}
             className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--border)] font-medium transition-colors ${
-              page <= 1 ? 'pointer-events-none opacity-40 bg-[var(--panel)]' : 'hover:bg-[var(--panel)] text-[var(--ink)]'
+              page <= 1
+                ? 'pointer-events-none opacity-40 bg-[var(--panel)]'
+                : 'hover:bg-[var(--panel)] text-[var(--ink)]'
             }`}
           >
             <ChevronLeft size={14} />
@@ -447,7 +447,9 @@ export function CertificatesManagerClient({
             })}`}
             aria-disabled={page >= totalPages}
             className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--border)] font-medium transition-colors ${
-              page >= totalPages ? 'pointer-events-none opacity-40 bg-[var(--panel)]' : 'hover:bg-[var(--panel)] text-[var(--ink)]'
+              page >= totalPages
+                ? 'pointer-events-none opacity-40 bg-[var(--panel)]'
+                : 'hover:bg-[var(--panel)] text-[var(--ink)]'
             }`}
           >
             <span>Next</span>

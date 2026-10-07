@@ -472,9 +472,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
           {/* Full-width Action Bar */}
           <Card className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div
-                className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`}
-              />
+              <div className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#a8710f] animate-pulse' : 'bg-[#1b7a4b]'}`} />
               <span className="text-xs font-medium text-[var(--mute)]">
                 {isDirty ? 'Unsaved changes pending' : 'All brand settings saved'}
               </span>
@@ -492,12 +490,7 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                   Discard changes
                 </PillButton>
               )}
-              <PillButton
-                type="submit"
-                variant="primary"
-                disabled={saving || !isDirty}
-                icon={<Save size={15} />}
-              >
+              <PillButton type="submit" variant="primary" disabled={saving || !isDirty} icon={<Save size={15} />}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </PillButton>
             </div>
@@ -545,7 +538,9 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                   <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
                     Tagline / Mission
                   </span>
-                  <span className="text-sm text-[var(--mute)] mt-0.5 block">{formData.tagline || 'Not configured'}</span>
+                  <span className="text-sm text-[var(--mute)] mt-0.5 block">
+                    {formData.tagline || 'Not configured'}
+                  </span>
                 </div>
               </div>
             </Card>
@@ -619,7 +614,9 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
                     <ExternalLink size={14} />
                   </a>
                 </div>
-                <span className="text-xs font-mono text-[var(--ink)] mt-1 block truncate">{formData.verifyBaseUrl}</span>
+                <span className="text-xs font-mono text-[var(--ink)] mt-1 block truncate">
+                  {formData.verifyBaseUrl}
+                </span>
               </div>
             </Card>
           </div>

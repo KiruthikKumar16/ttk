@@ -18,12 +18,7 @@ export interface PillBarChartProps {
   className?: string
 }
 
-export function PillBarChart({
-  data,
-  height = 140,
-  showLabels = true,
-  className = '',
-}: PillBarChartProps) {
+export function PillBarChart({ data, height = 140, showLabels = true, className = '' }: PillBarChartProps) {
   return (
     <div className={`w-full ${className}`}>
       <div className="flex items-end justify-between gap-2.5 sm:gap-4" style={{ height }}>
@@ -33,10 +28,7 @@ export function PillBarChart({
           const isHatched = item.isHatched ?? false
 
           return (
-            <div
-              key={idx}
-              className="group flex flex-1 flex-col items-center justify-end h-full relative"
-            >
+            <div key={idx} className="group flex flex-1 flex-col items-center justify-end h-full relative">
               {/* Tooltip on hover */}
               <div className="pointer-events-none absolute -top-8 z-20 hidden rounded-md bg-[var(--text-heading)] px-2 py-1 text-[11px] font-medium text-white shadow-sm group-hover:block whitespace-nowrap">
                 {item.tooltip || `${item.label}: ${item.value}`}

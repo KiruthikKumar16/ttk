@@ -116,11 +116,15 @@ export default function VerificationPage({ params }: { params: Promise<{ code: s
             <div className="rounded-[18px] bg-[var(--panel)] p-4 border border-[var(--border)] text-left space-y-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)]">Student Name</p>
-                <h2 className="text-base font-bold text-[var(--text-heading)] mt-0.5">{verificationResult.student_name}</h2>
+                <h2 className="text-base font-bold text-[var(--text-heading)] mt-0.5">
+                  {verificationResult.student_name}
+                </h2>
               </div>
               <div className="border-t border-[var(--border)] pt-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)]">Course Program</p>
-                <h2 className="text-sm font-semibold text-[var(--text-heading)] mt-0.5">{verificationResult.course_name}</h2>
+                <h2 className="text-sm font-semibold text-[var(--text-heading)] mt-0.5">
+                  {verificationResult.course_name}
+                </h2>
               </div>
               <div className="border-t border-[var(--border)] pt-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)]">Issue Date</p>
@@ -145,7 +149,9 @@ export default function VerificationPage({ params }: { params: Promise<{ code: s
             <div className="rounded-[18px] bg-[var(--panel)] p-4 border border-[var(--border)] text-left space-y-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)]">Invoice Number</p>
-                <h2 className="text-base font-mono font-bold text-[var(--text-heading)] mt-0.5">{verificationResult.invoice_number}</h2>
+                <h2 className="text-base font-mono font-bold text-[var(--text-heading)] mt-0.5">
+                  {verificationResult.invoice_number}
+                </h2>
               </div>
               <div className="border-t border-[var(--border)] pt-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)]">Issue Date</p>

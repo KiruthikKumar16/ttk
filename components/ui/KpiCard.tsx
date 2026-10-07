@@ -57,12 +57,8 @@ export function KpiCard({
 
         <div className="relative z-10 flex items-start justify-between gap-3">
           <div>
-            <p className="text-[12px] font-bold uppercase tracking-wider text-white/80">
-              {title}
-            </p>
-            <div className="mt-2 text-[44px] font-extrabold tracking-tight leading-none text-white">
-              {value}
-            </div>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-white/80">{title}</p>
+            <div className="mt-2 text-[44px] font-extrabold tracking-tight leading-none text-white">{value}</div>
           </div>
           {icon && (
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md">

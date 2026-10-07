@@ -64,9 +64,7 @@ export function DashboardShell({ role, children }: { role: Role; children: React
             <div className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-left duration-200 bg-[var(--shell)] border-r border-[var(--border)]">
               {/* Top Close Button for Mobile Accessibility */}
               <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[var(--border)]">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--mute)]">
-                  Navigation
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--mute)]">Navigation</span>
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}

@@ -41,9 +41,7 @@ export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
             {tab.count !== undefined && (
               <span
                 className={`ml-0.5 rounded-full px-2 py-0.2 text-[10px] font-bold ${
-                  isActive
-                    ? 'bg-[var(--g4)] text-[var(--g1)]'
-                    : 'bg-[var(--border)] text-[var(--mute)]'
+                  isActive ? 'bg-[var(--g4)] text-[var(--g1)]' : 'bg-[var(--border)] text-[var(--mute)]'
                 }`}
               >
                 {tab.count}

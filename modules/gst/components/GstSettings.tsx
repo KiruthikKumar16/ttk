@@ -78,7 +78,10 @@ export function GstSettingsPage({
       </div>
 
       {!settings && (
-        <p className="p-3.5 rounded-2xl bg-[rgba(168,113,15,0.08)] border border-[rgba(168,113,15,0.25)] text-xs font-semibold text-[#a8710f]" role="status">
+        <p
+          className="p-3.5 rounded-2xl bg-[rgba(168,113,15,0.08)] border border-[rgba(168,113,15,0.25)] text-xs font-semibold text-[#a8710f]"
+          role="status"
+        >
           GST settings have not been configured yet. Save this form to create them.
         </p>
       )}
@@ -121,11 +124,7 @@ export function GstSettingsPage({
               className="text-[var(--mute)] hover:text-[var(--ink)] transition-colors cursor-pointer"
               title={enabled ? 'Disable GST' : 'Enable GST'}
             >
-              {enabled ? (
-                <ToggleRight size={38} className="text-[var(--g1)]" />
-              ) : (
-                <ToggleLeft size={38} />
-              )}
+              {enabled ? <ToggleRight size={38} className="text-[var(--g1)]" /> : <ToggleLeft size={38} />}
             </button>
           </div>
 
@@ -199,7 +198,9 @@ export function GstSettingsPage({
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
             <div>
               <h2 className="text-base font-bold text-[var(--ink)]">Tax Breakdown Preview</h2>
-              <p className="text-xs text-[var(--mute)] mt-0.5">How a ₹10,000 course fee is calculated under current settings</p>
+              <p className="text-xs text-[var(--mute)] mt-0.5">
+                How a ₹10,000 course fee is calculated under current settings
+              </p>
             </div>
             <IndianRupee size={20} className="text-[var(--mute)]" />
           </div>
@@ -318,13 +319,13 @@ export function GstSettingsPage({
             <p>
               {previewMode === 'exclusive' ? (
                 <>
-                  <strong className="text-[var(--ink)]">Exclusive Courses:</strong> GST is added on top of the course fee. Each student pays Base
-                  Fee + {rateNum}% GST.
+                  <strong className="text-[var(--ink)]">Exclusive Courses:</strong> GST is added on top of the course
+                  fee. Each student pays Base Fee + {rateNum}% GST.
                 </>
               ) : (
                 <>
-                  <strong className="text-[var(--ink)]">Inclusive Courses:</strong> The course price already contains {rateNum}% GST. Base taxable
-                  revenue and tax are extracted automatically.
+                  <strong className="text-[var(--ink)]">Inclusive Courses:</strong> The course price already contains{' '}
+                  {rateNum}% GST. Base taxable revenue and tax are extracted automatically.
                 </>
               )}
             </p>

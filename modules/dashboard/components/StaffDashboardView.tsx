@@ -65,36 +65,20 @@ export function StaffDashboardView({
 
         {/* Quick Actions Dock */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <Link
-            href="/attendance"
-            className="btn-primary"
-            style={{ textDecoration: 'none' }}
-          >
+          <Link href="/attendance" className="btn-primary" style={{ textDecoration: 'none' }}>
             <CalendarDays size={14} />
             <span>Mark Attendance</span>
           </Link>
-          <Link
-            href="/assessments"
-            className="btn-secondary"
-            style={{ textDecoration: 'none' }}
-          >
+          <Link href="/assessments" className="btn-secondary" style={{ textDecoration: 'none' }}>
             <ClipboardCheck size={14} style={{ color: 'var(--g1)' }} />
             <span>Assessments</span>
           </Link>
-          <Link
-            href="/materials"
-            className="btn-secondary"
-            style={{ textDecoration: 'none' }}
-          >
+          <Link href="/materials" className="btn-secondary" style={{ textDecoration: 'none' }}>
             <FolderOpen size={14} style={{ color: 'var(--g1)' }} />
             <span>Upload Materials</span>
           </Link>
           {canCreateStudent && (
-            <Link
-              href="/students/new"
-              className="btn-secondary"
-              style={{ textDecoration: 'none' }}
-            >
+            <Link href="/students/new" className="btn-secondary" style={{ textDecoration: 'none' }}>
               <Plus size={14} style={{ color: '#1b7a4b' }} />
               <span>Add Student</span>
             </Link>

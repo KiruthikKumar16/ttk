@@ -11,14 +11,7 @@ export interface GaugeProps {
   className?: string
 }
 
-export function Gauge({
-  value,
-  size = 140,
-  strokeWidth = 12,
-  label,
-  sublabel,
-  className = '',
-}: GaugeProps) {
+export function Gauge({ value, size = 140, strokeWidth = 12, label, sublabel, className = '' }: GaugeProps) {
   const clamped = Math.max(0, Math.min(100, value))
   const radius = (size - strokeWidth) / 2
   const center = size / 2
@@ -30,12 +23,7 @@ export function Gauge({
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <div className="relative flex items-center justify-center" style={{ width: size, height: size / 2 + 10 }}>
-        <svg
-          width={size}
-          height={size / 2 + 10}
-          viewBox={`0 0 ${size} ${size / 2 + 10}`}
-          className="overflow-visible"
-        >
+        <svg width={size} height={size / 2 + 10} viewBox={`0 0 ${size} ${size / 2 + 10}`} className="overflow-visible">
           {/* Background Track */}
           <path
             d={`M ${strokeWidth / 2} ${center} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${center}`}
@@ -60,9 +48,7 @@ export function Gauge({
 
         {/* Value text in center */}
         <div className="absolute bottom-0 text-center">
-          <div className="text-2xl font-extrabold text-[var(--text-heading)] leading-none">
-            {Math.round(clamped)}%
-          </div>
+          <div className="text-2xl font-extrabold text-[var(--text-heading)] leading-none">{Math.round(clamped)}%</div>
         </div>
       </div>
 

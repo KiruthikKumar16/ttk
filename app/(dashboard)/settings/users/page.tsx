@@ -46,7 +46,9 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
             </span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">Users and roles</h1>
-          <p className="text-xs text-[var(--mute)] mt-1">Review app access. Role changes are recorded in the audit log.</p>
+          <p className="text-xs text-[var(--mute)] mt-1">
+            Review app access. Role changes are recorded in the audit log.
+          </p>
         </div>
       </div>
       <UserRoles

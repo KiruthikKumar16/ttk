@@ -123,12 +123,19 @@ export function TrainerAssignments({
 
       {/* Status / Error */}
       {error && (
-        <p role="alert" className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] font-medium">
+        <p
+          role="alert"
+          className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] font-medium"
+        >
           {error}
         </p>
       )}
       {status && (
-        <p role="status" aria-live="polite" className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] font-medium">
+        <p
+          role="status"
+          aria-live="polite"
+          className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] font-medium"
+        >
           {status}
         </p>
       )}

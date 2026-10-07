@@ -82,11 +82,7 @@ export function AdminReportsClient({
             className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeView === 'financial' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              activeView === 'financial'
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={activeView === 'financial' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             <CircleDollarSign size={14} />
             <span>Financial Overview</span>
@@ -102,11 +98,7 @@ export function AdminReportsClient({
             className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeView === 'staff' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              activeView === 'staff'
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={activeView === 'staff' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             <GraduationCap size={14} />
             <span>Staff & Academic Data</span>

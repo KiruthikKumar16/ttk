@@ -11,14 +11,7 @@ export interface TagProps {
   style?: React.CSSProperties
 }
 
-export function Tag({
-  children,
-  variant = 'neutral',
-  size = 'md',
-  icon,
-  className = '',
-  style,
-}: TagProps) {
+export function Tag({ children, variant = 'neutral', size = 'md', icon, className = '', style }: TagProps) {
   const sizeClasses = {
     sm: 'px-2.5 py-0.5 text-[11px]',
     md: 'px-3 py-1 text-xs',

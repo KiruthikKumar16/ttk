@@ -226,9 +226,7 @@ export function Sidebar({
               <span className="flex h-2 w-2 rounded-full bg-[var(--g1)] animate-pulse" />
               <span className="text-[11px] font-bold text-[var(--text-heading)]">ThoorigAI Portal</span>
             </div>
-            <p className="mt-1 text-[10px] text-[var(--mute)]">
-              {role.toUpperCase()} session active
-            </p>
+            <p className="mt-1 text-[10px] text-[var(--mute)]">{role.toUpperCase()} session active</p>
           </div>
         )}
 

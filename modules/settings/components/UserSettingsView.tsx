@@ -583,12 +583,7 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
             Reset to Saved
           </PillButton>
 
-          <PillButton
-            type="submit"
-            variant="primary"
-            disabled={saving}
-            icon={<Save size={14} />}
-          >
+          <PillButton type="submit" variant="primary" disabled={saving} icon={<Save size={14} />}>
             {saving ? 'Saving Settings...' : 'Save Settings'}
           </PillButton>
         </div>

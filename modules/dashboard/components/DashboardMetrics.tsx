@@ -264,11 +264,7 @@ export function DashboardMetrics({
           <p className="text-sm text-[var(--mute)] mt-1">{greetingData.subcopy}</p>
         </div>
         {canCreateStudent && (
-          <Link
-            href="/students/new"
-            className="btn-primary"
-            style={{ textDecoration: 'none' }}
-          >
+          <Link href="/students/new" className="btn-primary" style={{ textDecoration: 'none' }}>
             <Plus size={16} />
             <span>Add student</span>
           </Link>
@@ -295,7 +291,8 @@ export function DashboardMetrics({
                   .map((u) => u.fullName)
                   .slice(0, 3)
                   .join(', ')}
-                {pendingUsers.length > 3 ? ` and ${pendingUsers.length - 3} more` : ''} registered and waiting for academy portal access.
+                {pendingUsers.length > 3 ? ` and ${pendingUsers.length - 3} more` : ''} registered and waiting for
+                academy portal access.
               </p>
             </div>
           </div>
@@ -324,15 +321,10 @@ export function DashboardMetrics({
             aria-controls="admin-financial-panel"
             onClick={() => handleViewChange('financial')}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              activeView === 'financial'
-                ? 'text-white shadow-md'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeView === 'financial' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                activeView === 'financial'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: activeView === 'financial' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             <CircleDollarSign size={14} />
@@ -347,15 +339,10 @@ export function DashboardMetrics({
             aria-controls="admin-staff-panel"
             onClick={() => handleViewChange('staff')}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              activeView === 'staff'
-                ? 'text-white shadow-md'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeView === 'staff' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                activeView === 'staff'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: activeView === 'staff' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             <GraduationCap size={14} />
@@ -506,36 +493,20 @@ export function DashboardMetrics({
 
           {/* Quick Academic Actions Dock */}
           <div className="flex flex-wrap items-center gap-2.5 mb-6">
-            <Link
-              href="/attendance"
-              className="btn-primary"
-              style={{ textDecoration: 'none' }}
-            >
+            <Link href="/attendance" className="btn-primary" style={{ textDecoration: 'none' }}>
               <CalendarDays size={14} />
               <span>Mark / View Attendance</span>
             </Link>
-            <Link
-              href="/assessments"
-              className="btn-secondary"
-              style={{ textDecoration: 'none' }}
-            >
+            <Link href="/assessments" className="btn-secondary" style={{ textDecoration: 'none' }}>
               <ClipboardCheck size={14} style={{ color: 'var(--g1)' }} />
               <span>Assessments ({academicData?.assessmentCount ?? 0})</span>
             </Link>
-            <Link
-              href="/materials"
-              className="btn-secondary"
-              style={{ textDecoration: 'none' }}
-            >
+            <Link href="/materials" className="btn-secondary" style={{ textDecoration: 'none' }}>
               <FolderOpen size={14} style={{ color: 'var(--g1)' }} />
               <span>Learning Materials ({academicData?.materialsCount ?? 0})</span>
             </Link>
             {canCreateStudent && (
-              <Link
-                href="/students/new"
-                className="btn-secondary"
-                style={{ textDecoration: 'none' }}
-              >
+              <Link href="/students/new" className="btn-secondary" style={{ textDecoration: 'none' }}>
                 <Plus size={14} style={{ color: '#1b7a4b' }} />
                 <span>Add Student</span>
               </Link>

@@ -92,4 +92,3 @@ export function CertificateTableRow({
     </tr>
   )
 }
-

@@ -9,15 +9,7 @@ import { KpiCard } from '@/components/ui/KpiCard'
 import { Gauge } from '@/components/ui/Gauge'
 
 export function SettingsDrawer() {
-  const {
-    theme,
-    accent,
-    setTheme,
-    setAccent,
-    resetToDefault,
-    isSettingsOpen,
-    closeSettings,
-  } = useTheme()
+  const { theme, accent, setTheme, setAccent, resetToDefault, isSettingsOpen, closeSettings } = useTheme()
 
   const [customHex, setCustomHex] = useState(accent)
 
@@ -82,9 +74,7 @@ export function SettingsDrawer() {
         <div className="flex-1 space-y-7 p-6">
           {/* Section 1: Mode (Light / Dark) */}
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">
-              Interface Theme
-            </label>
+            <label className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">Interface Theme</label>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -120,9 +110,7 @@ export function SettingsDrawer() {
               <label className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">
                 Brand Accent Swatches
               </label>
-              <span className="text-[11px] font-mono font-medium text-[var(--mute)] uppercase">
-                {accent}
-              </span>
+              <span className="text-[11px] font-mono font-medium text-[var(--mute)] uppercase">{accent}</span>
             </div>
 
             <div className="mt-3 grid grid-cols-4 gap-2.5">

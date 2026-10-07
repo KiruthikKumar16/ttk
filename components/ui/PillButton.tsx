@@ -42,14 +42,11 @@ export function PillButton({
     variantClass =
       'bg-[var(--panel)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--hover-bg)] active:scale-[0.98]'
   } else if (variant === 'outline') {
-    variantClass =
-      'bg-transparent border border-[var(--g1)] text-[var(--g1)] hover:bg-[var(--g4)] active:scale-[0.98]'
+    variantClass = 'bg-transparent border border-[var(--g1)] text-[var(--g1)] hover:bg-[var(--g4)] active:scale-[0.98]'
   } else if (variant === 'danger') {
-    variantClass =
-      'bg-[#b53c37] text-white hover:bg-[#9e332f] active:scale-[0.98] shadow-sm'
+    variantClass = 'bg-[#b53c37] text-white hover:bg-[#9e332f] active:scale-[0.98] shadow-sm'
   } else if (variant === 'ghost') {
-    variantClass =
-      'bg-transparent text-[var(--text)] hover:bg-[var(--hover-bg)] active:scale-[0.98]'
+    variantClass = 'bg-transparent text-[var(--text)] hover:bg-[var(--hover-bg)] active:scale-[0.98]'
   }
 
   return (

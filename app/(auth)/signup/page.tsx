@@ -268,9 +268,7 @@ export default function SignupPage() {
               className="object-contain"
             />
           </div>
-          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">
-            {brand.displayName}
-          </p>
+          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">{brand.displayName}</p>
           <h1 id="signup-title" className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--text-heading)]">
             {isDetectedAdmin
               ? 'Administrator Registration'
@@ -278,14 +276,15 @@ export default function SignupPage() {
                 ? 'Activate Academy Access'
                 : 'Request Staff Access'}
           </h1>
-          <p className="mt-1 text-xs text-[var(--mute)]">
-            Institutional account onboarding and invite verification
-          </p>
+          <p className="mt-1 text-xs text-[var(--mute)]">Institutional account onboarding and invite verification</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-7 space-y-4">
           <div>
-            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            <label
+              htmlFor="fullName"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1"
+            >
               Full Name
             </label>
             <input
@@ -301,7 +300,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1"
+            >
               Institutional Email
             </label>
             <input
@@ -318,7 +320,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1"
+            >
               Password
             </label>
             <div className="relative">
@@ -339,7 +344,7 @@ export default function SignupPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] transition-colors p-1"
                 tabIndex={-1}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide input' : 'Show input'}
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -395,7 +400,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1"
+            >
               Confirm Password
             </label>
             <div className="relative">
@@ -416,7 +424,7 @@ export default function SignupPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] transition-colors p-1"
                 tabIndex={-1}
-                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                aria-label={showConfirmPassword ? 'Hide input' : 'Show input'}
               >
                 {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -443,9 +451,7 @@ export default function SignupPage() {
                 <KeyRound size={13} /> Have an invite code or OTP?
               </button>
             ) : (
-              <div
-                className="p-4 rounded-[20px] border border-[var(--border)] bg-[var(--panel)] transition-all"
-              >
+              <div className="p-4 rounded-[20px] border border-[var(--border)] bg-[var(--panel)] transition-all">
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="passcode"
@@ -483,15 +489,16 @@ export default function SignupPage() {
                 />
 
                 {/* Real-time verification badge */}
-                {verifyingCode && <span className="text-[11px] text-[var(--mute)] mt-1.5 block">Verifying code...</span>}
+                {verifyingCode && (
+                  <span className="text-[11px] text-[var(--mute)] mt-1.5 block">Verifying code...</span>
+                )}
                 {verifiedCode && !verifyingCode && (
                   <div className="mt-2">
                     {verifiedCode.valid ? (
-                      <span
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b7a4b]"
-                      >
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b7a4b]">
                         <Check size={13} />
-                        Valid {verifiedCode.role === 'admin' ? 'Administrator' : 'Staff'} Code — Instant access granted without admin review.
+                        Valid {verifiedCode.role === 'admin' ? 'Administrator' : 'Staff'} Code — Instant access granted
+                        without admin review.
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#b53c37]">

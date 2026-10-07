@@ -3,7 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Clock, Edit2, Trash2, AlertCircle, X, BookOpen, ArrowRight, Sparkles, FolderOpen, Layers } from 'lucide-react'
+import {
+  Plus,
+  Clock,
+  Edit2,
+  Trash2,
+  AlertCircle,
+  X,
+  BookOpen,
+  ArrowRight,
+  Sparkles,
+  FolderOpen,
+  Layers,
+} from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { CourseCategory } from '@/lib/types'
 import { Card } from '@/components/ui/Card'
@@ -144,8 +156,8 @@ export function CourseCategoriesManager({
             Configured Categories ({categories.length})
           </h2>
           <p className="text-xs text-[var(--mute)] mt-1">
-            Organize courses by standard duration tiers. Selecting a category when creating a course will auto-fill
-            its duration.
+            Organize courses by standard duration tiers. Selecting a category when creating a course will auto-fill its
+            duration.
           </p>
         </div>
         {canManage && (
@@ -162,10 +174,7 @@ export function CourseCategoriesManager({
           const isElite = cat.name.toLowerCase().includes('elite')
 
           return (
-            <Card
-              key={cat.id}
-              className="p-5 flex flex-col justify-between hover:shadow-md transition-all"
-            >
+            <Card key={cat.id} className="p-5 flex flex-col justify-between hover:shadow-md transition-all">
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -319,7 +328,8 @@ export function CourseCategoriesManager({
 
               <div className="p-3.5 bg-[var(--panel)] border border-[var(--border)] rounded-2xl text-xs text-[var(--mute)]">
                 💡 When a staff or admin selects this category when adding or editing a course, the duration will
-                automatically prefill to <strong className="text-[var(--ink)]">{duration || 'the duration set here'}</strong>.
+                automatically prefill to{' '}
+                <strong className="text-[var(--ink)]">{duration || 'the duration set here'}</strong>.
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border)]">

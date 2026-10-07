@@ -1,14 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from 'react'
-import {
-  type ThemeMode,
-  DEFAULT_THEME,
-  DEFAULT_ACCENT,
-  getStoredTheme,
-  getStoredAccent,
-  applyTheme,
-} from '@/lib/theme'
+import { type ThemeMode, DEFAULT_THEME, DEFAULT_ACCENT, getStoredTheme, getStoredAccent, applyTheme } from '@/lib/theme'
 
 interface ThemeContextValue {
   theme: ThemeMode

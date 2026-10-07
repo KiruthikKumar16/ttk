@@ -187,12 +187,7 @@ export function InvoicesManagerClient({
           variant="hero"
         />
 
-        <KpiCard
-          title="Total Invoices"
-          value={totalCount}
-          subtitle="All-time issued invoices"
-          icon={Receipt}
-        />
+        <KpiCard title="Total Invoices" value={totalCount} subtitle="All-time issued invoices" icon={Receipt} />
 
         <KpiCard
           title="Average Receipt"
@@ -240,11 +235,7 @@ export function InvoicesManagerClient({
               className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
                 dateMode === 'single' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
-              style={
-                dateMode === 'single'
-                  ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                  : {}
-              }
+              style={dateMode === 'single' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
               aria-pressed={dateMode === 'single'}
             >
               Single Date
@@ -256,11 +247,7 @@ export function InvoicesManagerClient({
               className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
                 dateMode === 'range' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
-              style={
-                dateMode === 'range'
-                  ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                  : {}
-              }
+              style={dateMode === 'range' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
               aria-pressed={dateMode === 'range'}
             >
               Date Range
@@ -383,15 +370,9 @@ export function InvoicesManagerClient({
               type="button"
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'table'
-                  ? 'text-white shadow-2xs'
-                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+                viewMode === 'table' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
-              style={
-                viewMode === 'table'
-                  ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                  : {}
-              }
+              style={viewMode === 'table' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
               title="Table List View"
             >
               <ListIcon size={15} />
@@ -400,15 +381,9 @@ export function InvoicesManagerClient({
               type="button"
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'text-white shadow-2xs'
-                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+                viewMode === 'grid' ? 'text-white shadow-2xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
-              style={
-                viewMode === 'grid'
-                  ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                  : {}
-              }
+              style={viewMode === 'grid' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
               title="Financial Cards View"
             >
               <LayoutGrid size={15} />

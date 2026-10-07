@@ -692,7 +692,9 @@ export function StudentDetail({
               {/* Roster Metrics Breakdown */}
               <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="p-3.5 rounded-[18px] bg-[var(--panel)] border border-[var(--border)]">
-                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">Rate</span>
+                  <span className="text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider block">
+                    Rate
+                  </span>
                   <strong
                     className={`text-2xl font-extrabold mt-0.5 block ${
                       attendanceRate >= 80
@@ -722,7 +724,9 @@ export function StudentDetail({
                 </div>
 
                 <div className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60">
-                  <span className="text-[11px] font-semibold text-[#b53c37] uppercase tracking-wider block">Absent</span>
+                  <span className="text-[11px] font-semibold text-[#b53c37] uppercase tracking-wider block">
+                    Absent
+                  </span>
                   <strong className="text-2xl font-extrabold text-[#b53c37] mt-0.5 block">{absentSessions}</strong>
                   <span className="text-[10px] text-[#b53c37] font-medium">Missed sessions</span>
                 </div>

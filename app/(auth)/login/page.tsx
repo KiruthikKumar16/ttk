@@ -103,20 +103,19 @@ export default function LoginPage() {
               className="object-contain"
             />
           </div>
-          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">
-            {brand.displayName}
-          </p>
+          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">{brand.displayName}</p>
           <h1 id="login-title" className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--text-heading)]">
             Sign in to {brand.displayName}
           </h1>
-          <p className="mt-1 text-xs text-[var(--mute)]">
-            Academic &amp; operations portal for authorized personnel
-          </p>
+          <p className="mt-1 text-xs text-[var(--mute)]">Academic &amp; operations portal for authorized personnel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5"
+            >
               Email address
             </label>
             <input
@@ -133,7 +132,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5">
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5"
+            >
               Password
             </label>
             <div className="relative">
@@ -152,7 +154,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] transition-colors p-1"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide input' : 'Show input'}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -179,7 +181,10 @@ export default function LoginPage() {
           )}
 
           {error && (
-            <p className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60 text-xs font-medium text-[#b53c37]" role="alert">
+            <p
+              className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60 text-xs font-medium text-[#b53c37]"
+              role="alert"
+            >
               {error}
             </p>
           )}

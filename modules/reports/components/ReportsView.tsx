@@ -358,12 +358,7 @@ export function ReportsView({
           variant="hero"
         />
 
-        <KpiCard
-          title="Total course fees"
-          value={money(totalFees)}
-          subtitle="Enrolled cohort value"
-          icon={Wallet}
-        />
+        <KpiCard title="Total course fees" value={money(totalFees)} subtitle="Enrolled cohort value" icon={Wallet} />
 
         <KpiCard
           title="Outstanding balance"
@@ -380,26 +375,11 @@ export function ReportsView({
         />
 
         {/* Row 2: Operational Health & Demographics */}
-        <KpiCard
-          title="Total students"
-          value={students.length}
-          subtitle="Active enrollments"
-          icon={Users}
-        />
+        <KpiCard title="Total students" value={students.length} subtitle="Active enrollments" icon={Users} />
 
-        <KpiCard
-          title="Certificate eligible"
-          value={fullyPaid}
-          subtitle="100% fees cleared"
-          icon={ShieldCheck}
-        />
+        <KpiCard title="Certificate eligible" value={fullyPaid} subtitle="100% fees cleared" icon={ShieldCheck} />
 
-        <KpiCard
-          title="Pending dues"
-          value={pending}
-          subtitle="Students with balance"
-          icon={Clock}
-        />
+        <KpiCard title="Pending dues" value={pending} subtitle="Students with balance" icon={Clock} />
 
         <KpiCard
           title="Average course fee"

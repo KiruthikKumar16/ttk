@@ -515,9 +515,7 @@ export function Assessments({
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1">
             ACADEMIC EVALUATIONS & QUIZZES
           </p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">
-            Assessments
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-heading)]">Assessments</h1>
           <p className="text-sm text-[var(--mute)] mt-1">
             Create evaluations, distribute Google Forms quizzes, and import graded responses in seconds.
           </p>
@@ -538,15 +536,10 @@ export function Assessments({
               type="button"
               onClick={() => setActiveTab('library')}
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'library'
-                  ? 'text-white shadow-md'
-                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+                activeTab === 'library' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
               style={{
-                background:
-                  activeTab === 'library'
-                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                    : 'transparent',
+                background: activeTab === 'library' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
               }}
             >
               <ClipboardList size={14} />
@@ -556,15 +549,10 @@ export function Assessments({
               type="button"
               onClick={() => setActiveTab('create')}
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'create'
-                  ? 'text-white shadow-md'
-                  : 'text-[var(--mute)] hover:text-[var(--text)]'
+                activeTab === 'create' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
               }`}
               style={{
-                background:
-                  activeTab === 'create'
-                    ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                    : 'transparent',
+                background: activeTab === 'create' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
               }}
             >
               <Plus size={14} />

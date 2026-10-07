@@ -297,45 +297,27 @@ export function StaffReportsView({
           <button
             onClick={() => setActiveTab('attendance')}
             className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
-              activeTab === 'attendance'
-                ? 'text-white shadow-xs'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'attendance' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              activeTab === 'attendance'
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={activeTab === 'attendance' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             Attendance Logs ({filteredAttendance.length})
           </button>
           <button
             onClick={() => setActiveTab('assessments')}
             className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
-              activeTab === 'assessments'
-                ? 'text-white shadow-xs'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'assessments' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              activeTab === 'assessments'
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={activeTab === 'assessments' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             Assessments & Grading ({filteredAssessments.length})
           </button>
           <button
             onClick={() => setActiveTab('students')}
             className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
-              activeTab === 'students'
-                ? 'text-white shadow-xs'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'students' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
-            style={
-              activeTab === 'students'
-                ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                : {}
-            }
+            style={activeTab === 'students' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}}
           >
             Attendance Watchlist ({lowAttendanceStudents.length})
           </button>
@@ -468,7 +450,9 @@ export function StaffReportsView({
                       {new Date(a.assessmentDate).toLocaleDateString('en-IN')}
                     </td>
                     <td className="px-4 py-2.5 font-medium text-[var(--text)]">{a.maxScore}</td>
-                    <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--g1)' }}>{a.avgScore}%</td>
+                    <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--g1)' }}>
+                      {a.avgScore}%
+                    </td>
                     <td className="px-4 py-2.5 text-[var(--mute)]">{a.resultsCount} graded</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
@@ -530,7 +514,9 @@ export function StaffReportsView({
                       {s.present} of {s.total} sessions
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-[#b53c37]">{s.rate}%</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-[#b53c37]">
+                        {s.rate}%
+                      </span>
                     </td>
                   </tr>
                 ))

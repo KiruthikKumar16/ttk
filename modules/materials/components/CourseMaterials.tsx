@@ -425,11 +425,7 @@ export function CourseMaterials({
 
           {/* Upload Button */}
           {canUpload && (
-            <button
-              type="button"
-              onClick={() => setUploadModalOpen(true)}
-              className="btn-primary"
-            >
+            <button type="button" onClick={() => setUploadModalOpen(true)} className="btn-primary">
               <UploadCloud size={14} />
               <span>Upload Material</span>
             </button>
@@ -458,15 +454,10 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('all')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'all'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'all' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
-            background:
-              activeFolder === 'all'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+            background: activeFolder === 'all' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <Folder size={14} />
@@ -484,15 +475,10 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('pdf')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'pdf'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'pdf' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
-            background:
-              activeFolder === 'pdf'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+            background: activeFolder === 'pdf' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <FileText size={14} />
@@ -510,15 +496,11 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('presentation')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'presentation'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'presentation' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
             background:
-              activeFolder === 'presentation'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+              activeFolder === 'presentation' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <Presentation size={14} />
@@ -536,15 +518,10 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('image')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'image'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'image' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
-            background:
-              activeFolder === 'image'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+            background: activeFolder === 'image' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <ImageIcon size={14} />
@@ -562,15 +539,10 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('document')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'document'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'document' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
-            background:
-              activeFolder === 'document'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+            background: activeFolder === 'document' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <FileText size={14} />
@@ -588,15 +560,10 @@ export function CourseMaterials({
           type="button"
           onClick={() => setActiveFolder('zip')}
           className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-            activeFolder === 'zip'
-              ? 'text-white shadow-xs'
-              : 'text-[var(--mute)] hover:text-[var(--text)]'
+            activeFolder === 'zip' ? 'text-white shadow-xs' : 'text-[var(--mute)] hover:text-[var(--text)]'
           }`}
           style={{
-            background:
-              activeFolder === 'zip'
-                ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                : 'transparent',
+            background: activeFolder === 'zip' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
           }}
         >
           <FileArchive size={14} />
@@ -942,7 +909,10 @@ export function CourseMaterials({
                       <UploadCloud size={22} />
                     </div>
                     <p className="text-sm font-semibold text-[var(--text)]">
-                      Drag and drop your file here, or <span style={{ color: 'var(--g1)' }} className="underline">browse</span>
+                      Drag and drop your file here, or{' '}
+                      <span style={{ color: 'var(--g1)' }} className="underline">
+                        browse
+                      </span>
                     </p>
                     <p className="text-xs text-[var(--mute)] mt-1">
                       Supports PDF documents, PNG, and JPEG files up to 20 MB
@@ -981,9 +951,7 @@ export function CourseMaterials({
                         : 'border-[var(--border)] text-[var(--text)] bg-[var(--panel)]'
                     }`}
                     style={
-                      newMaterial.type === 'pdf'
-                        ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }
-                        : {}
+                      newMaterial.type === 'pdf' ? { background: 'linear-gradient(135deg, var(--g1), var(--g1b))' } : {}
                     }
                   >
                     <FileText size={16} />

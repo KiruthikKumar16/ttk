@@ -332,15 +332,10 @@ export function AttendanceClientView({
             aria-controls="panel-marking"
             onClick={() => handleTabChange('marking')}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'marking'
-                ? 'text-white shadow-md'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'marking' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                activeTab === 'marking'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: activeTab === 'marking' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             <UserCheck size={14} />
@@ -355,15 +350,10 @@ export function AttendanceClientView({
             aria-controls="panel-analytics"
             onClick={() => handleTabChange('analytics')}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'analytics'
-                ? 'text-white shadow-md'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'analytics' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                activeTab === 'analytics'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: activeTab === 'analytics' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             <BarChart3 size={14} />
@@ -389,15 +379,10 @@ export function AttendanceClientView({
             aria-controls="panel-records"
             onClick={() => handleTabChange('records')}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'records'
-                ? 'text-white shadow-md'
-                : 'text-[var(--mute)] hover:text-[var(--text)]'
+              activeTab === 'records' ? 'text-white shadow-md' : 'text-[var(--mute)] hover:text-[var(--text)]'
             }`}
             style={{
-              background:
-                activeTab === 'records'
-                  ? 'linear-gradient(135deg, var(--g1), var(--g1b))'
-                  : 'transparent',
+              background: activeTab === 'records' ? 'linear-gradient(135deg, var(--g1), var(--g1b))' : 'transparent',
             }}
           >
             <FileText size={14} />
