@@ -39,9 +39,9 @@ export function DashboardShell({ role, children }: { role: Role; children: React
   }
 
   return (
-    <div className="app-shell p-0 md:p-3 lg:p-4 bg-[var(--bg)] min-h-screen box-border flex">
-      {/* 36px Rounded Outer Shell */}
-      <div className="app-shell-inner flex w-full min-h-full md:min-h-[calc(100vh-2rem)] rounded-none md:rounded-[36px] bg-[var(--shell)] border border-[var(--border)] overflow-hidden shadow-xs">
+    <div className="app-shell w-full min-h-screen box-border flex">
+      {/* Full-width Inner Workspace */}
+      <div className="app-shell-inner flex w-full min-h-full overflow-hidden">
         {/* Desktop / Large Screen Sidebar */}
         <Sidebar role={role} collapsed={collapsed} />
 
@@ -82,9 +82,9 @@ export function DashboardShell({ role, children }: { role: Role; children: React
         )}
 
         {/* Main Content Area */}
-        <div className="main-area flex-1 flex flex-col min-w-0 bg-[var(--shell)]">
+        <div className="main-area flex-1 flex flex-col min-w-0 bg-transparent">
           <Topbar onMenu={handleToggleMenu} role={role} />
-          <main className="content flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[var(--panel)] m-2 sm:m-3 rounded-[26px] border border-[var(--border)]">
+          <main className="content flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
             {children}
           </main>
         </div>

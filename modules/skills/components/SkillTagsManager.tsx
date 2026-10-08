@@ -392,7 +392,6 @@ export function SkillTagsManager({
             title="Total Skill Tags"
             value={skills.length}
             subtitle="Configured in academy catalog"
-            variant="hero"
             icon={Tags}
           />
           <KpiCard

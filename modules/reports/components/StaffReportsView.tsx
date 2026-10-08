@@ -266,7 +266,6 @@ export function StaffReportsView({
           value={`${attendanceStats.rate}%`}
           subtitle={`${attendanceStats.present} present / ${attendanceStats.total} logged sessions`}
           icon={Calendar}
-          variant="hero"
         />
 
         <KpiCard

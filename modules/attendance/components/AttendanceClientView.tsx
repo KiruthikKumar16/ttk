@@ -291,7 +291,6 @@ export function AttendanceClientView({
             text: kpiData.overallPct >= 85 ? 'Healthy' : kpiData.overallPct >= 75 ? 'Fair' : 'At Risk',
             variant: kpiData.overallPct >= 85 ? 'success' : kpiData.overallPct >= 75 ? 'warning' : 'danger',
           }}
-          variant="hero"
         />
         <KpiCard
           title="Batches Tracked"

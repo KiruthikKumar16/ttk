@@ -144,7 +144,6 @@ export function CertificatesManagerClient({
           title="Total Certificates"
           value={totalCount}
           subtitle="Official diplomas issued"
-          variant="hero"
           icon={Award}
         />
         <KpiCard

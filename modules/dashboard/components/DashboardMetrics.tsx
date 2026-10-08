@@ -31,6 +31,7 @@ import { CategoryBadge } from '@/components/CategoryBadge'
 import { getTimeBasedGreeting } from '@/lib/greeting'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { PillButton } from '@/components/ui/PillButton'
+import { ModernTable } from '@/components/ui/ModernTable'
 
 export function DashboardMetrics({
   summary,
@@ -242,12 +243,21 @@ export function DashboardMetrics({
       }
     })
 
+    const variantsCount =
+      catCourseNames.length > 0
+        ? catCourseNames.length
+        : courses.filter((c) => c.categoryId === cat.id).length || 1
+
     return {
       id: cat.id,
       name: cat.name,
       duration: cat.duration,
-      courseNames: catCourseNames,
+      courseNames: isInternship
+        ? catCourseNames.map((n) => n.replace(/course\s*[-–]\s*/gi, '').replace(/\bcourse\b/gi, 'Track').trim())
+        : catCourseNames,
+      variantsCount,
       studentCount: count,
+      isInternship,
     }
   })
 
@@ -375,100 +385,113 @@ export function DashboardMetrics({
       {activeView === 'financial' && (
         <div id="admin-financial-panel" role="tabpanel" aria-labelledby="admin-dashboard-toggle-financial">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {financialMetrics.map(({ label, value, sub, Icon }, idx) => (
+            {financialMetrics.map(({ label, value, sub, Icon }) => (
               <KpiCard
                 key={label}
                 title={label}
                 value={value}
                 subtitle={sub}
                 icon={<Icon size={18} />}
-                variant={idx === 0 ? 'hero' : 'normal'}
               />
             ))}
           </div>
 
-          <section className="panel mt-6">
+          <section className="panel mt-6 overflow-hidden transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b)] hover:border-transparent">
             <div className="panel-header">
-              <h2>Course mix</h2>
-              <Link href="/courses">View courses</Link>
+              <div>
+                <h2>Course mix</h2>
+                <p className="text-xs text-[var(--mute)] mt-0.5">Program categories, course variants, and enrolled student breakdown</p>
+              </div>
+              <Link href="/courses" className="text-xs font-semibold text-[var(--g1)] hover:underline">
+                View courses
+              </Link>
             </div>
-            <div className="data-wrap" role="region" aria-label="Course mix" tabIndex={0}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Course Category</th>
-                    <th>Tier</th>
-                    <th>Duration</th>
-                    <th className="align-right">Students</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categoryMix.map((row) => (
-                    <tr key={row.id}>
-                      <td>
-                        <span className="font-semibold text-slate-900 block">{row.name}</span>
-                      </td>
-                      <td>
-                        <CategoryBadge categoryName={row.name} />
-                      </td>
-                      <td className="text-xs text-slate-600 font-medium">{row.duration}</td>
-                      <td className="align-right font-bold text-slate-900">{row.studentCount}</td>
-                    </tr>
-                  ))}
-                  {categoryMix.length === 0 && (
-                    <tr>
-                      <td colSpan={4}>No category data yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="p-4 pt-1 overflow-hidden">
+              <ModernTable
+                columns={[
+                  { header: 'Course Category', align: 'left', className: 'w-[28%]' },
+                  { header: 'Variants', align: 'left', className: 'w-[42%]' },
+                  { header: 'Duration', align: 'left', className: 'w-[15%]' },
+                  { header: 'Students', align: 'center', className: 'w-[15%]' },
+                ]}
+                rows={categoryMix.map((row) => ({
+                  id: row.id,
+                  cells: [
+                    <div key="name" className="flex flex-col">
+                      <span className="font-semibold text-[var(--text-heading)]">{row.name}</span>
+                    </div>,
+                    <div key="variants" className="flex flex-col">
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--g4)] text-[var(--g1)] border border-[var(--g5)] w-fit"
+                        title={row.courseNames?.join(', ')}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--g1)]" />
+                        <span>
+                          {row.isInternship
+                            ? 'Type: Internship'
+                            : `${row.variantsCount} ${row.variantsCount === 1 ? 'Course' : 'Courses'}`}
+                        </span>
+                      </span>
+                      {row.courseNames && row.courseNames.length > 0 && (
+                        <span className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-1" title={row.courseNames.join(', ')}>
+                          {row.isInternship
+                            ? (row.courseNames[0] || 'Industry Internship Track')
+                            : `${row.courseNames.slice(0, 2).join(', ')}${row.courseNames.length > 2 ? ` +${row.courseNames.length - 2} more` : ''}`}
+                        </span>
+                      )}
+                    </div>,
+                    <span key="dur" className="text-xs text-[var(--mute)] font-medium">
+                      {row.duration}
+                    </span>,
+                    <span key="count" className="font-bold text-[var(--text-heading)] block text-center">
+                      {row.studentCount}
+                    </span>,
+                  ],
+                }))}
+                emptyMessage="No category data available yet."
+              />
             </div>
           </section>
 
-          <section className="panel mt-6">
+          <section className="panel mt-6 overflow-hidden transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b)] hover:border-transparent">
             <div className="panel-header">
-              <h2>Recent payments</h2>
-              <Link href="/invoices">View all</Link>
+              <div>
+                <h2>Recent payments</h2>
+                <p className="text-xs text-[var(--mute)] mt-0.5">Latest receipts, invoiced learners, and collected fee amounts</p>
+              </div>
+              <Link href="/invoices" className="text-xs font-semibold text-[var(--g1)] hover:underline">
+                View all
+              </Link>
             </div>
-            <div className="data-wrap" role="region" aria-label="Recent payments" tabIndex={0}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Invoice</th>
-                    <th>Student</th>
-                    <th>Date</th>
-                    <th className="align-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPayments.map((payment) => (
-                    <tr
-                      key={payment.id}
-                      onClick={() => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`)}
-                      className="cursor-pointer hover:bg-slate-50/80 transition-colors"
-                      title={`Open invoice ${payment.invoice}`}
-                    >
-                      <td>
-                        <Link
-                          href={`/invoices/${encodeURIComponent(payment.invoice)}`}
-                          className="inline-flex items-center min-h-[28px] font-medium text-indigo-600 hover:text-indigo-800"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {payment.invoice}
-                        </Link>
-                      </td>
-                      <td>{payment.student}</td>
-                      <td>{payment.date}</td>
-                      <td className="align-right font-medium">{payment.amount.toLocaleString('en-IN')}</td>
-                    </tr>
-                  ))}
-                  {recentPayments.length === 0 && (
-                    <tr>
-                      <td colSpan={4}>No payments recorded yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="p-4 pt-1 overflow-hidden">
+              <ModernTable
+                columns={[
+                  { header: 'Invoice', align: 'left', className: 'w-[25%]' },
+                  { header: 'Student', align: 'left', className: 'w-[35%]' },
+                  { header: 'Date', align: 'left', className: 'w-[20%]' },
+                  { header: 'Amount', align: 'center', className: 'w-[20%]' },
+                ]}
+                rows={recentPayments.map((payment) => ({
+                  id: payment.id,
+                  onClick: () => router.push(`/invoices/${encodeURIComponent(payment.invoice)}`),
+                  title: `Open invoice ${payment.invoice}`,
+                  cells: [
+                    <span key="inv" className="font-semibold text-[var(--g1)] hover:underline font-mono text-xs">
+                      {payment.invoice}
+                    </span>,
+                    <span key="stu" className="font-medium text-[var(--text-heading)]">
+                      {payment.student}
+                    </span>,
+                    <span key="date" className="text-xs text-[var(--mute)] font-medium">
+                      {payment.date}
+                    </span>,
+                    <span key="amt" className="font-bold text-[var(--text-heading)] font-mono text-sm block text-center">
+                      ₹{payment.amount.toLocaleString('en-IN')}
+                    </span>,
+                  ],
+                }))}
+                emptyMessage="No payments recorded yet."
+              />
             </div>
           </section>
         </div>
@@ -479,14 +502,13 @@ export function DashboardMetrics({
         <div id="admin-staff-panel" role="tabpanel" aria-labelledby="admin-dashboard-toggle-staff">
           {/* Top Academic KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {staffMetrics.map(({ label, value, sub, Icon }, idx) => (
+            {staffMetrics.map(({ label, value, sub, Icon }) => (
               <KpiCard
                 key={label}
                 title={label}
                 value={value}
                 subtitle={sub}
                 icon={<Icon size={18} />}
-                variant={idx === 0 ? 'hero' : 'normal'}
               />
             ))}
           </div>

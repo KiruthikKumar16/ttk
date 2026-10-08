@@ -570,7 +570,6 @@ export function Assessments({
             value={kpis.total}
             subtitle="Across active course batches"
             icon={<ClipboardList size={18} />}
-            variant="hero"
           />
           <KpiCard
             title="Google Form Quizzes"

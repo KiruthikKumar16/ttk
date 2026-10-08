@@ -184,7 +184,6 @@ export function InvoicesManagerClient({
           value={money(totalVolume)}
           subtitle="Aggregated payments on this page"
           icon={TrendingUp}
-          variant="hero"
         />
 
         <KpiCard title="Total Invoices" value={totalCount} subtitle="All-time issued invoices" icon={Receipt} />

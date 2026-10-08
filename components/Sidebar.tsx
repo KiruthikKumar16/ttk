@@ -19,14 +19,12 @@ import {
   Layers,
   Tags,
   UserCog,
-  Palette,
   LogOut,
   Sparkles,
 } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { can, type Resource } from '@/lib/auth/permissions'
 import type { Role } from '@/lib/types'
-import { useTheme } from '@/lib/ThemeContext'
 
 const nav: { label: string; href: string; Icon: typeof LayoutDashboard; resource: Resource }[] = [
   { label: 'Dashboard', href: '/', Icon: LayoutDashboard, resource: 'reports' },
@@ -52,7 +50,6 @@ export function Sidebar({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { openSettings } = useTheme()
 
   const handleSignOut = async () => {
     try {
@@ -99,8 +96,8 @@ export function Sidebar({
                 className={`nav-item${active ? ' active' : ''}`}
                 title={label}
               >
-                <Icon size={16} />
-                {!collapsed && <span className="flex-1 text-left">{label}</span>}
+                <Icon size={16} className="shrink-0" />
+                {!collapsed && <span className="flex-1 text-left truncate">{label}</span>}
               </Link>
             )
           })}
@@ -119,8 +116,8 @@ export function Sidebar({
                 className={`nav-item${pathname.startsWith('/settings/gst') ? ' active' : ''}`}
                 title="GST Settings"
               >
-                <Settings size={16} />
-                {!collapsed && <span className="flex-1 text-left">GST settings</span>}
+                <Settings size={16} className="shrink-0" />
+                {!collapsed && <span className="flex-1 text-left truncate">GST settings</span>}
               </Link>
             )}
             {can(role, 'users', 'manage') && (
@@ -131,8 +128,8 @@ export function Sidebar({
                 className={`nav-item${pathname.startsWith('/settings/users') ? ' active' : ''}`}
                 title="Users and roles"
               >
-                <Users size={16} />
-                {!collapsed && <span className="flex-1 text-left">Users and roles</span>}
+                <Users size={16} className="shrink-0" />
+                {!collapsed && <span className="flex-1 text-left truncate">Users and roles</span>}
               </Link>
             )}
             {can(role, 'courses', 'manage') && (
@@ -143,8 +140,8 @@ export function Sidebar({
                 className={`nav-item${pathname.startsWith('/settings/trainers') ? ' active' : ''}`}
                 title="Instructor assignments"
               >
-                <Users size={16} />
-                {!collapsed && <span className="flex-1 text-left">Instructor assignments</span>}
+                <Users size={16} className="shrink-0" />
+                {!collapsed && <span className="flex-1 text-left truncate">Instructor assignments</span>}
               </Link>
             )}
             {can(role, 'courses', 'manage') && (
@@ -155,8 +152,8 @@ export function Sidebar({
                 className={`nav-item${pathname.startsWith('/settings/course-categories') ? ' active' : ''}`}
                 title="Course categories"
               >
-                <Layers size={16} />
-                {!collapsed && <span className="flex-1 text-left">Course categories</span>}
+                <Layers size={16} className="shrink-0" />
+                {!collapsed && <span className="flex-1 text-left truncate">Course categories</span>}
               </Link>
             )}
             <Link
@@ -166,8 +163,8 @@ export function Sidebar({
               className={`nav-item${pathname.startsWith('/settings/skills') ? ' active' : ''}`}
               title="Skill tags"
             >
-              <Tags size={16} />
-              {!collapsed && <span className="flex-1 text-left">Skill tags</span>}
+              <Tags size={16} className="shrink-0" />
+              {!collapsed && <span className="flex-1 text-left truncate">Skill tags</span>}
             </Link>
             <Link
               href="/settings/brand"
@@ -176,8 +173,8 @@ export function Sidebar({
               className={`nav-item${pathname.startsWith('/settings/brand') ? ' active' : ''}`}
               title="Brand information"
             >
-              <Building2 size={16} />
-              {!collapsed && <span className="flex-1 text-left">Brand information</span>}
+              <Building2 size={16} className="shrink-0" />
+              {!collapsed && <span className="flex-1 text-left truncate">Brand information</span>}
             </Link>
           </div>
         </div>
@@ -194,19 +191,9 @@ export function Sidebar({
             className={`nav-item${pathname === '/settings/user' || pathname.startsWith('/settings/user/') ? ' active' : ''}`}
             title="User settings"
           >
-            <UserCog size={16} />
-            {!collapsed && <span className="flex-1 text-left">User settings</span>}
+            <UserCog size={16} className="shrink-0" />
+            {!collapsed && <span className="flex-1 text-left truncate">User settings</span>}
           </Link>
-
-          <button
-            type="button"
-            onClick={openSettings}
-            className="nav-item cursor-pointer text-left w-full"
-            title="Appearance & Theme"
-          >
-            <Palette size={16} />
-            {!collapsed && <span className="flex-1 text-left">Theme & Accent</span>}
-          </button>
 
           <button
             type="button"
@@ -214,31 +201,31 @@ export function Sidebar({
             className="nav-item cursor-pointer text-left w-full text-rose-500 hover:text-rose-600 hover:bg-rose-50/50"
             title="Log out"
           >
-            <LogOut size={16} />
-            {!collapsed && <span className="flex-1 text-left">Log out</span>}
+            <LogOut size={16} className="shrink-0" />
+            {!collapsed && <span className="flex-1 text-left truncate">Log out</span>}
           </button>
         </div>
 
         {/* Promo / Version Card at Bottom */}
         {!collapsed && (
-          <div className="mt-4 rounded-[18px] bg-[var(--panel)] p-3 border border-[var(--border)]">
+          <div className="mt-4 rounded-[18px] bg-[var(--panel)] p-3 border border-[var(--border)] overflow-hidden">
             <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-[var(--g1)] animate-pulse" />
-              <span className="text-[11px] font-bold text-[var(--text-heading)]">ThoorigAI Portal</span>
+              <span className="flex h-2 w-2 shrink-0 rounded-full bg-[var(--g1)] animate-pulse" />
+              <span className="text-[11px] font-bold text-[var(--text-heading)] truncate">ThoorigAI Portal</span>
             </div>
-            <p className="mt-1 text-[10px] text-[var(--mute)]">{role.toUpperCase()} session active</p>
+            <p className="mt-1 text-[10px] text-[var(--mute)] truncate">{role.toUpperCase()} session active</p>
           </div>
         )}
 
         {/* Account Info */}
-        <div className="account mt-3 pt-3 border-t border-[var(--border)]">
-          <div className="avatar">{role.slice(0, 1).toUpperCase()}</div>
+        <div className="account mt-3 pt-3 border-t border-[var(--border)] min-w-0 overflow-hidden">
+          <div className="avatar shrink-0">{role.slice(0, 1).toUpperCase()}</div>
           {!collapsed && (
-            <div>
-              <strong className="text-xs font-semibold text-[var(--text-heading)]">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <strong className="text-xs font-semibold text-[var(--text-heading)] truncate block">
                 {role[0].toUpperCase() + role.slice(1)} account
               </strong>
-              <small className="text-[11px] text-slate-700 block mt-0.5">{brand.displayName}</small>
+              <small className="text-[11px] text-[var(--mute)] block mt-0.5 truncate">{brand.displayName}</small>
             </div>
           )}
         </div>

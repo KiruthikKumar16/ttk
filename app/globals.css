@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import './print.css';
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* ═══════════════════════════════════════════════════════
    DESIGN SYSTEM — ThoorigAI Calm Academy Portal
@@ -18,11 +18,19 @@
   color-scheme: light;
 
   /* Surfaces & Backgrounds */
-  --bg: #f4f6f8;
+  --bg: #cbd5e1;
+  --bg-canvas-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(31, 125, 82, 0.05) 38%, rgba(31, 125, 82, 0.22) 100%);
+  --bg-canvas-color: #ffffff;
   --shell: #ffffff;
-  --panel: #f7f9fa;
-  --card: #ffffff;
-  --card-border: rgba(15, 23, 42, 0.06);
+  --panel: rgba(255, 255, 255, 0.74);
+  --card: rgba(255, 255, 255, 0.74);
+  --card-border: rgba(255, 255, 255, 0.75);
+  --card-glass-bg: rgba(255, 255, 255, 0.74);
+  --card-glass-blur: 18px;
+  --card-glass-border: rgba(255, 255, 255, 0.75);
+  --card-glass-shadow: 0 14px 34px -8px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+  --sidebar-glass-bg: rgba(255, 255, 255, 0.78);
+  --topbar-glass-bg: rgba(255, 255, 255, 0.78);
 
   /* Text & Labels */
   --text: #0f172a;
@@ -35,15 +43,15 @@
   --hover-bg: rgba(15, 23, 42, 0.04);
   --active-bg: rgba(15, 23, 42, 0.08);
 
-  /* Radius Tokens */
-  --radius-shell: 36px;
-  --radius-panel: 26px;
-  --radius-card: 22px;
+  /* Radius Tokens — Clean modern edges, no ballooned round corners */
+  --radius-shell: 0px;
+  --radius-panel: 12px;
+  --radius-card: 12px;
   --radius-pill: 9999px;
-  --radius: 22px;
-  --radius-sm: 12px;
-  --radius-lg: 26px;
-  --radius-xl: 36px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
 
   /* Accent System (Default Pine #1f7d52) */
   --g1: #1f7d52;
@@ -106,7 +114,7 @@
   --surface: var(--card);
   --surface-solid: var(--card);
   --surface-elevated: var(--card);
-  --canvas: var(--bg);
+  --canvas: transparent;
   --green: var(--success);
   --green-bg: var(--success-bg);
   --red: var(--danger);
@@ -123,11 +131,19 @@
   color-scheme: dark;
 
   /* Deep green-black surfaces */
-  --bg: #0b110e;
+  --bg: #070b09;
+  --bg-canvas-gradient: linear-gradient(135deg, #090e0c 0%, rgba(31, 125, 82, 0.07) 42%, rgba(31, 125, 82, 0.20) 100%);
+  --bg-canvas-color: #090e0c;
   --shell: #0e1713;
-  --panel: #121c17;
-  --card: #16231d;
-  --card-border: rgba(255, 255, 255, 0.07);
+  --panel: rgba(18, 28, 22, 0.65);
+  --card: rgba(18, 28, 22, 0.65);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --card-glass-bg: rgba(18, 28, 22, 0.65);
+  --card-glass-blur: 18px;
+  --card-glass-border: rgba(255, 255, 255, 0.12);
+  --card-glass-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  --sidebar-glass-bg: rgba(14, 23, 19, 0.75);
+  --topbar-glass-bg: rgba(14, 23, 19, 0.75);
 
   --text: #f0f4f2;
   --text-heading: #ffffff;
@@ -153,7 +169,7 @@
   --g4: rgba(31, 125, 82, 0.2);
   --g5: rgba(31, 125, 82, 0.35);
 
-  --canvas: var(--bg);
+  --canvas: transparent;
   --surface: var(--card);
   --surface-solid: var(--card);
   --surface-elevated: var(--card);
@@ -174,7 +190,8 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--bg-canvas-gradient, var(--bg));
+  background-color: var(--bg-canvas-color, #ffffff);
   color: var(--text);
   font-family: var(--font-jakarta);
 }
@@ -207,18 +224,42 @@ p {
 /* ═══════════════════════════════════════
    APP SHELL
    ═══════════════════════════════════════ */
+/* Optimization: zero transitions during active theme/gradient adjustments */
+.theme-dragging,
+.theme-dragging body,
+.theme-dragging .app-shell,
+.theme-dragging .app-shell-inner,
+.theme-dragging .panel,
+.theme-dragging .glass-card,
+.theme-dragging .sidebar,
+.theme-dragging .topbar,
+.theme-dragging div,
+.theme-dragging button,
+.theme-dragging span {
+  transition: none !important;
+}
+
 .app-shell {
   height: 100vh;
   height: 100dvh;
   display: flex;
   overflow: hidden;
+  background: var(--bg-canvas-gradient);
+  background-color: var(--bg-canvas-color);
+  contain: layout paint;
+  transform: translateZ(0);
+  will-change: background;
 }
 
-/* ── Sidebar — Calm shell navigation ── */
+/* ── Sidebar — Calm shell navigation (matches nav bar color) ── */
 .sidebar {
   width: 256px;
+  max-width: 256px;
+  min-width: 0;
   flex: 0 0 256px;
-  background: var(--shell);
+  background: var(--topbar-glass-bg, var(--sidebar-glass-bg, rgba(255, 255, 255, 0.78)));
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
   border-right: 1px solid var(--border);
   color: var(--mute);
   display: flex;
@@ -233,9 +274,15 @@ p {
     flex-basis 0.25s var(--ease-smooth),
     padding 0.25s var(--ease-smooth);
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+}
+.sidebar,
+.sidebar * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .sidebar::-webkit-scrollbar {
   width: 4px;
@@ -465,17 +512,16 @@ nav {
   height: 100vh;
   height: 100dvh;
   transition: all 0.3s var(--ease-smooth);
-  background: var(--canvas);
-  background-attachment: fixed;
+  background: transparent;
 }
 
 /* ── Topbar — Frosted glass command bar ── */
 .topbar {
   height: 56px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  background: var(--topbar-glass-bg, rgba(255, 255, 255, 0.68));
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1106,20 +1152,25 @@ nav {
 /* ═══════════════════════════════════════
    PANELS & TABLES — Elevated glass cards
    ═══════════════════════════════════════ */
-.panel {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.5);
+.panel,
+.glass-card {
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur, 18px)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--card-glass-blur, 18px)) saturate(160%);
+  border: 1px solid var(--card-glass-border);
   border-radius: var(--radius-lg);
   min-width: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--card-glass-shadow);
   transition:
     box-shadow 0.25s var(--ease-smooth),
-    border-color 0.25s;
+    border-color 0.25s,
+    transform 0.25s var(--ease-smooth);
 }
-.panel:hover {
-  box-shadow: var(--shadow-md);
+.panel:hover,
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -6px var(--g1b, rgba(0, 0, 0, 0.12));
+  border-color: var(--g5, var(--card-glass-border));
 }
 .panel-header {
   display: flex;
@@ -4414,10 +4465,10 @@ body:has(.login-page) {
 /* ── Topbar & Breadcrumb navigation (from main) ── */
 .topbar {
   height: 64px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: var(--topbar-glass-bg, rgba(255, 255, 255, 0.78));
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 16px;

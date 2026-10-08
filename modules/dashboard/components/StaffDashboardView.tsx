@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { getTimeBasedGreeting } from '@/lib/greeting'
 import { KpiCard } from '@/components/ui/KpiCard'
+import { ModernTable } from '@/components/ui/ModernTable'
 
 export function StaffDashboardView({
   data,
@@ -93,7 +94,6 @@ export function StaffDashboardView({
           value={totalStudents}
           subtitle={`${activeStudents} active learners`}
           icon={<Users size={18} />}
-          variant="hero"
         />
         <KpiCard
           title="Today's Attendance"
@@ -366,42 +366,55 @@ export function StaffDashboardView({
         <div className="panel-header">
           <div>
             <h2>Course mix</h2>
-            <p>Curriculum categories, duration tiers, and enrolled student breakdown</p>
+            <p className="text-xs text-[var(--mute)] mt-0.5">Curriculum categories, course variants, and enrolled student breakdown</p>
           </div>
-          <Link href="/courses">View courses</Link>
+          <Link href="/courses" className="text-xs font-semibold text-[var(--g1)] hover:underline">
+            View courses
+          </Link>
         </div>
-        <div className="data-wrap" role="region" aria-label="Course mix" tabIndex={0}>
-          <table>
-            <thead>
-              <tr>
-                <th>Course Category</th>
-                <th>Tier</th>
-                <th>Duration</th>
-                <th className="align-right">Students</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryMix.map((row) => (
-                <tr key={row.id}>
-                  <td>
-                    <span className="font-semibold text-slate-900 block">{row.name}</span>
-                  </td>
-                  <td>
-                    <CategoryBadge categoryName={row.name} />
-                  </td>
-                  <td className="text-xs text-slate-600 font-medium">{row.duration}</td>
-                  <td className="align-right font-bold text-slate-900">{row.studentCount}</td>
-                </tr>
-              ))}
-              {categoryMix.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="empty-note">
-                    No course categories configured.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="p-4 pt-1">
+          <ModernTable
+            columns={[
+              { header: 'Course Category', align: 'left' },
+              { header: 'Variants', align: 'left' },
+              { header: 'Duration', align: 'left' },
+              { header: 'Students', align: 'right' },
+            ]}
+            rows={categoryMix.map((row) => {
+              const variantsCount = row.courseNames?.length || 1
+              return {
+                id: row.id,
+                cells: [
+                  <div key="name" className="flex flex-col">
+                    <span className="font-semibold text-[var(--text-heading)]">{row.name}</span>
+                    {row.courseNames && row.courseNames.length > 0 && (
+                      <span className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-0.5">
+                        {row.courseNames.slice(0, 2).join(', ')}
+                        {row.courseNames.length > 2 ? ` +${row.courseNames.length - 2} more` : ''}
+                      </span>
+                    )}
+                  </div>,
+                  <span
+                    key="variants"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--g4)] text-[var(--g1)] border border-[var(--g5)]"
+                    title={row.courseNames?.join(', ')}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--g1)]" />
+                    <span>
+                      {variantsCount} {variantsCount === 1 ? 'Variant' : 'Variants'}
+                    </span>
+                  </span>,
+                  <span key="dur" className="text-xs text-[var(--mute)] font-medium">
+                    {row.duration}
+                  </span>,
+                  <span key="count" className="font-bold text-[var(--text-heading)]">
+                    {row.studentCount}
+                  </span>,
+                ],
+              }
+            })}
+            emptyMessage="No course categories configured."
+          />
         </div>
       </section>
     </div>

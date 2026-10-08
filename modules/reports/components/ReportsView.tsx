@@ -355,7 +355,6 @@ export function ReportsView({
           value={money(revenue)}
           subtitle="In selected period"
           icon={CircleDollarSign}
-          variant="hero"
         />
 
         <KpiCard title="Total course fees" value={money(totalFees)} subtitle="Enrolled cohort value" icon={Wallet} />
