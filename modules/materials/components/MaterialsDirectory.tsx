@@ -118,7 +118,7 @@ export function MaterialsDirectory({
             <Link
               key={course.id}
               href={`/courses/${encodeURIComponent(course.id)}/materials`}
-              className="rounded-[22px] bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
+              className="rounded-[22px] bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-card)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
               style={{
                 textDecoration: 'none',
               }}

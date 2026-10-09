@@ -401,7 +401,7 @@ export function DashboardMetrics({
             ))}
           </div>
 
-          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
             <div className="panel-header">
               <div>
                 <h2>Course mix</h2>
@@ -457,7 +457,7 @@ export function DashboardMetrics({
             </div>
           </section>
 
-          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
             <div className="panel-header">
               <div>
                 <h2>Recent payments</h2>
@@ -630,7 +630,7 @@ export function DashboardMetrics({
 
           {/* Recent Assessments Section */}
           {academicData && (
-            <section className="panel mb-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+            <section className="panel mb-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
               <div className="panel-header">
                 <div className="flex items-center gap-2">
                   <ClipboardCheck size={18} style={{ color: 'var(--g1)' }} />

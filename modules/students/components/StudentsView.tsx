@@ -469,7 +469,7 @@ export function StudentsView({
                     <div
                       key={s.registerId}
                       onClick={() => router.push(`/students/${s.registerId}`)}
-                      className="bg-[var(--card)] border border-[var(--border)] rounded-[22px] p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
+                      className="bg-[var(--card)] border border-[var(--border)] rounded-[22px] p-5 shadow-[var(--shadow-card)] hover:border-[var(--g1)] transition-all cursor-pointer group flex flex-col justify-between"
                       title={`View student ${s.name}`}
                     >
                       <div>

@@ -209,7 +209,7 @@ export function StaffDashboardView({
       {/* Row 2: Recent Assessments & Daily Faculty Checklist (Equal 50% Width, Aligned) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Recent Assessments Pipeline */}
-        <section className="panel flex flex-col justify-between overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+        <section className="panel flex flex-col justify-between overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
           <div>
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export function StaffDashboardView({
         </section>
 
         {/* Daily Faculty Checklist */}
-        <div className="panel p-5 flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+        <div className="panel p-5 flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -287,7 +287,7 @@ export function StaffDashboardView({
       </div>
 
       {/* Course Mix: Curriculum Categories & Programs */}
-      <section className="panel overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
+      <section className="panel overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)]">
         <div className="panel-header">
           <div>
             <h2>Course mix</h2>

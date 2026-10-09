@@ -54,7 +54,7 @@ export function TodayAttendanceSummary({
 
   return (
     <div
-      className={`panel p-5 flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)] ${className}`}
+      className={`panel p-5 flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[var(--g5)] ${className}`}
     >
       <div>
         {/* Header */}

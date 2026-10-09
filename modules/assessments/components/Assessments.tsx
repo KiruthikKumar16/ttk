@@ -665,12 +665,12 @@ export function Assessments({
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => {
-                          const catCourses = courses.filter((c) => c.categoryId === cat.id)
+                          const catCourses = courses.filter((c) => String(c.categoryId) === String(cat.id))
                           if (!catCourses.length) return null
                           return (
-                            <div key={cat.id}>
-                              <div className="px-2 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                {cat.name} ({cat.duration})
+                            <div key={cat.id} className="py-1">
+                              <div className="px-2.5 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                {cat.name} {cat.duration ? `(${cat.duration})` : ''}
                               </div>
                               {catCourses.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
@@ -680,18 +680,26 @@ export function Assessments({
                             </div>
                           )
                         })}
-                        {courses.some((c) => !c.categoryId) && (
-                          <div>
-                            <div className="px-2 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                              Other Curricula
-                            </div>
-                            {courses
-                              .filter((c) => !c.categoryId)
-                              .map((c) => (
+                        {(() => {
+                          const catIds = new Set(categories.map((cat) => String(cat.id)))
+                          const otherCourses = courses.filter((c) => !c.categoryId || !catIds.has(String(c.categoryId)))
+                          if (!otherCourses.length) return null
+                          return (
+                            <div className="py-1">
+                              <div className="px-2.5 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                {categories.length > 0 ? 'Other Curricula' : 'Available Courses'}
+                              </div>
+                              {otherCourses.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
                                   {c.name}
                                 </SelectItem>
                               ))}
+                            </div>
+                          )
+                        })()}
+                        {courses.length === 0 && (
+                          <div className="px-3 py-3 text-xs text-slate-400 text-center">
+                            No courses available
                           </div>
                         )}
                       </SelectContent>

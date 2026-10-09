@@ -164,7 +164,6 @@ export function Certificates({
                         <td>
                           {eligible ? (
                             <span className="status status-paid">
-                              <span className="status-dot" />
                               Eligible
                               {issuedCountForStudent > 0 && (
                                 <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.75 }}>

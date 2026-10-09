@@ -1206,7 +1206,6 @@ nav {
 .glass-card:hover,
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px -6px var(--g1b, rgba(0, 0, 0, 0.12));
   border-color: var(--g5, var(--card-glass-border));
 }
 .panel-header {

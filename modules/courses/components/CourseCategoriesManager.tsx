@@ -174,7 +174,7 @@ export function CourseCategoriesManager({
           const isElite = cat.name.toLowerCase().includes('elite')
 
           return (
-            <Card key={cat.id} className="p-5 flex flex-col justify-between hover:shadow-md transition-all">
+            <Card key={cat.id} className="p-5 flex flex-col justify-between transition-all">
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">

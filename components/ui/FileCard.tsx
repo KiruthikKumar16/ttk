@@ -47,7 +47,7 @@ export function FileCard({
 
   return (
     <div
-      className={`group flex flex-col justify-between rounded-[22px] border border-[var(--card-border)] bg-[var(--card)] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] ${className}`}
+      className={`group flex flex-col justify-between rounded-[22px] border border-[var(--card-border)] bg-[var(--card)] p-5 transition-all duration-200 hover:-translate-y-0.5 ${className}`}
       style={{ boxShadow: 'var(--shadow-card)' }}
     >
       <div>

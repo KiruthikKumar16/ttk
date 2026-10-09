@@ -42,7 +42,7 @@ export function KpiCard({
     return (
       <div
         onClick={onClick}
-        className={`relative overflow-hidden rounded-xl p-6 text-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_-8px_var(--g1b)] ${
+        className={`relative overflow-hidden rounded-xl p-6 text-white transition-all duration-300 ease-out hover:-translate-y-1 ${
           onClick ? 'cursor-pointer' : ''
         } ${className}`}
         style={{
@@ -85,10 +85,10 @@ export function KpiCard({
   return (
     <div
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-5 backdrop-blur-[var(--card-glass-blur,18px)] transition-[transform,box-shadow,border-color] duration-200 ease-out ${
+      className={`group relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-5 backdrop-blur-[var(--card-glass-blur,18px)] transition-[transform,border-color] duration-200 ease-out ${
         highlightOnHover
-          ? 'hover:-translate-y-1 hover:border-transparent hover:shadow-[0_16px_36px_-6px_var(--g1b)]'
-          : 'hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)]'
+          ? 'hover:-translate-y-1 hover:border-transparent'
+          : 'hover:-translate-y-0.5'
       } ${onClick ? 'cursor-pointer' : ''} ${className}`}
       style={{
         boxShadow: 'var(--shadow-card)',
@@ -102,13 +102,6 @@ export function KpiCard({
             style={{
               background: 'linear-gradient(135deg, var(--g2b) 0%, var(--g1) 55%, var(--g1b) 100%)',
             }}
-            aria-hidden="true"
-          />
-
-          {/* Glowing watermark ambient orb that fades in on hover */}
-          <div
-            className="pointer-events-none absolute -right-8 -bottom-8 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-25"
-            style={{ background: 'var(--g3)' }}
             aria-hidden="true"
           />
         </>

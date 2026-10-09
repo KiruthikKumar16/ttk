@@ -305,7 +305,7 @@ export function CertificatesManagerClient({
               <div
                 key={cert.id}
                 onClick={() => router.push(certUrl)}
-                className="group bg-[var(--card)] border border-[var(--border)] rounded-[22px] overflow-hidden shadow-xs hover:shadow-lg hover:border-[var(--g1)] transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                className="group bg-[var(--card)] border border-[var(--border)] rounded-[22px] overflow-hidden shadow-xs hover:border-[var(--g1)] transition-all duration-200 cursor-pointer flex flex-col justify-between"
                 title={`Click to view & print certificate ${cert.certificate_id}`}
               >
                 {/* Diploma Card Frame Header */}

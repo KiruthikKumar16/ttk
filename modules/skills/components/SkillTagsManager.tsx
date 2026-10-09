@@ -579,7 +579,7 @@ export function SkillTagsManager({
             const DomainIcon = domain.icon
 
             return (
-              <Card key={skill.id} className="p-4 flex flex-col justify-between hover:shadow-md transition-all">
+              <Card key={skill.id} className="p-4 flex flex-col justify-between transition-all">
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
