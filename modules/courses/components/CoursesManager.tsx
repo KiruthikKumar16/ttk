@@ -344,7 +344,7 @@ export function CoursesManager({
         </div>
       </div>
 
-      <section className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-xs overflow-hidden mb-6">
+      <section className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-xs mb-6">
         <div className="p-5 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-bold text-[var(--text)]">
@@ -587,7 +587,7 @@ export function CoursesManager({
           </div>
         ) : (
           /* Courses Grid View */
-          <div className="p-5" role="region" aria-label="Course grid" tabIndex={0}>
+          <div className="p-5" role="region" aria-label="Course grid">
             {filteredCourses.length === 0 ? (
               <div className="text-center py-12 text-[var(--mute)]">
                 <BookOpen size={32} className="mx-auto text-[var(--mute)] mb-2" />

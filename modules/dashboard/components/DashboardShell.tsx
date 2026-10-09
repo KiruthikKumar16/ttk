@@ -82,9 +82,9 @@ export function DashboardShell({ role, children }: { role: Role; children: React
         )}
 
         {/* Main Content Area */}
-        <div className="main-area flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-hidden bg-transparent">
+        <div className="main-area flex-1 flex flex-col min-w-0 min-h-0 h-full max-h-screen max-h-[100dvh] overflow-hidden bg-transparent">
           <Topbar onMenu={handleToggleMenu} role={role} />
-          <main className="content flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 bg-transparent">
+          <main className="content flex-1 min-h-0 h-[calc(100vh-56px)] h-[calc(100dvh-56px)] max-h-[calc(100vh-56px)] max-h-[calc(100dvh-56px)] overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 bg-transparent">
             {children}
           </main>
         </div>
