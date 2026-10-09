@@ -125,7 +125,8 @@ export function TrainerAssignments({
       {error && (
         <p
           role="alert"
-          className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] font-medium"
+          className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] font-medium shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
           {error}
         </p>
@@ -134,14 +135,15 @@ export function TrainerAssignments({
         <p
           role="status"
           aria-live="polite"
-          className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] font-medium"
+          className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] font-medium shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
           {status}
         </p>
       )}
 
       {/* Assignments table */}
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-[26px] overflow-hidden shadow-xs">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-semibold uppercase tracking-wider text-[11px]">

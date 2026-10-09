@@ -42,7 +42,7 @@ export function KpiCard({
     return (
       <div
         onClick={onClick}
-        className={`relative overflow-hidden rounded-xl p-6 text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
+        className={`relative overflow-hidden rounded-xl p-6 text-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_-8px_var(--g1b)] ${
           onClick ? 'cursor-pointer' : ''
         } ${className}`}
         style={{

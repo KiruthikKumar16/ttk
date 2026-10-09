@@ -947,7 +947,7 @@ export function UserRoles({
 
           {/* Table wrapper with card styling */}
           <div
-            className="bg-[var(--card)] rounded-[26px] shadow-xs border border-[var(--border)] overflow-x-auto w-full"
+            className="bg-[var(--card)] rounded-xl shadow-xs border border-[var(--border)] overflow-x-auto w-full"
             role="region"
             aria-label="Users and roles"
             tabIndex={0}

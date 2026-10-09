@@ -95,14 +95,22 @@ export function GstSettingsPage({
           </div>
 
           {error && (
-            <div className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] flex items-center gap-2 font-medium">
-              <AlertCircle size={16} />
+            <div
+              role="alert"
+              className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] flex items-center gap-2 font-medium shadow-2xs"
+              style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+            >
+              <AlertCircle size={16} className="text-[var(--g1)]" />
               <span>{error}</span>
             </div>
           )}
           {success && (
-            <div className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] flex items-center gap-2 font-medium">
-              <CheckCircle2 size={16} />
+            <div
+              role="status"
+              className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] flex items-center gap-2 font-medium shadow-2xs"
+              style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+            >
+              <CheckCircle2 size={16} className="text-[var(--g1)]" />
               <span>{success}</span>
             </div>
           )}

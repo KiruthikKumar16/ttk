@@ -58,11 +58,14 @@ export async function generateUniqueVerificationCode(supabase: any, maxAttempts:
   throw new Error('Failed to generate unique verification code after maximum attempts')
 }
 
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
 /**
  * Utility function to conditionally join class names together
  * @param inputs Variable number of class name arguments
  * @returns String of joined class names
  */
-export function cn(...inputs: (string | undefined | false | null | 0)[]): string {
-  return inputs.filter(Boolean).join(' ')
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs))
 }

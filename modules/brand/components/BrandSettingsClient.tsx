@@ -141,14 +141,18 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
       {success && (
         <div
           role="status"
-          className="flex items-center gap-3 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] p-4 text-xs text-[#1b7a4b]"
+          className="flex items-center gap-3 rounded-2xl border border-[var(--g5)] p-4 text-xs text-[var(--g1b)] shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
-          <div className="rounded-full bg-[#1b7a4b] text-white p-1">
+          <div
+            className="rounded-full text-white p-1"
+            style={{ background: 'linear-gradient(135deg, var(--g1) 0%, var(--g1b) 100%)' }}
+          >
             <Check size={14} />
           </div>
           <div>
-            <p className="font-bold text-[#1b7a4b]">Brand information updated successfully</p>
-            <p className="mt-0.5">
+            <p className="font-bold text-[var(--g1b)]">Brand information updated successfully</p>
+            <p className="mt-0.5 text-[var(--mute)]">
               All dynamic documents and public verification links reflect these updates immediately.
             </p>
           </div>
@@ -472,7 +476,6 @@ export function BrandSettingsClient({ settings, editable }: { settings: BrandSet
           {/* Full-width Action Bar */}
           <Card className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${isDirty ? 'bg-[#854d0e] animate-pulse' : 'bg-[#1b7a4b]'}`} />
               <span className="text-xs font-medium text-[var(--mute)]">
                 {isDirty ? 'Unsaved changes pending' : 'All brand settings saved'}
               </span>

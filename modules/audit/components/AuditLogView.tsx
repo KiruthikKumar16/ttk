@@ -114,11 +114,11 @@ function ChangeDiff({
           >
             <span className="font-semibold text-[var(--ink)] min-w-[140px]">{prettyFieldName(key)}</span>
             <div className="flex items-center gap-2 flex-1 break-all">
-              <span className="px-2 py-0.5 rounded-lg bg-[rgba(181,60,55,0.08)] text-[#b53c37] line-through font-mono text-[11px]">
+              <span className="px-2 py-0.5 rounded-lg bg-[var(--panel)] text-[var(--mute)] border border-[var(--border)] line-through font-mono text-[11px]">
                 {prettyValue(oldValues[key])}
               </span>
               <span className="text-[var(--mute)]">→</span>
-              <span className="px-2 py-0.5 rounded-lg bg-[rgba(27,122,75,0.08)] text-[#1b7a4b] font-medium font-mono text-[11px]">
+              <span className="px-2 py-0.5 rounded-lg bg-[var(--g4)] text-[var(--g1)] border border-[var(--g5)] font-semibold font-mono text-[11px]">
                 {prettyValue(newValues[key])}
               </span>
             </div>
@@ -507,7 +507,7 @@ export function AuditLogView({
       </Card>
 
       {/* Main Table */}
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-[26px] overflow-hidden shadow-xs">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-semibold uppercase tracking-wider text-[11px]">

@@ -879,7 +879,7 @@ export function Assessments({
               </div>
 
               {/* Assessment Table / Cards */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
+              <div className="overflow-x-auto rounded-xl border border-[var(--border)] shadow-xs bg-[var(--card)]">
                 <table className="w-full min-w-[700px] text-left">
                   <thead className="bg-slate-50/90 border-b border-slate-200">
                     <tr>
@@ -1283,7 +1283,7 @@ export function Assessments({
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
+            <div className="overflow-x-auto rounded-xl border border-[var(--border)] shadow-xs bg-[var(--card)]">
               <table className="w-full min-w-[720px] text-left text-xs sm:text-sm">
                 <thead className="bg-slate-50/90 border-b border-slate-200">
                   <tr>

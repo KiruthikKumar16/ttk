@@ -32,6 +32,8 @@ import { getTimeBasedGreeting } from '@/lib/greeting'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { PillButton } from '@/components/ui/PillButton'
 import { ModernTable } from '@/components/ui/ModernTable'
+import { TodayAttendanceSummary } from './TodayAttendanceSummary'
+import { AttendanceWatchlistCard } from './AttendanceWatchlistCard'
 
 export function DashboardMetrics({
   summary,
@@ -282,9 +284,12 @@ export function DashboardMetrics({
       </div>
 
       {pendingUsers.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 p-4 sm:p-5 rounded-[22px] border border-amber-200/60 bg-[var(--warning-bg)] shadow-[var(--shadow-xs)]">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 p-4 sm:p-5 rounded-[22px] border border-[var(--g5)] shadow-[var(--shadow-xs)]"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+        >
           <div className="flex items-center gap-3.5">
-            <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/15 text-[#854d0e] flex items-center justify-center">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-[var(--g4)] border border-[var(--g5)] text-[var(--g1)] flex items-center justify-center">
               <UserCheck size={20} />
             </div>
             <div>
@@ -292,7 +297,7 @@ export function DashboardMetrics({
                 <span className="font-bold text-sm text-[var(--text-heading)]">
                   {pendingUsers.length} Access Request{pendingUsers.length > 1 ? 's' : ''} Pending
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-[#854d0e]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--g4)] border border-[var(--g5)] text-[var(--g1)]">
                   Action Required
                 </span>
               </div>
@@ -309,7 +314,7 @@ export function DashboardMetrics({
           <Link
             href="/settings/users?filter=pending"
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-white text-xs font-semibold shrink-0 shadow-sm transition-transform hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #b45309, #92400e)', textDecoration: 'none' }}
+            style={{ background: 'linear-gradient(135deg, var(--g1) 0%, var(--g1b) 100%)', textDecoration: 'none' }}
           >
             Review & Approve <ArrowRight size={13} />
           </Link>
@@ -359,10 +364,11 @@ export function DashboardMetrics({
             <span>Staff & Academic Data</span>
             {academicData && academicData.lowAttendanceStudents.length > 0 && (
               <span
-                className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors"
                 style={{
-                  background: activeView === 'staff' ? 'rgba(255,255,255,0.25)' : 'var(--warning-bg)',
-                  color: activeView === 'staff' ? '#fff' : '#854d0e',
+                  background: activeView === 'staff' ? 'rgba(255,255,255,0.25)' : 'var(--g4)',
+                  color: activeView === 'staff' ? '#fff' : 'var(--g1)',
+                  borderColor: activeView === 'staff' ? 'rgba(255,255,255,0.3)' : 'var(--g5)',
                 }}
               >
                 {academicData.lowAttendanceStudents.length}
@@ -371,8 +377,7 @@ export function DashboardMetrics({
           </button>
         </div>
 
-        <div className="text-xs px-3 flex items-center gap-2 text-[var(--mute)] font-medium">
-          <span className="shrink-0 h-2 w-2 rounded-full" style={{ background: 'var(--g1)' }} />
+        <div className="text-xs px-3 flex items-center text-[var(--mute)] font-medium">
           <span>
             {activeView === 'financial'
               ? 'Displaying tuition revenue, fee balances & payments'
@@ -396,7 +401,7 @@ export function DashboardMetrics({
             ))}
           </div>
 
-          <section className="panel mt-6 overflow-hidden transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b)] hover:border-transparent">
+          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
             <div className="panel-header">
               <div>
                 <h2>Course mix</h2>
@@ -412,7 +417,7 @@ export function DashboardMetrics({
                   { header: 'Course Category', align: 'left', className: 'w-[28%]' },
                   { header: 'Variants', align: 'left', className: 'w-[42%]' },
                   { header: 'Duration', align: 'left', className: 'w-[15%]' },
-                  { header: 'Students', align: 'center', className: 'w-[15%]' },
+                  { header: 'Students', align: 'right', className: 'w-[15%]' },
                 ]}
                 rows={categoryMix.map((row) => ({
                   id: row.id,
@@ -422,10 +427,9 @@ export function DashboardMetrics({
                     </div>,
                     <div key="variants" className="flex flex-col">
                       <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--g4)] text-[var(--g1)] border border-[var(--g5)] w-fit"
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--g4)] text-[var(--g1)] border border-[var(--g5)] w-fit"
                         title={row.courseNames?.join(', ')}
                       >
-                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--g1)]" />
                         <span>
                           {row.isInternship
                             ? 'Type: Internship'
@@ -443,7 +447,7 @@ export function DashboardMetrics({
                     <span key="dur" className="text-xs text-[var(--mute)] font-medium">
                       {row.duration}
                     </span>,
-                    <span key="count" className="font-bold text-[var(--text-heading)] block text-center">
+                    <span key="count" className="font-bold text-[var(--text-heading)] block text-right">
                       {row.studentCount}
                     </span>,
                   ],
@@ -453,7 +457,7 @@ export function DashboardMetrics({
             </div>
           </section>
 
-          <section className="panel mt-6 overflow-hidden transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b)] hover:border-transparent">
+          <section className="panel mt-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
             <div className="panel-header">
               <div>
                 <h2>Recent payments</h2>
@@ -469,7 +473,7 @@ export function DashboardMetrics({
                   { header: 'Invoice', align: 'left', className: 'w-[25%]' },
                   { header: 'Student', align: 'left', className: 'w-[35%]' },
                   { header: 'Date', align: 'left', className: 'w-[20%]' },
-                  { header: 'Amount', align: 'center', className: 'w-[20%]' },
+                  { header: 'Amount', align: 'right', className: 'w-[20%]' },
                 ]}
                 rows={recentPayments.map((payment) => ({
                   id: payment.id,
@@ -485,7 +489,7 @@ export function DashboardMetrics({
                     <span key="date" className="text-xs text-[var(--mute)] font-medium">
                       {payment.date}
                     </span>,
-                    <span key="amt" className="font-bold text-[var(--text-heading)] font-mono text-sm block text-center">
+                    <span key="amt" className="font-bold text-[var(--text-heading)] font-mono text-sm block text-right">
                       ₹{payment.amount.toLocaleString('en-IN')}
                     </span>,
                   ],
@@ -515,22 +519,93 @@ export function DashboardMetrics({
 
           {/* Quick Academic Actions Dock */}
           <div className="flex flex-wrap items-center gap-2.5 mb-6">
-            <Link href="/attendance" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <CalendarDays size={14} />
-              <span>Mark / View Attendance</span>
+            <Link
+              href="/attendance"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-xs font-semibold text-[var(--text-heading)] shadow-xs backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-transparent cursor-pointer"
+              style={{ textDecoration: 'none' }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                style={{
+                  background: 'linear-gradient(135deg, var(--g2b) 0%, var(--g1) 55%, var(--g1b) 100%)',
+                }}
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute -right-3 -bottom-3 h-12 w-12 rounded-full opacity-0 blur-lg transition-opacity duration-200 group-hover:opacity-25"
+                style={{ background: 'var(--g3)' }}
+                aria-hidden="true"
+              />
+              <CalendarDays size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Mark / View Attendance</span>
             </Link>
-            <Link href="/assessments" className="btn-secondary" style={{ textDecoration: 'none' }}>
-              <ClipboardCheck size={14} style={{ color: 'var(--g1)' }} />
-              <span>Assessments ({academicData?.assessmentCount ?? 0})</span>
+
+            <Link
+              href="/assessments"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-xs font-semibold text-[var(--text-heading)] shadow-xs backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-transparent cursor-pointer"
+              style={{ textDecoration: 'none' }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                style={{
+                  background: 'linear-gradient(135deg, var(--g2b) 0%, var(--g1) 55%, var(--g1b) 100%)',
+                }}
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute -right-3 -bottom-3 h-12 w-12 rounded-full opacity-0 blur-lg transition-opacity duration-200 group-hover:opacity-25"
+                style={{ background: 'var(--g3)' }}
+                aria-hidden="true"
+              />
+              <ClipboardCheck size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
+                Assessments ({academicData?.assessmentCount ?? 0})
+              </span>
             </Link>
-            <Link href="/materials" className="btn-secondary" style={{ textDecoration: 'none' }}>
-              <FolderOpen size={14} style={{ color: 'var(--g1)' }} />
-              <span>Learning Materials ({academicData?.materialsCount ?? 0})</span>
+
+            <Link
+              href="/materials"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-xs font-semibold text-[var(--text-heading)] shadow-xs backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-transparent cursor-pointer"
+              style={{ textDecoration: 'none' }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                style={{
+                  background: 'linear-gradient(135deg, var(--g2b) 0%, var(--g1) 55%, var(--g1b) 100%)',
+                }}
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute -right-3 -bottom-3 h-12 w-12 rounded-full opacity-0 blur-lg transition-opacity duration-200 group-hover:opacity-25"
+                style={{ background: 'var(--g3)' }}
+                aria-hidden="true"
+              />
+              <FolderOpen size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
+                Learning Materials ({academicData?.materialsCount ?? 0})
+              </span>
             </Link>
+
             {canCreateStudent && (
-              <Link href="/students/new" className="btn-secondary" style={{ textDecoration: 'none' }}>
-                <Plus size={14} style={{ color: '#1b7a4b' }} />
-                <span>Add Student</span>
+              <Link
+                href="/students/new"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-xs font-semibold text-[var(--text-heading)] shadow-xs backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-transparent cursor-pointer"
+                style={{ textDecoration: 'none' }}
+              >
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--g2b) 0%, var(--g1) 55%, var(--g1b) 100%)',
+                  }}
+                  aria-hidden="true"
+                />
+                <div
+                  className="pointer-events-none absolute -right-3 -bottom-3 h-12 w-12 rounded-full opacity-0 blur-lg transition-opacity duration-200 group-hover:opacity-25"
+                  style={{ background: 'var(--g3)' }}
+                  aria-hidden="true"
+                />
+                <Plus size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+                <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Add Student</span>
               </Link>
             )}
           </div>
@@ -538,214 +613,69 @@ export function DashboardMetrics({
           {/* Attendance Summary & Watchlist */}
           {academicData && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
-              {/* Today's Attendance Progress Box */}
-              <div className="panel p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-emerald-600" />
-                      <h2 className="text-sm font-semibold text-slate-900">Today&apos;s Attendance Summary</h2>
-                    </div>
-                    <Link
-                      href="/attendance"
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                    >
-                      Attendance Registry <ArrowRight size={12} />
-                    </Link>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div
-                      className="p-3.5 rounded-xl border"
-                      style={{
-                        background: 'rgba(236, 253, 245, 0.6)',
-                        borderColor: 'rgba(167, 243, 208, 0.6)',
-                      }}
-                    >
-                      <p className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">
-                        Present / Late
-                      </p>
-                      <p className="text-2xl font-bold text-emerald-900 mt-1">{academicData.todayAttendance.present}</p>
-                      <p className="text-[10px] text-emerald-700 mt-0.5">Students in session</p>
-                    </div>
-
-                    <div
-                      className="p-3.5 rounded-xl border"
-                      style={{
-                        background: 'rgba(255, 241, 242, 0.6)',
-                        borderColor: 'rgba(254, 205, 211, 0.6)',
-                      }}
-                    >
-                      <p className="text-[11px] font-semibold text-rose-800 uppercase tracking-wider">Absent</p>
-                      <p className="text-2xl font-bold text-rose-900 mt-1">{academicData.todayAttendance.absent}</p>
-                      <p className="text-[10px] text-rose-700 mt-0.5">Marked absent today</p>
-                    </div>
-
-                    <div
-                      className="p-3.5 rounded-xl border"
-                      style={{
-                        background: 'rgba(248, 250, 252, 0.8)',
-                        borderColor: 'rgba(226, 232, 240, 0.8)',
-                      }}
-                    >
-                      <p className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Marked</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">
-                        {academicData.todayAttendance.totalMarked}
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Records logged today</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Attendance Progress Bar */}
-                <div className="mt-5 pt-3.5 border-t border-slate-100">
-                  <div className="flex justify-between text-xs text-slate-600 mb-1.5 font-medium">
-                    <span>Classroom Attendance Health</span>
-                    <span className="font-bold text-slate-900">{academicData.todayAttendance.rate}% Present</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(100, Math.max(0, academicData.todayAttendance.rate))}%`,
-                        boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* Today's Attendance Summary with Donut Pattern Chart (Strictly Present & Absent) */}
+              <TodayAttendanceSummary
+                present={academicData.todayAttendance.present}
+                absent={academicData.todayAttendance.absent}
+                totalMarked={academicData.todayAttendance.totalMarked}
+                rate={academicData.todayAttendance.rate}
+                linkHref="/attendance"
+                linkLabel="Attendance Registry"
+              />
 
               {/* Low Attendance Watchlist Card */}
-              <div
-                className="p-5 rounded-2xl flex flex-col justify-between"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(254, 243, 199, 0.25), rgba(255, 255, 255, 0.85))',
-                  border: '1px solid rgba(245, 158, 11, 0.25)',
-                  boxShadow: 'var(--shadow-sm)',
-                  backdropFilter: 'blur(12px)',
-                }}
-              >
-                <div>
-                  <div className="flex items-center justify-between pb-3 border-b border-amber-200/50">
-                    <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
-                      <AlertTriangle size={15} className="text-amber-600 shrink-0" />
-                      <span>Attendance Watchlist (&lt; 75%)</span>
-                    </div>
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{
-                        background: 'rgba(245, 158, 11, 0.15)',
-                        color: '#92400e',
-                        border: '1px solid rgba(245, 158, 11, 0.25)',
-                      }}
-                    >
-                      {academicData.lowAttendanceStudents.length} Students
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-amber-800/90 mt-2 mb-3">
-                    Learners below 75% attendance criteria requiring academy follow-up.
-                  </p>
-                </div>
-
-                {academicData.lowAttendanceStudents.length === 0 ? (
-                  <div className="py-7 px-4 text-center text-xs text-emerald-800 bg-white/70 rounded-xl border border-emerald-100 flex-1 flex flex-col items-center justify-center">
-                    <CheckCircle2 size={22} className="mx-auto mb-1.5 text-emerald-600" />
-                    <span className="font-medium">All active students meet the 75% attendance threshold!</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                    {academicData.lowAttendanceStudents.map((s) => (
-                      <div
-                        key={s.id}
-                        className="p-2.5 rounded-xl bg-white/90 border border-amber-200/60 shadow-2xs flex items-center justify-between gap-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <Link
-                              href={`/students/${s.registerId}`}
-                              className="text-xs font-semibold text-slate-900 hover:text-indigo-600 truncate"
-                            >
-                              {s.name}
-                            </Link>
-                            <span className="text-[10px] text-slate-400 font-mono">#{s.registerId}</span>
-                          </div>
-                          <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.course}</p>
-                          {s.phone && (
-                            <a
-                              href={`tel:${s.phone}`}
-                              className="inline-flex items-center gap-1 text-[10px] text-indigo-600 font-medium mt-1 hover:underline"
-                            >
-                              <Phone size={10} />
-                              {s.phone}
-                            </a>
-                          )}
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/50">
-                            {s.rate}%
-                          </span>
-                          <span className="block text-[10px] text-slate-500 mt-0.5">
-                            {s.presentSessions}/{s.totalSessions} days
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AttendanceWatchlistCard students={academicData.lowAttendanceStudents} />
             </div>
           )}
 
           {/* Recent Assessments Section */}
           {academicData && (
-            <section className="panel mb-6">
+            <section className="panel mb-6 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_var(--g1b,rgba(0,0,0,0.12))] hover:border-[var(--g5)]">
               <div className="panel-header">
                 <div className="flex items-center gap-2">
-                  <ClipboardCheck size={18} className="text-indigo-600" />
+                  <ClipboardCheck size={18} style={{ color: 'var(--g1)' }} />
                   <h2>Recent Assessments</h2>
                 </div>
-                <Link href="/assessments">View assessments ({academicData.assessmentCount})</Link>
+                <Link href="/assessments" className="text-xs font-semibold text-[var(--g1)] hover:underline">
+                  View assessments ({academicData.assessmentCount})
+                </Link>
               </div>
-              <div className="data-wrap" role="region" aria-label="Recent assessments" tabIndex={0}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Assessment Title</th>
-                      <th>Course</th>
-                      <th>Date</th>
-                      <th className="align-right">Max Score</th>
-                      <th className="align-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {academicData.recentAssessments.map((a) => (
-                      <tr key={a.id}>
-                        <td>
-                          <span className="font-semibold text-slate-900 block">{a.title}</span>
-                        </td>
-                        <td>
-                          <span className="text-xs font-medium text-slate-700">{a.courseName}</span>
-                        </td>
-                        <td className="text-xs text-slate-600">{a.assessmentDate}</td>
-                        <td className="align-right font-bold text-slate-900">{a.maxScore} marks</td>
-                        <td className="align-right">
-                          <Link
-                            href={`/assessments`}
-                            className="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-                          >
-                            Grade / Review &rarr;
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                    {academicData.recentAssessments.length === 0 && (
-                      <tr>
-                        <td colSpan={5}>No assessments conducted yet.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+              <div className="p-4 pt-1 overflow-hidden">
+                <ModernTable
+                  columns={[
+                    { header: 'Assessment Title', align: 'left', className: 'w-[30%]' },
+                    { header: 'Course', align: 'left', className: 'w-[26%]' },
+                    { header: 'Date', align: 'left', className: 'w-[16%]' },
+                    { header: 'Max Score', align: 'right', className: 'w-[14%]' },
+                    { header: 'Action', align: 'right', className: 'w-[14%]' },
+                  ]}
+                  rows={academicData.recentAssessments.map((a) => ({
+                    id: a.id,
+                    cells: [
+                      <span key="title" className="font-semibold text-[var(--text-heading)]">
+                        {a.title}
+                      </span>,
+                      <span key="course" className="text-xs font-medium text-[var(--mute)]">
+                        {a.courseName}
+                      </span>,
+                      <span key="date" className="text-xs text-[var(--mute)] font-medium">
+                        {a.assessmentDate}
+                      </span>,
+                      <span key="score" className="font-bold text-[var(--text-heading)] block text-right">
+                        {a.maxScore} marks
+                      </span>,
+                      <div key="act" className="flex items-center justify-end">
+                        <Link
+                          href={`/assessments`}
+                          className="inline-flex items-center text-xs font-semibold text-[var(--g1)] hover:underline whitespace-nowrap"
+                        >
+                          Grade &rarr;
+                        </Link>
+                      </div>,
+                    ],
+                  }))}
+                  emptyMessage="No assessments conducted yet."
+                />
               </div>
             </section>
           )}

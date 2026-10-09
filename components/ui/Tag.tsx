@@ -20,39 +20,17 @@ export function Tag({ children, variant = 'neutral', size = 'md', icon, classNam
   let variantStyle: React.CSSProperties = {}
   let variantClass = ''
 
-  if (variant === 'accent') {
+  if (
+    variant === 'accent' ||
+    variant === 'success' ||
+    variant === 'warning' ||
+    variant === 'danger' ||
+    variant === 'info'
+  ) {
     variantStyle = {
-      backgroundColor: 'var(--g4)',
+      background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
       color: 'var(--g1)',
       borderColor: 'var(--g5)',
-    }
-    variantClass = 'border'
-  } else if (variant === 'success') {
-    variantStyle = {
-      backgroundColor: 'var(--success-bg)',
-      color: '#1b7a4b',
-      borderColor: 'rgba(27, 122, 75, 0.2)',
-    }
-    variantClass = 'border'
-  } else if (variant === 'warning') {
-    variantStyle = {
-      backgroundColor: 'var(--warning-bg)',
-      color: '#854d0e',
-      borderColor: 'rgba(133, 77, 14, 0.25)',
-    }
-    variantClass = 'border'
-  } else if (variant === 'danger') {
-    variantStyle = {
-      backgroundColor: 'var(--danger-bg)',
-      color: '#b53c37',
-      borderColor: 'rgba(181, 60, 55, 0.2)',
-    }
-    variantClass = 'border'
-  } else if (variant === 'info') {
-    variantStyle = {
-      backgroundColor: 'var(--info-bg)',
-      color: '#0284c7',
-      borderColor: 'rgba(2, 132, 199, 0.2)',
     }
     variantClass = 'border'
   } else if (variant === 'hatched') {

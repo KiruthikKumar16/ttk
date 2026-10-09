@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Button } from './button'
-import { X } from 'lucide-react'
+import { PillButton } from '@/components/ui/PillButton'
+import { AlertCircle, AlertTriangle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ConfirmDialogProps {
@@ -72,7 +72,7 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
       data-testid="confirm-dialog-overlay"
     >
       <div
@@ -81,37 +81,46 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby={description ? 'confirm-dialog-description' : undefined}
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto"
         tabIndex={-1}
       >
-        <div className="relative bg-card text-card-foreground shadow-lg rounded-lg border p-6">
+        <div className="relative bg-white dark:bg-[#151d2f] text-[var(--ink)] shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7">
           {/* Close button */}
           <button
             onClick={onCancel}
-            className="absolute right-3 top-3 rounded-sm hover:bg-muted p-1 text-muted-foreground"
+            className="absolute right-4 top-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={18} />
           </button>
 
-          <div className="pt-2">
-            <h2 id="confirm-dialog-title" className="text-lg font-semibold leading-tight">
-              {title}
-            </h2>
-            {description && (
-              <p id="confirm-dialog-description" className="mt-2 text-muted-foreground">
-                {description}
-              </p>
-            )}
+          <div className="flex items-start gap-3.5 pr-6">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--g5)] text-[var(--g1)]"
+              style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+            >
+              {destructive ? <AlertTriangle size={20} /> : <AlertCircle size={20} />}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h2 id="confirm-dialog-title" className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                {title}
+              </h2>
+              {description && (
+                <p id="confirm-dialog-description" className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {description}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
-            <Button variant="ghost" size="default" onClick={onCancel}>
+          <div className="mt-6 flex items-center justify-end gap-2.5">
+            <PillButton type="button" variant="secondary" size="sm" onClick={onCancel}>
               {cancelText}
-            </Button>
-            <Button variant={destructive ? 'destructive' : 'default'} size="default" onClick={onConfirm}>
+            </PillButton>
+            <PillButton type="button" variant={destructive ? 'danger' : 'primary'} size="sm" onClick={onConfirm}>
               {confirmText}
-            </Button>
+            </PillButton>
           </div>
         </div>
       </div>

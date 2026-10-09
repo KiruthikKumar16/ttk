@@ -156,9 +156,9 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
     .sort((a, b) => a.rate - b.rate)
     .slice(0, 10)
 
-  const todayPresent = (todayAttendance ?? []).filter((a) => a.status === 'Present' || a.status === 'Late').length
+  const todayPresent = (todayAttendance ?? []).filter((a) => a.status === 'Present').length
   const todayAbsent = (todayAttendance ?? []).filter((a) => a.status === 'Absent').length
-  const todayTotal = (todayAttendance ?? []).length
+  const todayTotal = todayPresent + todayAbsent
   const todayRate = todayTotal > 0 ? Math.round((todayPresent / todayTotal) * 100) : 0
 
   const mappedAssessments = (assessments ?? []).map((a: any) => ({

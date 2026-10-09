@@ -276,16 +276,24 @@ export function getStoredGradientConfig(): GradientConfig {
 
 let saveStorageTimeout: ReturnType<typeof setTimeout> | null = null
 
+export function saveStorageImmediately(theme: ThemeMode, accentHex: string, gradientCfg: GradientConfig) {
+  if (saveStorageTimeout) {
+    clearTimeout(saveStorageTimeout)
+    saveStorageTimeout = null
+  }
+  try {
+    localStorage.setItem(STORAGE_THEME_KEY, theme)
+    localStorage.setItem(STORAGE_ACCENT_KEY, accentHex)
+    localStorage.setItem(STORAGE_GRADIENT_KEY, JSON.stringify(gradientCfg))
+  } catch {
+    // ignore
+  }
+}
+
 export function debouncedSaveStorage(theme: ThemeMode, accentHex: string, gradientCfg: GradientConfig) {
   if (saveStorageTimeout) clearTimeout(saveStorageTimeout)
   saveStorageTimeout = setTimeout(() => {
-    try {
-      localStorage.setItem(STORAGE_THEME_KEY, theme)
-      localStorage.setItem(STORAGE_ACCENT_KEY, accentHex)
-      localStorage.setItem(STORAGE_GRADIENT_KEY, JSON.stringify(gradientCfg))
-    } catch {
-      // ignore
-    }
+    saveStorageImmediately(theme, accentHex, gradientCfg)
   }, 200)
 }
 
@@ -342,6 +350,21 @@ export function applyTheme(theme: ThemeMode, accentHex: string, config?: Gradien
   root.style.setProperty('--g1b', palette.g1b)
   root.style.setProperty('--g2b', palette.g2b)
 
+  // Map all semantic variables to the selected color palette (no extra greens, ambers, reds)
+  root.style.setProperty('--success', palette.g1)
+  root.style.setProperty('--success-bg', palette.g4)
+  root.style.setProperty('--warning', palette.g1b)
+  root.style.setProperty('--warning-bg', palette.g4)
+  root.style.setProperty('--danger', palette.g1b)
+  root.style.setProperty('--danger-bg', palette.g4)
+  root.style.setProperty('--info', palette.g1)
+  root.style.setProperty('--info-bg', palette.g4)
+  root.style.setProperty('--amber-bg', palette.g4)
+  root.style.setProperty('--highlight-bg', palette.g4)
+  root.style.setProperty('--highlight-border', palette.g5)
+  root.style.setProperty('--highlight-text', palette.g1b)
+  root.style.setProperty('--highlight-icon', palette.g1)
+
   // 3. Compute and apply gradient & glassmorphism tokens
   const canvasGradient = computeCanvasGradient(accentHex, theme, gradientCfg)
   const glass = computeGlassmorphismTokens(theme, gradientCfg)
@@ -370,6 +393,6 @@ export function applyTheme(theme: ThemeMode, accentHex: string, config?: Gradien
   root.style.setProperty('--radius-lg', '12px')
   root.style.setProperty('--radius-xl', '14px')
 
-  // Debounced persistence
-  debouncedSaveStorage(theme, accentHex, gradientCfg)
+  // Immediate persistence on explicit theme apply
+  saveStorageImmediately(theme, accentHex, gradientCfg)
 }

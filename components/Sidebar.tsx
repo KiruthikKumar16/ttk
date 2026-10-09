@@ -206,16 +206,6 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Promo / Version Card at Bottom */}
-        {!collapsed && (
-          <div className="mt-4 rounded-[18px] bg-[var(--panel)] p-3 border border-[var(--border)] overflow-hidden">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 shrink-0 rounded-full bg-[var(--g1)] animate-pulse" />
-              <span className="text-[11px] font-bold text-[var(--text-heading)] truncate">ThoorigAI Portal</span>
-            </div>
-            <p className="mt-1 text-[10px] text-[var(--mute)] truncate">{role.toUpperCase()} session active</p>
-          </div>
-        )}
 
         {/* Account Info */}
         <div className="account mt-3 pt-3 border-t border-[var(--border)] min-w-0 overflow-hidden">

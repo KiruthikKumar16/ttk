@@ -476,7 +476,7 @@ export function InvoicesManagerClient({
         </div>
       ) : (
         /* High-Density Elevated Table View */
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-[22px] overflow-hidden shadow-xs">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
               <tr>

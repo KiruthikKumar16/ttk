@@ -56,14 +56,15 @@ export function ModernTable({
                 scope="col"
                 className={`py-2.5 px-3.5 text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider transition-colors duration-150 ${
                   col.align === 'right'
-                    ? 'text-right'
+                    ? 'text-right align-right'
                     : col.align === 'center'
-                      ? 'text-center'
-                      : 'text-left'
+                      ? 'text-center align-center'
+                      : 'text-left align-left'
                 } ${col.className || ''}`}
                 style={{
                   letterSpacing: '0.05em',
                   padding: '10px 14px',
+                  textAlign: col.align || 'left',
                 }}
               >
                 {col.header}
@@ -96,7 +97,7 @@ export function ModernTable({
                     style={{
                       backgroundColor: isHovered ? 'var(--g4)' : 'transparent',
                       boxShadow: isHovered
-                        ? 'inset 3.5px 0 0 0 var(--g1), inset 0 0 0 1px var(--g1)'
+                        ? 'inset 4px 0 0 0 var(--g1)'
                         : 'none',
                     }}
                     title={title}
@@ -105,10 +106,10 @@ export function ModernTable({
                       const col = normalizedCols[ci]
                       const alignClass =
                         col?.align === 'right'
-                          ? 'text-right'
+                          ? 'text-right align-right'
                           : col?.align === 'center'
-                            ? 'text-center'
-                            : 'text-left'
+                            ? 'text-center align-center'
+                            : 'text-left align-left'
 
                       return (
                         <td
@@ -116,6 +117,7 @@ export function ModernTable({
                           className={`py-3 px-3.5 text-sm text-[var(--text)] transition-colors duration-150 ${alignClass} ${col?.className || ''}`}
                           style={{
                             padding: '10px 14px',
+                            textAlign: col?.align || 'left',
                           }}
                         >
                           {cell}

@@ -104,9 +104,12 @@ export function AdminReportsClient({
             <span>Staff & Academic Data</span>
             {lowAttendanceCount > 0 && (
               <span
-                className={`ml-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  activeView === 'staff' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-[#854d0e]'
-                }`}
+                className="ml-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors"
+                style={{
+                  background: activeView === 'staff' ? 'rgba(255,255,255,0.25)' : 'var(--g4)',
+                  color: activeView === 'staff' ? '#fff' : 'var(--g1)',
+                  borderColor: activeView === 'staff' ? 'rgba(255,255,255,0.3)' : 'var(--g5)',
+                }}
               >
                 {lowAttendanceCount}
               </span>
@@ -114,8 +117,7 @@ export function AdminReportsClient({
           </button>
         </div>
 
-        <div className="text-xs text-[var(--mute)] px-3 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#1b7a4b] shrink-0" />
+        <div className="text-xs text-[var(--mute)] px-3 flex items-center">
           <span>
             {activeView === 'financial'
               ? 'Displaying tuition velocity, collections, payment breakdown & demographics'

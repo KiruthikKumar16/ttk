@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 import {
   ArrowDownRight,
   BarChart3,
@@ -11,7 +12,7 @@ import {
   Users,
   CheckCircle2,
   TrendingUp,
-  PieChart,
+  PieChart as PieChartIcon,
   Wallet,
   Clock,
   GraduationCap,
@@ -22,7 +23,29 @@ import {
   Compass,
   Activity,
   User,
+  Megaphone,
 } from 'lucide-react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
 import { Button } from '@/components/ui/button'
 import type { Payment, Student, Course, CourseCategory } from '@/lib/types'
 import { money } from '@/lib/formatters'
@@ -65,6 +88,948 @@ function parseDate(dateString?: string): Date {
     }
   }
   return isNaN(direct.getTime()) ? new Date(0) : direct
+}
+
+function getCourseShortName(name: string): string {
+  const clean = name
+    .replace(/^[-–—\s]+/, '')
+    .replace(/^ThoorigAI\s+/i, '')
+    .replace(/\s+Course$/i, '')
+    .trim()
+  if (clean.length <= 14) return clean
+  if (/data science/i.test(clean) || /ai/i.test(clean)) return 'AI & DS'
+  if (/full\s*stack/i.test(clean)) return 'Full Stack'
+  return clean.slice(0, 12) + '…'
+}
+
+type CourseEnrollmentChartProps = {
+  courseCounts: Record<string, number>
+  totalStudents: number
+}
+
+function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollmentChartProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [displayValue, setDisplayValue] = useState<number | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const courses = useMemo(() => {
+    return Object.entries(courseCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => {
+        const shortName = getCourseShortName(name)
+        const sharePct = totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0
+        return {
+          name,
+          shortName,
+          count,
+          sharePct,
+        }
+      })
+  }, [courseCounts, totalStudents])
+
+  const maxValue = useMemo(() => Math.max(...courses.map((c) => c.count), 1), [courses])
+
+  useEffect(() => {
+    if (hoveredIndex !== null && courses[hoveredIndex]) {
+      setDisplayValue(courses[hoveredIndex].count)
+    }
+  }, [hoveredIndex, courses])
+
+  const handleContainerEnter = () => setIsHovering(true)
+  const handleContainerLeave = () => {
+    setIsHovering(false)
+    setHoveredIndex(null)
+    setTimeout(() => {
+      setDisplayValue(null)
+    }, 150)
+  }
+
+  const activeCourse = hoveredIndex !== null ? courses[hoveredIndex] : null
+
+  if (courses.length === 0) {
+    return <p className="empty-note">No course enrollment data in this period.</p>
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={handleContainerEnter}
+      onMouseLeave={handleContainerLeave}
+      className="group relative w-full p-4 sm:p-5 rounded-2xl bg-[var(--card)] border border-[var(--border)] transition-all duration-500 hover:border-[var(--g5)] flex flex-col gap-4 overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-end mb-1">
+        <div className="relative h-7 flex items-center">
+          {activeCourse ? (
+            <div className="flex items-center gap-1.5 animate-fadeIn">
+              <span className="text-xs font-medium text-[var(--mute)] max-w-[120px] sm:max-w-[180px] truncate">
+                {activeCourse.shortName}:
+              </span>
+              <span className="text-base sm:text-lg font-bold font-mono text-[var(--ink)] tabular-nums">
+                {activeCourse.count}
+                <span className="text-xs font-normal text-[var(--mute)] ml-0.5">std</span>
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-[var(--g5)] text-[var(--g1b)]"
+                style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+              >
+                {activeCourse.sharePct}%
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-[var(--mute)]">
+              <span>Total Cohort:</span>
+              <span className="text-base font-bold font-mono text-[var(--ink)] tabular-nums">
+                {totalStudents}
+              </span>
+              <span className="text-xs">std</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Interactive Bar Chart Area */}
+      <div className="relative h-44 w-full pt-4 pb-8 flex items-end">
+        {/* Dashed background guidelines */}
+        <div className="absolute inset-x-0 top-4 bottom-8 flex flex-col justify-between pointer-events-none">
+          <div className="border-b border-dashed border-[var(--border)] w-full relative">
+            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
+              {maxValue} std
+            </span>
+          </div>
+          <div className="border-b border-dashed border-[var(--border)] w-full relative">
+            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
+              {Math.max(1, Math.round(maxValue / 2))} std
+            </span>
+          </div>
+          <div className="border-b border-dashed border-[var(--border)] w-full relative">
+            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
+              0
+            </span>
+          </div>
+        </div>
+
+        {/* Bars */}
+        <div className="relative z-10 w-full h-full flex items-end justify-around gap-2 sm:gap-3 px-1">
+          {courses.map((item, index) => {
+            const heightPx = Math.max(22, Math.round((item.count / maxValue) * 105))
+            const isHovered = hoveredIndex === index
+            const isAnyHovered = hoveredIndex !== null
+            const isNeighbor =
+              hoveredIndex !== null && (index === hoveredIndex - 1 || index === hoveredIndex + 1)
+
+            return (
+              <div
+                key={item.name}
+                className="relative flex-1 flex flex-col items-center justify-end h-full"
+                onMouseEnter={() => setHoveredIndex(index)}
+              >
+                {/* Count badge on top of bar */}
+                <span
+                  className={cn(
+                    'text-[10px] font-bold font-mono mb-1.5 transition-all duration-300',
+                    isHovered ? 'text-[var(--g1b)] scale-110' : 'text-[var(--mute)]',
+                  )}
+                >
+                  {item.count}
+                </span>
+
+                {/* Pill-shaped Bar */}
+                <div
+                  className={cn(
+                    'w-full max-w-[34px] sm:max-w-[42px] rounded-full cursor-pointer transition-all duration-300 ease-out origin-bottom',
+                  )}
+                  style={{
+                    height: `${heightPx}px`,
+                    background: isHovered
+                      ? 'linear-gradient(180deg, var(--g1) 0%, var(--g1b) 100%)'
+                      : isNeighbor
+                        ? 'var(--g1)'
+                        : isAnyHovered
+                          ? 'var(--g1)'
+                          : 'linear-gradient(180deg, var(--g1) 0%, var(--g3) 100%)',
+                    opacity: isHovered ? 1 : isNeighbor ? 0.6 : isAnyHovered ? 0.2 : 0.85,
+                    boxShadow: isHovered ? '0 0 16px var(--g4)' : 'none',
+                    transform: isHovered
+                      ? 'scaleX(1.15) scaleY(1.03)'
+                      : isNeighbor
+                        ? 'scaleX(1.05)'
+                        : 'scaleX(1)',
+                  }}
+                />
+
+                {/* Label under bar */}
+                <span
+                  className={cn(
+                    'absolute -bottom-6 w-full text-[10px] font-medium text-center truncate transition-all duration-300 select-none',
+                    isHovered ? 'text-[var(--g1b)] font-bold' : 'text-[var(--mute)]',
+                  )}
+                  title={item.name}
+                >
+                  {item.shortName}
+                </span>
+
+                {/* Floating Tooltip */}
+                <div
+                  className={cn(
+                    'absolute -top-12 left-1/2 -translate-x-1/2 px-2.5 py-1.5 rounded-xl bg-[var(--card)] border border-[var(--border)] shadow-xl text-xs font-medium transition-all duration-200 whitespace-nowrap z-30 pointer-events-none flex flex-col items-center gap-0.5',
+                    isHovered
+                      ? 'opacity-100 translate-y-0 scale-100'
+                      : 'opacity-0 translate-y-2 scale-95 pointer-events-none',
+                  )}
+                >
+                  <span className="text-[11px] font-bold text-[var(--ink)]">{item.name}</span>
+                  <span className="text-[10px] text-[var(--g1b)] font-mono font-semibold">
+                    {item.count} std ({item.sharePct}%)
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Subtle glow effect on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[var(--g4)]/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+    </div>
+  )
+}
+
+type PaymentClearanceProps = {
+  collectionRate: number
+  fullyPaid: number
+  pending: number
+  totalStudents: number
+  totalPaid: number
+  outstanding: number
+}
+
+function PaymentClearanceChart({
+  collectionRate,
+  fullyPaid,
+  pending,
+  totalStudents,
+  totalPaid,
+  outstanding,
+}: PaymentClearanceProps) {
+  const [activeName, setActiveName] = useState<string | null>(null)
+
+  const data = useMemo(() => {
+    return [
+      {
+        name: 'Fully Cleared',
+        value: Math.max(0, fullyPaid),
+        count: fullyPaid,
+        pct: totalStudents ? Math.round((fullyPaid / totalStudents) * 100) : 0,
+        fill: 'var(--g1)',
+      },
+      {
+        name: 'Pending Dues',
+        value: Math.max(0, pending),
+        count: pending,
+        pct: totalStudents ? Math.round((pending / totalStudents) * 100) : 0,
+        fill: 'var(--g3)',
+      },
+    ]
+  }, [fullyPaid, pending, totalStudents])
+
+  const chartConfig = {
+    fullyCleared: { label: 'Fully Cleared', color: 'var(--g1)' },
+    pendingDues: { label: 'Pending Dues', color: 'var(--g3)' },
+  } satisfies ChartConfig
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-4 sm:p-5 items-center">
+      {/* Padded Donut Chart with Centered Clearance Ratio */}
+      <div className="md:col-span-5 relative flex items-center justify-center">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square max-h-[220px] w-full"
+        >
+          <PieChart>
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  indicator="dot"
+                  className="min-w-[10rem] p-3 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-xl"
+                  formatter={(value, name, item) => (
+                    <div className="flex w-full items-center justify-between gap-3 text-xs">
+                      <span className="text-[var(--mute)]">Students:</span>
+                      <span className="font-bold text-[var(--ink)] font-mono">
+                        {item.payload.count} ({item.payload.pct}%)
+                      </span>
+                    </div>
+                  )}
+                />
+              }
+            />
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={58}
+              outerRadius={85}
+              paddingAngle={6}
+              cornerRadius={8}
+              animationDuration={800}
+              onMouseLeave={() => setActiveName(null)}
+            >
+              {data.map((entry) => (
+                <Cell
+                  key={entry.name}
+                  fill={entry.fill}
+                  stroke="var(--card)"
+                  strokeWidth={2}
+                  style={{
+                    opacity: activeName === null || activeName === entry.name ? 1 : 0.35,
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={() => setActiveName(entry.name)}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+
+        {/* Center ratio label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-all duration-300">
+          <span className="text-2xl font-extrabold font-mono text-[var(--ink)] tracking-tight">
+            {activeName === 'Fully Cleared'
+              ? `${totalStudents ? Math.round((fullyPaid / totalStudents) * 100) : 0}%`
+              : activeName === 'Pending Dues'
+                ? `${totalStudents ? Math.round((pending / totalStudents) * 100) : 0}%`
+                : `${collectionRate}%`}
+          </span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--mute)] max-w-[100px] truncate text-center">
+            {activeName ? activeName : 'Settled'}
+          </span>
+        </div>
+      </div>
+
+      {/* Modern Status Cards Stack */}
+      <div className="md:col-span-7 flex flex-col gap-3">
+        {/* Card 1: Fully Cleared */}
+        <div
+          className={cn(
+            'p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer',
+            activeName === 'Fully Cleared'
+              ? 'border-[var(--g1)] bg-[var(--card)] shadow-lg scale-[1.02] -translate-y-0.5'
+              : activeName !== null
+                ? 'border-[var(--border)] bg-[var(--panel)]/40 opacity-40'
+                : 'border-[var(--border)] bg-[var(--panel)]/50 hover:bg-[var(--card)] hover:border-[var(--g5)]',
+          )}
+          onMouseEnter={() => setActiveName('Fully Cleared')}
+          onMouseLeave={() => setActiveName(null)}
+        >
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all',
+                  activeName === 'Fully Cleared'
+                    ? 'border-[var(--g1)] ring-2 ring-[var(--g1)]/30 text-[var(--g1)]'
+                    : 'border-[var(--g5)] text-[var(--g1)]',
+                )}
+                style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+              >
+                <CheckCircle2 size={16} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[var(--ink)]">Fully Cleared</h4>
+                <p className="text-[10px] text-[var(--mute)]">Ready for certificate</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span
+                className={cn(
+                  'text-base font-mono block transition-transform',
+                  activeName === 'Fully Cleared'
+                    ? 'font-extrabold text-[var(--ink)] scale-110'
+                    : 'font-bold text-[var(--ink)]',
+                )}
+              >
+                {fullyPaid}
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-all inline-block"
+                style={{
+                  background:
+                    activeName === 'Fully Cleared'
+                      ? 'var(--g1)'
+                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                  color: activeName === 'Fully Cleared' ? '#fff' : 'var(--g1b)',
+                  borderColor: activeName === 'Fully Cleared' ? 'var(--g1)' : 'var(--g5)',
+                }}
+              >
+                {totalStudents ? Math.round((fullyPaid / totalStudents) * 100) : 0}% cohort
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px] text-[var(--mute)]">
+            <span>Collected Fees</span>
+            <span
+              className={cn(
+                'font-mono font-bold transition-colors',
+                activeName === 'Fully Cleared' ? 'text-[var(--g1b)]' : 'text-[var(--ink)]',
+              )}
+            >
+              {money(totalPaid)}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 2: Pending Dues */}
+        <div
+          className={cn(
+            'p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer',
+            activeName === 'Pending Dues'
+              ? 'border-[var(--g1b)] bg-[var(--card)] shadow-lg scale-[1.02] -translate-y-0.5'
+              : activeName !== null
+                ? 'border-[var(--border)] bg-[var(--panel)]/40 opacity-40'
+                : 'border-[var(--border)] bg-[var(--panel)]/50 hover:bg-[var(--card)] hover:border-[var(--g5)]',
+          )}
+          onMouseEnter={() => setActiveName('Pending Dues')}
+          onMouseLeave={() => setActiveName(null)}
+        >
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all',
+                  activeName === 'Pending Dues'
+                    ? 'border-[var(--g1b)] ring-2 ring-[var(--g1b)]/30 text-[var(--g1b)]'
+                    : 'border-[var(--g5)] text-[var(--g1b)]',
+                )}
+                style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+              >
+                <Clock size={16} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[var(--ink)]">Pending Dues</h4>
+                <p className="text-[10px] text-[var(--mute)]">
+                  {money(outstanding)} due
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span
+                className={cn(
+                  'text-base font-mono block transition-transform',
+                  activeName === 'Pending Dues'
+                    ? 'font-extrabold text-[var(--ink)] scale-110'
+                    : 'font-bold text-[var(--ink)]',
+                )}
+              >
+                {pending}
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-all inline-block"
+                style={{
+                  background:
+                    activeName === 'Pending Dues'
+                      ? 'var(--g1b)'
+                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                  color: activeName === 'Pending Dues' ? '#fff' : 'var(--g1b)',
+                  borderColor: activeName === 'Pending Dues' ? 'var(--g1b)' : 'var(--g5)',
+                }}
+              >
+                {totalStudents ? Math.round((pending / totalStudents) * 100) : 0}% cohort
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px] text-[var(--mute)]">
+            <span>Receivable Balance</span>
+            <span
+              className={cn(
+                'font-mono font-bold transition-colors',
+                activeName === 'Pending Dues' ? 'text-[var(--g1b)]' : 'text-[var(--ink)]',
+              )}
+            >
+              {money(outstanding)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type GenderDemographicsProps = {
+  femaleStudents: Student[]
+  maleStudents: Student[]
+  otherStudents: Student[]
+  femalePct: number
+  malePct: number
+  otherPct: number
+}
+
+function GenderDemographicsChart({
+  femaleStudents,
+  maleStudents,
+  otherStudents,
+  femalePct,
+  malePct,
+  otherPct,
+}: GenderDemographicsProps) {
+  const [activeGender, setActiveGender] = useState<'Female' | 'Male' | 'Other' | null>(null)
+
+  const femaleAvg = femaleStudents.length
+    ? Math.round(femaleStudents.reduce((a, s) => a + s.total, 0) / femaleStudents.length)
+    : 0
+  const maleAvg = maleStudents.length
+    ? Math.round(maleStudents.reduce((a, s) => a + s.total, 0) / maleStudents.length)
+    : 0
+
+  const total = femaleStudents.length + maleStudents.length + otherStudents.length
+
+  if (total === 0) {
+    return <p className="empty-note">No demographic data in this period.</p>
+  }
+
+  return (
+    <div className="p-4 sm:p-5 flex flex-col gap-5">
+      {/* ── Partition Bar ── */}
+      <div className="w-full flex flex-col gap-2">
+        {/* Track with proportional pills forming a light-to-dark gradient strip */}
+        <div className="w-full flex items-center gap-1.5 h-3.5">
+          {femalePct > 0 && (
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-300 cursor-pointer',
+                activeGender === 'Female' ? 'ring-2 ring-[var(--g1)] shadow-md' : '',
+              )}
+              style={{
+                width: `${femalePct}%`,
+                background: 'linear-gradient(90deg, var(--g3) 0%, var(--g1) 100%)',
+                opacity: activeGender === null || activeGender === 'Female' ? 1 : 0.35,
+              }}
+              onMouseEnter={() => setActiveGender('Female')}
+              onMouseLeave={() => setActiveGender(null)}
+              title={`Female: ${femaleStudents.length} (${femalePct}%) — Light Theme Tone`}
+            />
+          )}
+          {malePct > 0 && (
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-300 cursor-pointer',
+                activeGender === 'Male' ? 'ring-2 ring-[var(--g1b)] shadow-md' : '',
+              )}
+              style={{
+                width: `${malePct}%`,
+                background: 'linear-gradient(90deg, var(--g1b) 0%, var(--g2b) 100%)',
+                opacity: activeGender === null || activeGender === 'Male' ? 1 : 0.35,
+              }}
+              onMouseEnter={() => setActiveGender('Male')}
+              onMouseLeave={() => setActiveGender(null)}
+              title={`Male: ${maleStudents.length} (${malePct}%) — Dark Theme Tone`}
+            />
+          )}
+          {otherPct > 0 && (
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-300 cursor-pointer',
+                activeGender === 'Other' ? 'ring-2 ring-[var(--g5)] shadow-md' : '',
+              )}
+              style={{
+                width: `${otherPct}%`,
+                background: 'var(--g5)',
+                opacity: activeGender === null || activeGender === 'Other' ? 1 : 0.35,
+              }}
+              onMouseEnter={() => setActiveGender('Other')}
+              onMouseLeave={() => setActiveGender(null)}
+              title={`Other: ${otherStudents.length} (${otherPct}%)`}
+            />
+          )}
+        </div>
+
+        {/* Partition Labels directly below bar */}
+        <div className="flex items-center justify-between text-xs text-[var(--mute)] px-0.5">
+          <div
+            className={cn(
+              'flex flex-col items-start transition-all duration-200 cursor-pointer',
+              activeGender === 'Female'
+                ? 'text-[var(--g1)] font-bold scale-105'
+                : activeGender !== null
+                  ? 'opacity-40'
+                  : '',
+            )}
+            onMouseEnter={() => setActiveGender('Female')}
+            onMouseLeave={() => setActiveGender(null)}
+          >
+            <span className="font-semibold text-xs text-[var(--ink)]">Female</span>
+            <span className="text-[11px] font-mono font-medium">
+              {femaleStudents.length} ({femalePct}%)
+            </span>
+          </div>
+
+          <div
+            className={cn(
+              'flex flex-col items-end transition-all duration-200 cursor-pointer',
+              activeGender === 'Male'
+                ? 'text-[var(--g1b)] font-bold scale-105'
+                : activeGender !== null
+                  ? 'opacity-40'
+                  : '',
+            )}
+            onMouseEnter={() => setActiveGender('Male')}
+            onMouseLeave={() => setActiveGender(null)}
+          >
+            <span className="font-semibold text-xs text-[var(--ink)]">Male</span>
+            <span className="text-[11px] font-mono font-medium">
+              {maleStudents.length} ({malePct}%)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Interactive Demographic Profile Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Female Card */}
+        <div
+          className={cn(
+            'p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2',
+            activeGender === 'Female'
+              ? 'border-[var(--g1)] bg-[var(--card)] shadow-lg scale-[1.02] -translate-y-0.5'
+              : activeGender !== null
+                ? 'border-[var(--border)] bg-[var(--panel)]/40 opacity-40'
+                : 'border-[var(--border)] bg-[var(--panel)]/50 hover:bg-[var(--card)] hover:border-[var(--g5)]',
+          )}
+          onMouseEnter={() => setActiveGender('Female')}
+          onMouseLeave={() => setActiveGender(null)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all',
+                  activeGender === 'Female'
+                    ? 'border-[var(--g1)] ring-2 ring-[var(--g1)]/30 text-[var(--g1)]'
+                    : 'border-[var(--g5)] text-[var(--g1)]',
+                )}
+                style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+              >
+                <User size={16} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[var(--ink)] block">Female</span>
+                <span className="text-[10px] text-[var(--mute)]">Cohort ratio</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span
+                className={cn(
+                  'text-base font-mono block transition-transform',
+                  activeGender === 'Female'
+                    ? 'font-extrabold text-[var(--ink)] scale-110'
+                    : 'font-bold text-[var(--ink)]',
+                )}
+              >
+                {femaleStudents.length}
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-all inline-block"
+                style={{
+                  background:
+                    activeGender === 'Female'
+                      ? 'var(--g1)'
+                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                  color: activeGender === 'Female' ? '#fff' : 'var(--g1b)',
+                  borderColor: activeGender === 'Female' ? 'var(--g1)' : 'var(--g5)',
+                }}
+              >
+                {femalePct}%
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px] text-[var(--mute)]">
+            <span>Avg Tuition</span>
+            <span
+              className={cn(
+                'font-mono font-bold transition-colors',
+                activeGender === 'Female' ? 'text-[var(--g1b)]' : 'text-[var(--ink)]',
+              )}
+            >
+              {money(femaleAvg)}
+            </span>
+          </div>
+        </div>
+
+        {/* Male Card */}
+        <div
+          className={cn(
+            'p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2',
+            activeGender === 'Male'
+              ? 'border-[var(--g1)] bg-[var(--card)] shadow-lg scale-[1.02] -translate-y-0.5'
+              : activeGender !== null
+                ? 'border-[var(--border)] bg-[var(--panel)]/40 opacity-40'
+                : 'border-[var(--border)] bg-[var(--panel)]/50 hover:bg-[var(--card)] hover:border-[var(--g5)]',
+          )}
+          onMouseEnter={() => setActiveGender('Male')}
+          onMouseLeave={() => setActiveGender(null)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all',
+                  activeGender === 'Male'
+                    ? 'border-[var(--g1)] ring-2 ring-[var(--g1)]/30 text-[var(--g1)]'
+                    : 'border-[var(--g5)] text-[var(--g1)]',
+                )}
+                style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
+              >
+                <User size={16} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[var(--ink)] block">Male</span>
+                <span className="text-[10px] text-[var(--mute)]">Cohort ratio</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span
+                className={cn(
+                  'text-base font-mono block transition-transform',
+                  activeGender === 'Male'
+                    ? 'font-extrabold text-[var(--ink)] scale-110'
+                    : 'font-bold text-[var(--ink)]',
+                )}
+              >
+                {maleStudents.length}
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-all inline-block"
+                style={{
+                  background:
+                    activeGender === 'Male'
+                      ? 'var(--g1)'
+                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                  color: activeGender === 'Male' ? '#fff' : 'var(--g1b)',
+                  borderColor: activeGender === 'Male' ? 'var(--g1)' : 'var(--g5)',
+                }}
+              >
+                {malePct}%
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px] text-[var(--mute)]">
+            <span>Avg Tuition</span>
+            <span
+              className={cn(
+                'font-mono font-bold transition-colors',
+                activeGender === 'Male' ? 'text-[var(--g1b)]' : 'text-[var(--ink)]',
+              )}
+            >
+              {money(maleAvg)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type PaymentMethodTotalsProps = {
+  paymentChartData: Array<{
+    key: string
+    method: string
+    amount: number
+    count: number
+    fill: string
+  }>
+  paymentChartConfig: ChartConfig
+  revenue: number
+}
+
+function PaymentMethodTotalsChart({
+  paymentChartData,
+  paymentChartConfig,
+  revenue,
+}: PaymentMethodTotalsProps) {
+  const [activeMethod, setActiveMethod] = useState<string | null>(null)
+
+  const activeItem = activeMethod
+    ? paymentChartData.find((item) => item.method === activeMethod)
+    : null
+
+  if (paymentChartData.length === 0) {
+    return <p className="empty-note">No payments recorded in selected period.</p>
+  }
+
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-2 sm:p-4">
+      {/* Donut Chart */}
+      <div className="w-full md:w-1/2 flex items-center justify-center">
+        <ChartContainer
+          config={paymentChartConfig}
+          className="mx-auto aspect-square max-h-[280px] min-h-[220px] w-full max-w-[280px]"
+        >
+          <PieChart onMouseLeave={() => setActiveMethod(null)}>
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  className="min-w-[12rem] p-3 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-xl"
+                  formatter={(value, name, item) => (
+                    <div className="flex w-full items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{ background: item.payload?.fill || 'var(--g1)' }}
+                        />
+                        <span className="font-semibold text-[var(--ink)]">
+                          {item.payload?.method || name}
+                        </span>
+                        <span className="text-[10px] text-[var(--mute)]">
+                          ({item.payload?.count ?? 1} tx)
+                        </span>
+                      </div>
+                      <span className="font-bold text-[var(--ink)] font-mono">
+                        {money(Number(value))}
+                      </span>
+                    </div>
+                  )}
+                />
+              }
+            />
+            <Pie
+              data={paymentChartData}
+              dataKey="amount"
+              nameKey="method"
+              innerRadius={65}
+              outerRadius={95}
+              paddingAngle={4}
+              cornerRadius={8}
+              strokeWidth={2}
+              stroke="var(--card)"
+              animationDuration={800}
+              onMouseLeave={() => setActiveMethod(null)}
+            >
+              {paymentChartData.map((entry) => {
+                const isHovered = activeMethod === entry.method
+                const isAnyHovered = activeMethod !== null
+
+                return (
+                  <Cell
+                    key={entry.method}
+                    fill={entry.fill}
+                    stroke="var(--card)"
+                    strokeWidth={isHovered ? 3 : 2}
+                    style={{
+                      opacity: isAnyHovered ? (isHovered ? 1 : 0.35) : 1,
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={() => setActiveMethod(entry.method)}
+                  />
+                )
+              })}
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) - 2}
+                          className="fill-[var(--ink)] text-xl sm:text-2xl font-bold font-mono tracking-tight"
+                        >
+                          {activeItem ? money(activeItem.amount) : money(revenue)}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 20}
+                          className="fill-[var(--mute)] text-xs font-semibold uppercase tracking-wider"
+                        >
+                          {activeItem
+                            ? `${activeItem.method} (${revenue > 0 ? Math.round((activeItem.amount / revenue) * 100) : 0}%)`
+                            : 'Collected'}
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      </div>
+
+      {/* Options List with Interactive Synchronized Hover */}
+      <div className="w-full md:w-1/2 flex flex-col gap-2.5">
+        {paymentChartData.map((item) => {
+          const isHovered = activeMethod === item.method
+          const isAnyHovered = activeMethod !== null
+          const pct = revenue > 0 ? Math.round((item.amount / revenue) * 100) : 0
+
+          return (
+            <div
+              key={item.method}
+              onMouseEnter={() => setActiveMethod(item.method)}
+              onMouseLeave={() => setActiveMethod(null)}
+              className={cn(
+                'flex items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all duration-300 cursor-pointer',
+                isHovered
+                  ? 'bg-[var(--card)] shadow-lg scale-[1.02] -translate-y-0.5'
+                  : isAnyHovered
+                    ? 'bg-[var(--panel)]/40 border-[var(--border)] opacity-40'
+                    : 'bg-[var(--panel)] border-[var(--border)] hover:bg-[var(--card)]',
+              )}
+              style={{
+                borderColor: isHovered ? item.fill : undefined,
+                boxShadow: isHovered ? `0 4px 18px -2px ${item.fill}40` : undefined,
+              }}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className={cn(
+                    'rounded-full shrink-0 transition-all duration-300',
+                    isHovered ? 'w-3 h-3 ring-4 ring-[var(--g4)]' : 'w-2.5 h-2.5',
+                  )}
+                  style={{ background: item.fill }}
+                />
+                <strong
+                  className={cn(
+                    'text-xs transition-colors truncate',
+                    isHovered ? 'text-[var(--ink)] font-bold' : 'text-[var(--ink)] font-semibold',
+                  )}
+                >
+                  {item.method}
+                </strong>
+                <span className="text-[10px] text-[var(--mute)] shrink-0 font-medium font-mono">
+                  ({item.count} tx)
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-bold font-mono text-[var(--ink)]">
+                  {money(item.amount)}
+                </span>
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all"
+                  style={{
+                    background: isHovered
+                      ? item.fill
+                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                    color: isHovered ? '#fff' : 'var(--g1b)',
+                    borderColor: isHovered ? item.fill : 'var(--g5)',
+                  }}
+                >
+                  {pct}%
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 export function ReportsView({
@@ -191,6 +1156,26 @@ export function ReportsView({
     )
   }, [students])
 
+  const radarChartData = useMemo(() => {
+    return Object.entries(studentSourceCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([channel, count]) => {
+        const pct = students.length ? Math.round((count / students.length) * 100) : 0
+        return {
+          channel,
+          students: count,
+          sharePct: pct,
+        }
+      })
+  }, [studentSourceCounts, students.length])
+
+  const radarChartConfig = {
+    students: {
+      label: 'Students',
+      color: 'var(--g1)',
+    },
+  } satisfies ChartConfig
+
   const courseCounts = useMemo(() => {
     return students.reduce(
       (acc, s) => {
@@ -223,6 +1208,25 @@ export function ReportsView({
     })
   }, [timelineMap])
 
+  const velocityChartData = useMemo(() => {
+    return timelineEntries.map(([date, amount]) => {
+      const parts = date.split(' ')
+      const shortDate = parts.length >= 2 ? `${parts[0]} ${parts[1]}` : date
+      return {
+        date: shortDate,
+        fullDate: date,
+        amount,
+      }
+    })
+  }, [timelineEntries])
+
+  const velocityChartConfig = {
+    amount: {
+      label: 'Inflow',
+      color: 'var(--g1)',
+    },
+  } satisfies ChartConfig
+
   const download = () => {
     const rows = [
       ['Student', 'Register ID', 'Course', 'Total Fees', 'Paid', 'Balance', 'Status', 'Source'],
@@ -246,40 +1250,56 @@ export function ReportsView({
     URL.revokeObjectURL(url)
   }
 
-  const methodColors: Record<string, string> = {
-    UPI: '#6366f1',
-    'Bank Transfer': '#0ea5e9',
-    Cash: '#10b981',
-    Card: '#f59e0b',
-    Cheque: '#ec4899',
-  }
+  const themeGradientFills = [
+    'var(--g1)',
+    'var(--g2)',
+    'var(--g3)',
+    'var(--g1b)',
+    'var(--g2b)',
+    'var(--g5)',
+  ]
 
-  const donutCircumference = 2 * Math.PI * 46 // radius 46 -> ~289
-  const methodSlices = useMemo(() => {
-    let runPct = 0
-    return Object.entries(methods).map(([method, amount]) => {
-      const pct = revenue > 0 ? (amount / revenue) * 100 : 0
-      const offset = -((runPct / 100) * donutCircumference)
-      runPct += pct
-      const strokeDasharray = `${(pct / 100) * donutCircumference} ${donutCircumference}`
-      return {
-        method,
-        amount,
-        pct,
-        offset,
-        strokeDasharray,
-        color: methodColors[method] || '#8b5cf6',
+  const paymentChartData = useMemo(() => {
+    return Object.entries(methods)
+      .sort((a, b) => b[1] - a[1])
+      .map(([method, amount], idx) => {
+        const key = method.toLowerCase().replace(/[^a-z0-9]/g, '_')
+        const fill = themeGradientFills[idx % themeGradientFills.length]
+        return {
+          key,
+          method,
+          amount,
+          count: methodCounts[method] || 1,
+          fill,
+        }
+      })
+  }, [methods, methodCounts])
+
+  const paymentChartConfig = useMemo(() => {
+    const cfg: ChartConfig = {
+      amount: {
+        label: 'Revenue (₹)',
+      },
+    }
+    paymentChartData.forEach((item) => {
+      cfg[item.key] = {
+        label: item.method,
+        color: item.fill,
       }
     })
-  }, [methods, revenue, donutCircumference])
+    return cfg
+  }, [paymentChartData])
 
   const sourceIcons: Record<string, typeof Globe> = {
     Website: Globe,
     'Social Media': Share2,
     'Campus Drive': Building,
+    'Campus Seminar': Building,
     'Walk-in': Footprints,
     'Direct Walk-in': Footprints,
     Reference: Users,
+    'Friend Referral': Users,
+    'Online Advertisement': Megaphone,
     Alumni: Users,
   }
 
@@ -398,9 +1418,6 @@ export function ReportsView({
                 Enrollment volume, total tuition value, and fee realization by duration tier
               </p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
-              {categoryStats.length} Categories Configured
-            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -494,301 +1511,175 @@ export function ReportsView({
               <h2>Payment method totals</h2>
               <p>Revenue distribution by payment channel (selected period)</p>
             </div>
-            <span className="chart-badge chart-badge-blue">
-              <PieChart size={12} />
-              Donut Breakdown
-            </span>
           </div>
 
-          {Object.keys(methods).length === 0 ? (
-            <p className="empty-note">No payments recorded in selected period.</p>
-          ) : (
-            <div className="donut-chart-container">
-              <div className="donut-svg-box">
-                <svg viewBox="0 0 120 120">
-                  {/* Background track */}
-                  <circle cx="60" cy="60" r="46" fill="transparent" stroke="#f1f5f9" strokeWidth="14" />
-                  {/* Data segments */}
-                  {methodSlices.map((slice) => (
-                    <circle
-                      key={slice.method}
-                      cx="60"
-                      cy="60"
-                      r="46"
-                      fill="transparent"
-                      stroke={slice.color}
-                      strokeWidth="14"
-                      strokeDasharray={slice.strokeDasharray}
-                      strokeDashoffset={slice.offset}
-                      strokeLinecap="round"
-                      className="transition-all duration-500 ease-out hover:opacity-85 cursor-pointer"
-                    />
-                  ))}
-                </svg>
-                <div className="donut-center-info">
-                  <span className="donut-center-value">{money(revenue)}</span>
-                  <span className="donut-center-label">Collected</span>
-                </div>
-              </div>
-
-              <div className="donut-details-list">
-                {Object.entries(methods).map(([method, amount]) => {
-                  const pct = revenue > 0 ? Math.round((amount / revenue) * 100) : 0
-                  const count = methodCounts[method] || 1
-                  const color = methodColors[method] || '#8b5cf6'
-
-                  return (
-                    <div className="donut-detail-item" key={method}>
-                      <div className="flex items-center gap-2">
-                        <span className="donut-color-dot" style={{ background: color }} />
-                        <strong className="text-slate-800">{method}</strong>
-                        <span className="text-[10px] text-slate-400">({count} tx)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-700">{money(amount)}</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                          {pct}%
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <PaymentMethodTotalsChart
+            paymentChartData={paymentChartData}
+            paymentChartConfig={paymentChartConfig}
+            revenue={revenue}
+          />
         </section>
 
-        {/* ── GRAPH 2: Enrollment by Course (Vertical Column Bar Chart) ── */}
+        {/* ── GRAPH 2: Enrollment by Course (Interactive Density Bar Chart) ── */}
         <section className="panel report-side">
           <div className="panel-header chart-panel-header">
             <div>
               <h2>Enrollment by course</h2>
               <p>Student density across active training programs</p>
             </div>
-            <span className="chart-badge chart-badge-purple">
-              <BarChart3 size={12} />
-              {Object.keys(courseCounts).length} Courses
-            </span>
           </div>
 
-          <div className="col-chart-container">
-            {/* Dashed guidelines */}
-            <div className="col-chart-guidelines">
-              <div className="col-chart-line">
-                <span>{maxCourseCount} std</span>
-              </div>
-              <div className="col-chart-line">
-                <span>{Math.ceil(maxCourseCount / 2)} std</span>
-              </div>
-              <div className="col-chart-line">
-                <span>0</span>
-              </div>
-            </div>
-
-            {/* Vertical column bars */}
-            <div className="col-chart-bars-wrap">
-              {Object.entries(courseCounts).map(([course, count]) => {
-                const heightPercent = Math.max(18, Math.round((count / maxCourseCount) * 82))
-                const sharePct = students.length ? Math.round((count / students.length) * 100) : 0
-
-                return (
-                  <div className="col-pillar-col" key={course} title={`${course}: ${count} students (${sharePct}%)`}>
-                    <span className="col-pillar-count">{count}</span>
-                    <div className="col-pillar-bar" style={{ height: `${heightPercent}%` }} />
-                    <span className="col-pillar-label">{course.replace(' Course', '').replace('ThoorigAI ', '')}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          <CourseEnrollmentChart courseCounts={courseCounts} totalStudents={students.length} />
         </section>
 
-        {/* ── GRAPH 3: Acquisition Channels (Marketing Flow Cards) ── */}
+        {/* ── GRAPH 3: Acquisition Channels (Radar Chart) ── */}
         <section className="panel report-main">
           <div className="panel-header chart-panel-header">
             <div>
               <h2>Acquisition channels</h2>
               <p>How registered students discovered the institute</p>
             </div>
-            <span className="chart-badge chart-badge-green">
-              <Globe size={12} />
-              Marketing Flow
-            </span>
           </div>
 
-          <div className="channel-cards-list">
-            {Object.entries(studentSourceCounts)
-              .sort((a, b) => b[1] - a[1])
-              .map(([src, count], idx) => {
-                const pct = students.length ? Math.round((count / students.length) * 100) : 0
-                const IconComponent = sourceIcons[src] || Compass
-                const gradients = [
-                  'linear-gradient(90deg, #6366f1, #818cf8)',
-                  'linear-gradient(90deg, #0ea5e9, #38bdf8)',
-                  'linear-gradient(90deg, #10b981, #34d399)',
-                  'linear-gradient(90deg, #f59e0b, #fbbf24)',
-                  'linear-gradient(90deg, #ec4899, #f472b6)',
-                ]
-                const barGradient = gradients[idx % gradients.length]
-
-                return (
-                  <div className="channel-card-item" key={src}>
-                    <div className="channel-card-meta">
-                      <div className="channel-icon-tag">
-                        <div className="channel-icon-pill bg-slate-100 text-slate-700">
-                          <IconComponent size={14} />
-                        </div>
-                        <span>{src}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-slate-700">{count} students</span>
-                        <span className="channel-count-pill bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
-                          {pct}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="channel-track">
-                      <div className="channel-fill" style={{ width: `${pct}%`, background: barGradient }} />
-                    </div>
-                  </div>
-                )
-              })}
-          </div>
+          {radarChartData.length === 0 ? (
+            <p className="empty-note">No acquisition source data in this period.</p>
+          ) : (
+            <div className="p-4 sm:p-6 flex flex-col items-center justify-center">
+              <ChartContainer
+                config={radarChartConfig}
+                className="mx-auto aspect-square max-h-[320px] w-full max-w-[440px]"
+              >
+                <RadarChart data={radarChartData} outerRadius="70%">
+                  <ChartTooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        indicator="dot"
+                        className="min-w-[10rem] p-3 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-xl"
+                        formatter={(value, name, item) => (
+                          <div className="flex w-full items-center justify-between gap-3 text-xs">
+                            <span className="text-[var(--mute)]">Students:</span>
+                            <span className="font-bold text-[var(--ink)] font-mono">
+                              {value} ({item.payload.sharePct}%)
+                            </span>
+                          </div>
+                        )}
+                      />
+                    }
+                  />
+                  <PolarAngleAxis
+                    dataKey="channel"
+                    tick={{ fill: 'var(--ink)', fontSize: 11, fontWeight: 600 }}
+                  />
+                  <PolarGrid stroke="var(--mute)" strokeOpacity={0.35} strokeWidth={1.2} />
+                  <Radar
+                    name="Students"
+                    dataKey="students"
+                    stroke="var(--g1)"
+                    strokeWidth={2.5}
+                    fill="var(--g1)"
+                    fillOpacity={0.35}
+                    dot={{ fill: 'var(--card)', stroke: 'var(--g1)', strokeWidth: 2, r: 4 }}
+                    activeDot={{ fill: 'var(--g1)', stroke: 'var(--card)', strokeWidth: 2, r: 6 }}
+                  />
+                </RadarChart>
+              </ChartContainer>
+            </div>
+          )}
         </section>
 
-        {/* ── GRAPH 4: Payment Cash Flow Velocity (Vertical SVG Area Chart) ── */}
+        {/* ── GRAPH 4: Payment Cash Flow Velocity (Recharts Area Chart) ── */}
         <section className="panel report-side">
           <div className="panel-header chart-panel-header">
             <div>
               <h2>Payment cash flow velocity</h2>
               <p>Transaction inflow pattern across selected period</p>
             </div>
-            <span className="chart-badge chart-badge-green">
-              <Activity size={12} />
-              {filteredPayments.length} Transactions
-            </span>
           </div>
 
-          {timelineEntries.length === 0 ? (
+          {velocityChartData.length === 0 ? (
             <p className="empty-note">No payment velocity data in this period.</p>
           ) : (
-            <div className="timeline-chart-wrap">
-              {(() => {
-                const maxTimelineAmount = Math.max(...timelineEntries.map((e) => e[1]), 1000)
-                const count = timelineEntries.length
-                const width = 520
-                const height = 180
-                const paddingX = 35
-                const paddingTop = 32
-                const paddingBottom = 26
-                const graphHeight = height - paddingTop - paddingBottom
+            <div className="p-3 sm:p-5 flex flex-col gap-3">
+              <ChartContainer
+                config={velocityChartConfig}
+                className="aspect-auto h-[240px] w-full"
+              >
+                <AreaChart
+                  data={velocityChartData}
+                  margin={{ top: 12, right: 16, left: 10, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="velocityFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--g1)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--g1)" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="var(--border)"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fill: 'var(--mute)', fontSize: 11 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={6}
+                    width={75}
+                    tick={{ fill: 'var(--mute)', fontSize: 10 }}
+                    tickFormatter={(val) => money(Number(val))}
+                  />
+                  <ChartTooltip
+                    cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
+                    content={
+                      <ChartTooltipContent
+                        indicator="dot"
+                        className="min-w-[10rem] p-3 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-xl"
+                        formatter={(value) => (
+                          <div className="flex w-full items-center justify-between gap-3 text-xs">
+                            <span className="text-[var(--mute)]">Inflow:</span>
+                            <span className="font-bold text-[var(--ink)] font-mono">
+                              {money(Number(value))}
+                            </span>
+                          </div>
+                        )}
+                        labelFormatter={(_, payload) => (
+                          <span className="font-semibold text-xs text-[var(--ink)]">
+                            {payload?.[0]?.payload?.fullDate || ''}
+                          </span>
+                        )}
+                      />
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="var(--g1)"
+                    strokeWidth={2.5}
+                    fill="url(#velocityFill)"
+                    dot={{ fill: 'var(--card)', stroke: 'var(--g1)', strokeWidth: 2, r: 3.5 }}
+                    activeDot={{ fill: 'var(--g1)', stroke: 'var(--card)', strokeWidth: 2, r: 5.5 }}
+                  />
+                </AreaChart>
+              </ChartContainer>
 
-                // Generate coordinates with safe headroom
-                const points = timelineEntries.map((entry, idx) => {
-                  const x = count === 1 ? width / 2 : paddingX + (idx / (count - 1)) * (width - 2 * paddingX)
-                  const y = height - paddingBottom - (entry[1] / maxTimelineAmount) * graphHeight
-                  return { x, y, date: entry[0], amount: entry[1] }
-                })
-
-                const baselineY = height - paddingBottom
-
-                const linePath =
-                  points.length === 1
-                    ? `M ${points[0].x - 50} ${points[0].y} L ${points[0].x + 50} ${points[0].y}`
-                    : points.reduce((acc, p, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, '')
-
-                const areaPath =
-                  points.length === 1
-                    ? `M ${points[0].x - 50} ${baselineY} L ${points[0].x - 50} ${points[0].y} L ${points[0].x + 50} ${points[0].y} L ${points[0].x + 50} ${baselineY} Z`
-                    : `${linePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`
-
-                return (
-                  <>
-                    <div className="timeline-svg-container">
-                      <svg viewBox={`0 0 ${width} ${height}`}>
-                        <defs>
-                          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.32" />
-                            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
-                          </linearGradient>
-                        </defs>
-
-                        {/* Guidelines */}
-                        <line
-                          x1={paddingX}
-                          y1={paddingTop}
-                          x2={width - paddingX}
-                          y2={paddingTop}
-                          stroke="#e2e8f0"
-                          strokeDasharray="3 3"
-                          strokeWidth="1"
-                        />
-                        <text x={width - paddingX} y={paddingTop - 4} fontSize="8.5" fill="#94a3b8" textAnchor="end">
-                          {money(maxTimelineAmount)}
-                        </text>
-
-                        <line
-                          x1={paddingX}
-                          y1={paddingTop + graphHeight / 2}
-                          x2={width - paddingX}
-                          y2={paddingTop + graphHeight / 2}
-                          stroke="#f1f5f9"
-                          strokeDasharray="3 3"
-                          strokeWidth="1"
-                        />
-
-                        {/* Baseline */}
-                        <line
-                          x1={paddingX}
-                          y1={baselineY}
-                          x2={width - paddingX}
-                          y2={baselineY}
-                          stroke="#cbd5e1"
-                          strokeWidth="1"
-                        />
-
-                        {/* Area fill */}
-                        <path d={areaPath} fill="url(#areaGradient)" />
-
-                        {/* Line stroke */}
-                        <path d={linePath} fill="none" stroke="#4f46e5" strokeWidth="2.5" strokeLinecap="round" />
-
-                        {/* Dots & Labels */}
-                        {points.map((pt, i) => (
-                          <g key={i} className="cursor-pointer">
-                            <circle cx={pt.x} cy={pt.y} r="4.5" fill="#ffffff" stroke="#4f46e5" strokeWidth="2.5" />
-                            <text
-                              x={pt.x}
-                              y={pt.y - 10}
-                              fontSize="9"
-                              fontWeight="700"
-                              fill="#3730a3"
-                              textAnchor="middle"
-                            >
-                              {money(pt.amount)}
-                            </text>
-                            <text x={pt.x} y={height - 8} fontSize="8.5" fill="#64748b" textAnchor="middle">
-                              {pt.date.split(' ').slice(0, 2).join(' ')}
-                            </text>
-                          </g>
-                        ))}
-                      </svg>
-                    </div>
-
-                    <div className="timeline-meta-bar">
-                      <span>
-                        Period Inflow: <strong>{money(revenue)}</strong>
-                      </span>
-                      <span>
-                        Avg Transaction:{' '}
-                        <strong>
-                          {money(filteredPayments.length ? Math.round(revenue / filteredPayments.length) : 0)}
-                        </strong>
-                      </span>
-                    </div>
-                  </>
-                )
-              })()}
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--border)] text-xs text-[var(--mute)]">
+                <span>
+                  Period Inflow: <strong className="text-[var(--ink)] font-mono">{money(revenue)}</strong>
+                </span>
+                <span>
+                  Avg Transaction:{' '}
+                  <strong className="text-[var(--ink)] font-mono">
+                    {money(filteredPayments.length ? Math.round(revenue / filteredPayments.length) : 0)}
+                  </strong>
+                </span>
+              </div>
             </div>
           )}
         </section>
@@ -800,69 +1691,16 @@ export function ReportsView({
               <h2>Payment clearance status</h2>
               <p>Clearance ratio & active balances</p>
             </div>
-            <span className="chart-badge chart-badge-amber">
-              <ShieldCheck size={12} />
-              Health
-            </span>
           </div>
 
-          <div className="status-gauge-wrap">
-            <div className="status-radial-circle">
-              <svg viewBox="0 0 90 90">
-                <circle cx="45" cy="45" r="35" fill="transparent" stroke="#f1f5f9" strokeWidth="9" />
-                {/* Paid portion */}
-                <circle
-                  cx="45"
-                  cy="45"
-                  r="35"
-                  fill="transparent"
-                  stroke="#10b981"
-                  strokeWidth="9"
-                  strokeDasharray={`${(collectionRate / 100) * (2 * Math.PI * 35)} ${2 * Math.PI * 35}`}
-                  strokeLinecap="round"
-                  className="transition-all duration-700"
-                />
-              </svg>
-              <div className="donut-center-info">
-                <span className="text-sm font-bold text-emerald-600">{collectionRate}%</span>
-                <span className="text-[8px] uppercase tracking-wider text-slate-400">Settled</span>
-              </div>
-            </div>
-
-            <div className="status-cards-stack">
-              <div className="status-metric-card status-card-paid">
-                <div>
-                  <div className="status-card-title flex items-center gap-1.5">
-                    <CheckCircle2 size={12} />
-                    Fully Cleared
-                  </div>
-                  <div className="text-[10px] text-slate-500">Ready for certificate</div>
-                </div>
-                <div className="text-right">
-                  <div className="status-card-num">{fullyPaid}</div>
-                  <span className="text-[9px] text-emerald-700 font-semibold">
-                    {students.length ? Math.round((fullyPaid / students.length) * 100) : 0}% cohort
-                  </span>
-                </div>
-              </div>
-
-              <div className="status-metric-card status-card-pending">
-                <div>
-                  <div className="status-card-title flex items-center gap-1.5">
-                    <Clock size={12} />
-                    Pending Dues
-                  </div>
-                  <div className="text-[10px] text-slate-500">{money(outstanding)} due</div>
-                </div>
-                <div className="text-right">
-                  <div className="status-card-num">{pending}</div>
-                  <span className="text-[9px] text-amber-700 font-semibold">
-                    {students.length ? Math.round((pending / students.length) * 100) : 0}% cohort
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PaymentClearanceChart
+            collectionRate={collectionRate}
+            fullyPaid={fullyPaid}
+            pending={pending}
+            totalStudents={students.length}
+            totalPaid={totalPaid}
+            outstanding={outstanding}
+          />
         </section>
 
         {/* ── GRAPH 6: Gender Demographics ── */}
@@ -872,79 +1710,16 @@ export function ReportsView({
               <h2>Gender demographics</h2>
               <p>Cohort gender distribution & representation</p>
             </div>
-            <span className="chart-badge chart-badge-blue">
-              <Users size={12} />
-              Ratio {femaleStudents.length}:{maleStudents.length}
-            </span>
           </div>
 
-          <div className="demographics-wrap">
-            {/* Segmented ratio bar */}
-            <div className="demographics-ratio-track">
-              {femalePct > 0 && (
-                <div
-                  className="demographics-segment-female"
-                  style={{ width: `${femalePct}%` }}
-                  title={`Female: ${femaleStudents.length} (${femalePct}%)`}
-                />
-              )}
-              {malePct > 0 && (
-                <div
-                  className="demographics-segment-male"
-                  style={{ width: `${malePct}%` }}
-                  title={`Male: ${maleStudents.length} (${malePct}%)`}
-                />
-              )}
-              {otherPct > 0 && (
-                <div
-                  className="demographics-segment-other"
-                  style={{ width: `${otherPct}%` }}
-                  title={`Other: ${otherStudents.length} (${otherPct}%)`}
-                />
-              )}
-            </div>
-
-            {/* Profile cards */}
-            <div className="demographics-cards-grid">
-              <div className="demo-card-item">
-                <div className="demo-icon-box demo-female-box">
-                  <User size={16} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-slate-500">Female</div>
-                  <div className="text-base font-bold text-slate-800 leading-tight">
-                    {femaleStudents.length} <span className="text-xs text-pink-600 font-semibold">({femalePct}%)</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
-                    Avg:{' '}
-                    {money(
-                      femaleStudents.length
-                        ? femaleStudents.reduce((a, s) => a + s.total, 0) / femaleStudents.length
-                        : 0,
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="demo-card-item">
-                <div className="demo-icon-box demo-male-box">
-                  <User size={16} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-slate-500">Male</div>
-                  <div className="text-base font-bold text-slate-800 leading-tight">
-                    {maleStudents.length} <span className="text-xs text-blue-600 font-semibold">({malePct}%)</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
-                    Avg:{' '}
-                    {money(
-                      maleStudents.length ? maleStudents.reduce((a, s) => a + s.total, 0) / maleStudents.length : 0,
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GenderDemographicsChart
+            femaleStudents={femaleStudents}
+            maleStudents={maleStudents}
+            otherStudents={otherStudents}
+            femalePct={femalePct}
+            malePct={malePct}
+            otherPct={otherPct}
+          />
         </section>
       </div>
 

@@ -78,7 +78,7 @@ function getSkillDomain(name: string): DomainMeta {
     return {
       category: 'ai_data',
       label: 'AI & Data Science',
-      tagVariant: 'warning',
+      tagVariant: 'accent',
       icon: Cpu,
     }
   }
@@ -96,7 +96,7 @@ function getSkillDomain(name: string): DomainMeta {
     return {
       category: 'cloud_devops',
       label: 'Cloud & DevOps',
-      tagVariant: 'success',
+      tagVariant: 'accent',
       icon: Terminal,
     }
   }
@@ -350,16 +350,17 @@ export function SkillTagsManager({
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-xs text-[#b53c37] flex items-center justify-between gap-2"
+          className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] flex items-center justify-between gap-2 shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
           <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="text-[#b53c37] shrink-0" />
+            <AlertCircle size={16} className="text-[var(--g1)] shrink-0" />
             <span className="font-medium">{error}</span>
           </div>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="p-1 text-[#b53c37] hover:opacity-75 rounded transition-opacity cursor-pointer"
+            className="p-1 text-[var(--g1)] hover:opacity-75 rounded transition-opacity cursor-pointer"
           >
             <X size={14} />
           </button>
@@ -369,16 +370,17 @@ export function SkillTagsManager({
       {success && (
         <div
           role="status"
-          className="p-3.5 rounded-2xl bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-xs text-[#1b7a4b] flex items-center justify-between gap-2"
+          className="p-3.5 rounded-2xl border border-[var(--g5)] text-xs text-[var(--g1b)] flex items-center justify-between gap-2 shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-[#1b7a4b] shrink-0" />
+            <CheckCircle2 size={16} className="text-[var(--g1)] shrink-0" />
             <span className="font-medium">{success}</span>
           </div>
           <button
             type="button"
             onClick={() => setSuccess(null)}
-            className="p-1 text-[#1b7a4b] hover:opacity-75 rounded transition-opacity cursor-pointer"
+            className="p-1 text-[var(--g1)] hover:opacity-75 rounded transition-opacity cursor-pointer"
           >
             <X size={14} />
           </button>
@@ -616,7 +618,7 @@ export function SkillTagsManager({
                             type="button"
                             onClick={() => handleSaveEdit(skill.id)}
                             disabled={loading || !editingName.trim()}
-                            className="p-1.5 text-[#1b7a4b] hover:bg-[var(--panel)] rounded-full transition-colors cursor-pointer"
+                            className="p-1.5 text-[var(--g1)] hover:bg-[var(--panel)] rounded-full transition-colors cursor-pointer"
                             title="Save changes (Enter)"
                           >
                             <Check size={14} />
@@ -671,7 +673,7 @@ export function SkillTagsManager({
 
       {/* VIEW: TABLE MODE */}
       {viewMode === 'table' && (
-        <div className="rounded-[26px] border border-[var(--border)] bg-[var(--card)] overflow-hidden shadow-xs">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-semibold uppercase tracking-wider text-[11px]">
@@ -738,7 +740,7 @@ export function SkillTagsManager({
                               type="button"
                               onClick={() => handleSaveEdit(skill.id)}
                               disabled={loading || !editingName.trim()}
-                              className="p-1.5 text-[#1b7a4b] hover:bg-[var(--panel)] rounded-full transition-colors cursor-pointer"
+                              className="p-1.5 text-[var(--g1)] hover:bg-[var(--panel)] rounded-full transition-colors cursor-pointer"
                               title="Save"
                             >
                               <Check size={14} />

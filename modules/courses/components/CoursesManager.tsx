@@ -462,7 +462,7 @@ export function CoursesManager({
         </div>
 
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto" role="region" aria-label="Course list" tabIndex={0}>
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs overflow-hidden" role="region" aria-label="Course list" tabIndex={0}>
             <table className="w-full text-left text-xs" style={{ whiteSpace: 'normal' }}>
               <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
                 <tr>

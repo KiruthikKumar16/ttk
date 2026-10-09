@@ -361,7 +361,7 @@ export function StaffReportsView({
 
       {/* Tab 1: Attendance Logs Table */}
       {activeTab === 'attendance' && (
-        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+        <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xs overflow-hidden">
           <table className="min-w-full divide-y divide-[var(--border)] text-xs">
             <thead className="bg-[var(--panel)]">
               <tr>
@@ -420,7 +420,7 @@ export function StaffReportsView({
 
       {/* Tab 2: Assessments Table */}
       {activeTab === 'assessments' && (
-        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+        <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xs overflow-hidden">
           <table className="min-w-full divide-y divide-[var(--border)] text-xs">
             <thead className="bg-[var(--panel)]">
               <tr>
@@ -470,7 +470,7 @@ export function StaffReportsView({
 
       {/* Tab 3: Attendance Watchlist (< 75%) */}
       {activeTab === 'students' && (
-        <div className="bg-[var(--card)] rounded-[22px] border border-[var(--border)] shadow-2xs overflow-hidden">
+        <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xs overflow-hidden">
           <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
             <div>
               <h3 className="text-xs font-bold text-[var(--text)] uppercase tracking-wider flex items-center gap-1.5">

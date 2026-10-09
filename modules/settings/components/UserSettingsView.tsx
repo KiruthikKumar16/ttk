@@ -183,9 +183,10 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
       {successMsg && (
         <div
           role="status"
-          className="flex items-center gap-3 p-4 bg-[rgba(27,122,75,0.08)] border border-[rgba(27,122,75,0.25)] text-[#1b7a4b] rounded-2xl text-xs font-medium"
+          className="flex items-center gap-3 p-4 border border-[var(--g5)] text-[var(--g1b)] rounded-2xl text-xs font-medium shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
-          <CheckCircle2 size={18} className="text-[#1b7a4b] shrink-0" />
+          <CheckCircle2 size={18} className="text-[var(--g1)] shrink-0" />
           <p>{successMsg}</p>
         </div>
       )}
@@ -193,9 +194,10 @@ export function UserSettingsView({ initialProfile }: UserSettingsViewProps) {
       {errorMsg && (
         <div
           role="alert"
-          className="flex items-center gap-3 p-4 bg-[rgba(181,60,55,0.08)] border border-[rgba(181,60,55,0.25)] text-[#b53c37] rounded-2xl text-xs font-medium"
+          className="flex items-center gap-3 p-4 border border-[var(--g5)] text-[var(--g1b)] rounded-2xl text-xs font-medium shadow-2xs"
+          style={{ background: 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)' }}
         >
-          <AlertCircle size={18} className="text-[#b53c37] shrink-0" />
+          <AlertCircle size={18} className="text-[var(--g1)] shrink-0" />
           <p>{errorMsg}</p>
         </div>
       )}
