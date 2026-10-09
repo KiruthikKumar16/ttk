@@ -10,7 +10,7 @@ interface AuthShellProps {
 
 export function AuthShell({ children }: AuthShellProps) {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-100 selection:bg-[#1f7d52] selection:text-white">
+    <main className="min-h-screen w-full flex flex-col items-center justify-center py-6 px-4 sm:px-6 md:py-10 relative bg-slate-100 selection:bg-[#1f7d52] selection:text-white overflow-x-hidden overflow-y-auto">
       {/* Background Ambient Mesh & Subtle Glow */}
       <div
         className="absolute inset-0 pointer-events-none opacity-40"
@@ -32,16 +32,16 @@ export function AuthShell({ children }: AuthShellProps) {
       />
 
       {/* Main Single Box Card */}
-      <div className="w-full max-w-md rounded-[28px] sm:rounded-3xl border border-slate-200/90 bg-white p-7 sm:p-9 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)] relative z-10 transition-all">
+      <div className="w-full max-w-md my-auto rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 md:p-8 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)] relative z-10 transition-all">
         {/* Logo at Top */}
-        <div className="flex justify-center mb-5">
+        <div className="flex justify-center mb-3 sm:mb-4">
           <Image
             src={brand.logoPath}
             alt={`${brand.shortName} logo`}
-            width={112}
-            height={112}
+            width={88}
+            height={88}
             priority
-            className="w-24 h-24 sm:w-28 sm:h-28 object-contain"
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 object-contain"
           />
         </div>
 

@@ -266,15 +266,15 @@ export default function SignupPage() {
     <AuthShell>
       <div className="w-full max-w-md mx-auto">
         {/* Form Header */}
-        <div className="mb-5 text-center">
-          <h1 id="signup-title" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+        <div className="mb-4 text-center">
+          <h1 id="signup-title" className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-tight">
             {isDetectedAdmin
               ? 'Administrator Registration'
               : activeTab === 'otp'
                 ? 'Invite Activation'
                 : 'Request Staff Access'}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
+          <p className="mt-1 text-xs text-slate-600 leading-relaxed font-normal max-w-sm mx-auto">
             {activeTab === 'otp'
               ? 'Enter your invite code for immediate clearance without waiting for approval.'
               : 'Register your details to request an authorized faculty account from an administrator.'}
@@ -282,7 +282,7 @@ export default function SignupPage() {
         </div>
 
         {/* Tab Switcher: Staff Request vs Invite */}
-        <div className="p-1 rounded-xl bg-slate-100/90 border border-slate-200/90 flex gap-1 mb-5" role="tablist">
+        <div className="p-1 rounded-xl bg-slate-100/90 border border-slate-200/90 flex gap-1 mb-3.5 sm:mb-4" role="tablist">
           <button
             type="button"
             role="tab"
@@ -312,10 +312,10 @@ export default function SignupPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4" aria-labelledby="signup-title">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5" aria-labelledby="signup-title">
           {/* OTP Code Field - High visibility when tab is active */}
           {activeTab === 'otp' && (
-            <div className="p-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50/40 transition-all">
+            <div className="p-3.5 rounded-2xl border-2 border-emerald-300 bg-emerald-50/40 transition-all">
               <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="passcode"
@@ -338,7 +338,7 @@ export default function SignupPage() {
                 placeholder="e.g. ADMIN-8392-WP4K or STAFF-8392-WP4K"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value.toUpperCase())}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 uppercase tracking-wider shadow-xs"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 uppercase tracking-wider shadow-xs"
               />
 
               {/* Real-time verification badge */}
@@ -369,13 +369,13 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="fullName"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
+              className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 mb-1"
             >
               Full Name
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                <User size={16} aria-hidden="true" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <User size={15} aria-hidden="true" />
               </div>
               <input
                 id="fullName"
@@ -385,7 +385,7 @@ export default function SignupPage() {
                 placeholder="e.g. Aadhithiyan K"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-9 pr-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
               />
             </div>
           </div>
@@ -394,13 +394,13 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
+              className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 mb-1"
             >
               Institutional Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                <Mail size={16} aria-hidden="true" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <Mail size={15} aria-hidden="true" />
               </div>
               <input
                 id="email"
@@ -411,7 +411,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-9 pr-3.5 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
               />
             </div>
           </div>
@@ -420,13 +420,13 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
+              className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 mb-1"
             >
               Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                <Lock size={16} aria-hidden="true" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <Lock size={15} aria-hidden="true" />
               </div>
               <input
                 id="password"
@@ -438,15 +438,15 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
-                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-10 pr-11 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+                {showPassword ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
               </button>
             </div>
 
@@ -572,7 +572,7 @@ export default function SignupPage() {
             type="submit"
             disabled={loading}
             aria-busy={loading}
-            className="w-full rounded-xl py-3 px-6 text-sm font-bold text-white transition-all duration-200 shadow-md hover:shadow-xl hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer flex items-center justify-center gap-2 mt-2"
+            className="w-full rounded-xl py-2.5 sm:py-3 px-5 sm:px-6 text-sm font-bold text-white transition-all duration-200 shadow-md hover:shadow-xl hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer flex items-center justify-center gap-2 mt-1.5"
             style={{
               background: 'linear-gradient(135deg, #1f7d52 0%, #134e35 100%)',
               boxShadow: '0 4px 14px -2px rgba(31, 125, 82, 0.4)',
@@ -593,7 +593,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="mt-6 pt-5 border-t border-slate-200/80 text-center text-xs text-slate-700 font-normal">
+        <p className="mt-4 pt-3.5 border-t border-slate-200/80 text-center text-xs text-slate-700 font-normal">
           Already have an account?{' '}
           <Link href="/login" className="font-bold text-emerald-800 hover:text-emerald-950 hover:underline">
             Sign in
