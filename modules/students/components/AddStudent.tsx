@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { X, AlertCircle, Settings } from 'lucide-react'
+import { X, AlertCircle } from 'lucide-react'
 import type { Course, Student, Role } from '@/lib/types'
 import { money } from '@/lib/formatters'
 import { calculateGstForRupees, rupeesToPaise } from '@/lib/money'
 import { CategoryBadge } from '@/components/CategoryBadge'
-import { DEFAULT_SKILL_TAGS, type SkillTag } from '@/modules/skills/types'
-import { SkillTagsManager } from '@/modules/skills/components/SkillTagsManager'
+import { DEFAULT_SKILL_TAGS } from '@/modules/skills/types'
 
 const DEFAULT_COURSE_OPTIONS = [
   'Professional Course',
@@ -71,15 +70,12 @@ export function AddStudent({
   const [comments, setComments] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [availableSkills, setAvailableSkills] = useState<string[]>(DEFAULT_SKILL_TAGS)
-  const [allSkillObjects, setAllSkillObjects] = useState<SkillTag[]>([])
-  const [skillsModalOpen, setSkillsModalOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/skills')
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          setAllSkillObjects(json.data)
           setAvailableSkills(json.data.map((s: any) => String(s.name)))
         }
       })
@@ -495,18 +491,8 @@ export function AddStudent({
 
           {/* Row 7: Student Knowledge Tags */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2">
               <label className="block text-xs font-semibold text-gray-700">Knowledge / Skill Tags</label>
-              {role === 'admin' && (
-                <button
-                  type="button"
-                  onClick={() => setSkillsModalOpen(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                >
-                  <Settings size={12} />
-                  Configure Skills (CRUD)
-                </button>
-              )}
             </div>
 
             {/* Split neatly into 2 lines with even count per line */}
@@ -655,18 +641,6 @@ export function AddStudent({
           </div>
         </form>
       </div>
-
-      {skillsModalOpen && (
-        <SkillTagsManager
-          isModal
-          initialSkills={allSkillObjects}
-          onClose={() => setSkillsModalOpen(false)}
-          onSkillsChange={(updated) => {
-            setAllSkillObjects(updated)
-            setAvailableSkills(updated.map((s) => s.name))
-          }}
-        />
-      )}
     </div>
   )
 }
