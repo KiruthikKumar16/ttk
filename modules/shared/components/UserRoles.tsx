@@ -882,10 +882,7 @@ export function UserRoles({
           {/* Top Controls: Instructions, Search, and Save Button */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-[22px] border border-[var(--border)] bg-[var(--card)] shadow-xs">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${hasChanges ? 'bg-[#854d0e] animate-pulse' : 'bg-[#1b7a4b]'}`}
-                />
+              <div>
                 <span className="text-xs font-semibold text-[var(--ink)]">
                   {hasChanges
                     ? `${changedCount} unsaved role ${changedCount === 1 ? 'change' : 'changes'}`
