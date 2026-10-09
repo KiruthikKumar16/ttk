@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { brand } from '@/lib/brand'
 import { supabaseBrowser } from '@/lib/supabase/browser'
-import { Clock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { AuthShell } from '@/components/auth/AuthShell'
+import { Clock, Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -74,8 +74,8 @@ export default function LoginPage() {
             ? body.error
             : typeof body?.error === 'object' && body?.error !== null
               ? body.error.message
-              : 'Unable to sign in. Please try again.'
-        throw new Error(message || 'Unable to sign in. Please try again.')
+              : 'Unable to sign in. Please verify your credentials.'
+        throw new Error(message || 'Unable to sign in. Please verify your credentials.')
       }
 
       router.push('/')
@@ -87,58 +87,58 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[var(--bg)] transition-colors">
-      <section
-        className="w-full max-w-md rounded-[26px] bg-[var(--card)] p-8 sm:p-10 border border-[var(--card-border)] shadow-[var(--shadow-card)] text-[var(--text)] transition-all"
-        aria-labelledby="login-title"
-      >
-        <div className="flex flex-col items-center text-center">
-          <div className="h-16 w-16 rounded-[20px] bg-[var(--panel)] border border-[var(--border)] p-2 shadow-xs flex items-center justify-center">
-            <Image
-              src={brand.logoPath}
-              alt={`${brand.shortName} logo`}
-              width={56}
-              height={56}
-              priority
-              className="object-contain"
-            />
-          </div>
-          <p className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--g1)]">{brand.displayName}</p>
-          <h1 id="login-title" className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--text-heading)]">
+    <AuthShell>
+      <div className="w-full max-w-md mx-auto">
+        {/* Form Header */}
+        <div className="mb-6 text-center">
+          <h1 id="login-title" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
             Sign in to {brand.displayName}
           </h1>
-          <p className="mt-1 text-xs text-[var(--mute)]">Academic &amp; operations portal for authorized personnel</p>
+          <p className="mt-1.5 text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
+            Enter your institutional credentials to access your administrative dashboard.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" aria-labelledby="login-title">
+          {/* Email Field */}
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
             >
               Email address
             </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              placeholder="name@thoorigai.in"
-              className="w-full rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 text-sm text-[var(--text)] placeholder-[var(--mute-light)] transition-all focus:border-[var(--g1)] focus:bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g5)]"
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <Mail size={16} aria-hidden="true" />
+              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="name@thoorigai.in"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
+              />
+            </div>
           </div>
 
+          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
             >
               Password
             </label>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <Lock size={16} aria-hidden="true" />
+              </div>
               <input
                 id="password"
                 name="password"
@@ -148,75 +148,90 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 placeholder="••••••••••••"
-                className="w-full rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 pr-11 text-sm text-[var(--text)] placeholder-[var(--mute-light)] transition-all focus:border-[var(--g1)] focus:bg-[var(--card)] focus:outline-none focus:ring-2 focus:ring-[var(--g5)]"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/60 pl-10 pr-11 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-500 transition-all focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-xs"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--mute)] hover:text-[var(--text)] transition-colors p-1"
-                aria-label={showPassword ? 'Hide input' : 'Show input'}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
               </button>
             </div>
           </div>
 
+          {/* Pending Approval Notice */}
           {isPendingApproval && (
-            <div className="p-4 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60 text-xs text-[#854d0e] space-y-2">
-              <div className="font-bold flex items-center gap-1.5">
-                <Clock size={15} /> Account Awaiting Approval
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-2">
+              <div className="font-bold flex items-center gap-2 text-amber-900">
+                <Clock size={16} className="text-amber-700 shrink-0" aria-hidden="true" />
+                <span>Account Awaiting Administrator Approval</span>
               </div>
-              <p className="text-[11px] leading-relaxed">
-                Your registration has been received and is waiting for administrator authorization.
+              <p className="text-xs text-amber-900 leading-relaxed font-normal">
+                Your account was created but requires admin clearance before signing in.
               </p>
               <div className="pt-1">
                 <Link
                   href={`/pending-approval?email=${encodeURIComponent(email)}`}
-                  className="font-semibold underline inline-flex items-center gap-1 text-[11px] hover:text-[#78350f]"
+                  className="font-bold text-amber-950 underline hover:text-black inline-flex items-center gap-1.5 text-xs"
                 >
-                  Have an invite code or OTP? Activate now <ArrowRight size={12} />
+                  Have an invite code? Activate now
                 </Link>
               </div>
             </div>
           )}
 
+          {/* Error Notice */}
           {error && (
-            <p
-              className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60 text-xs font-medium text-[#b53c37]"
+            <div
+              className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-900 flex items-start gap-2.5"
               role="alert"
             >
-              {error}
-            </p>
+              <AlertCircle size={16} className="text-rose-700 shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="leading-relaxed">{error}</span>
+            </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             aria-busy={loading}
-            className="w-full rounded-full py-3 px-6 text-sm font-semibold text-white transition-all shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full rounded-xl py-3 px-6 text-sm font-bold text-white transition-all duration-200 shadow-md hover:shadow-xl hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer flex items-center justify-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, var(--g1) 0%, var(--g1b) 100%)',
-              boxShadow: '0 4px 14px -2px var(--g1b)',
+              background: 'linear-gradient(135deg, #1f7d52 0%, #134e35 100%)',
+              boxShadow: '0 4px 14px -2px rgba(31, 125, 82, 0.4)',
             }}
           >
             {loading ? (
               <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
                 <span>Signing in...</span>
               </>
             ) : (
-              'Sign in'
+              <span>Sign in</span>
             )}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-[var(--mute)]">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-bold text-[var(--g1)] hover:underline inline-flex items-center gap-1">
-            Request Staff Access <ArrowRight size={12} />
-          </Link>
-        </p>
-      </section>
-    </main>
+        {/* Bottom Switcher / OTP Link */}
+        <div className="mt-8 pt-6 border-t border-slate-200/80 space-y-2 text-center">
+          <p className="text-xs text-slate-700 font-normal">
+            New faculty or staff member?{' '}
+            <Link href="/signup" className="font-bold text-emerald-800 hover:text-emerald-950 hover:underline">
+              Request Staff Access
+            </Link>
+          </p>
+          <p className="text-xs text-slate-700 font-normal">
+            Have an invite code?{' '}
+            <Link href="/signup?tab=otp" className="font-bold text-emerald-800 hover:text-emerald-950 hover:underline">
+              Activate instantly
+            </Link>
+          </p>
+        </div>
+      </div>
+    </AuthShell>
   )
 }
+
