@@ -870,10 +870,14 @@ nav {
   padding: 28px;
   width: 100%;
   flex: 1;
+  min-height: 0;
   box-sizing: border-box;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }

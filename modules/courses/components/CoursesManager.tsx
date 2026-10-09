@@ -462,8 +462,8 @@ export function CoursesManager({
         </div>
 
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs overflow-hidden" role="region" aria-label="Course list" tabIndex={0}>
-            <table className="w-full text-left text-xs" style={{ whiteSpace: 'normal' }}>
+          <div className="overflow-x-auto w-full rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs" role="region" aria-label="Course list">
+            <table className="w-full min-w-[760px] text-left text-xs" style={{ whiteSpace: 'normal' }}>
               <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3.5 px-4" style={{ width: '28%' }}>
@@ -743,12 +743,13 @@ export function CoursesManager({
             </Link>
           </div>
         </div>
+      </section>
 
-        {/* Add / Edit Course Modal */}
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+      {/* Add / Edit Course Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full max-w-lg my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-bold text-[var(--text)]">
@@ -785,13 +786,14 @@ export function CoursesManager({
               </div>
 
               {formError && (
-                <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-[#b53c37] flex items-center gap-2">
+                <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-[#b53c37] flex items-center gap-2 shrink-0">
                   <AlertCircle size={16} />
                   <span>{formError}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
                   <label className="block text-xs font-bold text-[var(--text)] mb-1">
                     Course Name <span className="text-[#b53c37]">*</span>
@@ -996,7 +998,9 @@ export function CoursesManager({
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-[var(--border)]">
+                </div>
+
+                <div className="flex items-center justify-between gap-3 p-4 px-6 border-t border-[var(--border)] bg-[var(--card)] shrink-0">
                   <div>
                     {editingCourse && canDelete && (
                       <button
@@ -1036,9 +1040,9 @@ export function CoursesManager({
 
         {/* Security Deletion Modal with Course Name Confirmation */}
         {deleteConfirmOpen && deleteConfirmCourse && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-60 animate-in fade-in duration-150">
-            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-rose-500/20 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
-              <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-60 overflow-y-auto animate-in fade-in duration-150">
+            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-rose-500/20 w-full max-w-md my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+              <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-rose-500/20 text-[#b53c37] flex items-center justify-center shrink-0">
                     <ShieldAlert size={20} />
@@ -1060,7 +1064,7 @@ export function CoursesManager({
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs space-y-2 text-amber-900">
                   <div className="flex items-center gap-2 font-semibold text-amber-800">
                     <AlertTriangle size={15} className="shrink-0 text-amber-600" />
@@ -1139,7 +1143,6 @@ export function CoursesManager({
             </div>
           </div>
         )}
-      </section>
     </>
   )
 }
