@@ -19,7 +19,7 @@ import {
 export interface StudentPrintDossierProps {
   student: Student
   payments: Payment[]
-  attendance: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Late' | 'Excused' }[]
+  attendance: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused' }[]
   assessments: {
     id: string
     title: string
@@ -65,10 +65,11 @@ export function StudentPrintDossier({
   // Attendance metrics
   const totalSessions = attendance.length
   const presentSessions = attendance.filter((a) => a.status === 'Present').length
-  const lateSessions = attendance.filter((a) => a.status === 'Late').length
   const absentSessions = attendance.filter((a) => a.status === 'Absent').length
+  const exemptSessions = attendance.filter((a) => a.status === 'Exempt' || a.status === 'Excused').length
+  const countableSessions = totalSessions - exemptSessions
   const attendanceRate =
-    totalSessions > 0 ? Math.round(((presentSessions + lateSessions * 0.5) / totalSessions) * 100) : 0
+    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : (totalSessions > 0 ? 100 : 0)
 
   // Assessment metrics
   const totalEvaluations = assessments.length
@@ -524,9 +525,9 @@ export function StudentPrintDossier({
               <div className="flex items-center gap-2 text-[9px] font-semibold">
                 <span className="text-emerald-700">{presentSessions} Present</span>
                 <span className="text-slate-300">·</span>
-                <span className="text-amber-700">{lateSessions} Late</span>
-                <span className="text-slate-300">·</span>
                 <span className="text-rose-700">{absentSessions} Absent</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-sky-700">{exemptSessions} Exempt</span>
               </div>
             </div>
 
@@ -546,14 +547,14 @@ export function StudentPrintDossier({
                         className={`font-bold px-1 py-0.2 rounded text-[7.5px] border shrink-0 ${
                           att.status === 'Present'
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                            : att.status === 'Late'
-                              ? 'bg-amber-100 text-amber-800 border-amber-300'
-                              : att.status === 'Absent'
-                                ? 'bg-rose-100 text-rose-800 border-rose-300'
-                                : 'bg-indigo-100 text-indigo-800 border-indigo-300'
+                            : att.status === 'Absent'
+                              ? 'bg-rose-100 text-rose-800 border-rose-300'
+                              : att.status === 'Exempt' || att.status === 'Excused'
+                                ? 'bg-sky-100 text-sky-800 border-sky-300'
+                                : 'bg-amber-100 text-amber-800 border-amber-300'
                         }`}
                       >
-                        {att.status}
+                        {att.status === 'Excused' ? 'Exempt' : att.status}
                       </span>
                     </div>
                   ))}
@@ -561,7 +562,7 @@ export function StudentPrintDossier({
                 {attendance.length > 36 && (
                   <div className="mt-2 py-1 px-2.5 rounded bg-indigo-50 border border-indigo-200 text-center text-[8px] text-indigo-900 font-semibold">
                     Displaying 36 most recent sessions of {totalSessions} total recorded sessions ({presentSessions}{' '}
-                    Present, {lateSessions} Late, {absentSessions} Absent · Attendance Rate: {attendanceRate}%).
+                    Present, {absentSessions} Absent, {exemptSessions} Exempt · Attendance Rate: {attendanceRate}%).
                   </div>
                 )}
               </>

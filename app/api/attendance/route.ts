@@ -105,7 +105,7 @@ async function getAttendance(req: NextRequest) {
         courseId: course?.id,
         courseName: course?.name,
         sessionDate: record.session_date,
-        status: record.status,
+        status: record.status === 'Excused' ? 'Exempt' : record.status,
         markedBy: profile
           ? {
               id: profile.id,

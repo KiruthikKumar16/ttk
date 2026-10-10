@@ -91,7 +91,7 @@ export const attendanceSchema = z.object({
   studentId: z.number().int().positive({ message: 'Student ID must be a positive integer' }),
   courseId: z.string().min(1, { message: 'Course ID is required' }),
   sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be in YYYY-MM-DD format' }),
-  status: z.enum(['Present', 'Absent', 'Late', 'Excused']),
+  status: z.enum(['Present', 'Absent', 'Exempt', 'Excused']).transform((val) => (val === 'Excused' ? 'Exempt' : val)),
 })
 
 export const assessmentSchema = z.object({

@@ -23,18 +23,19 @@ function AttendanceStatusBadge({ status }: { status: string }) {
           Absent
         </span>
       )
+    case 'Exempt':
+    case 'Excused':
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          Exempt
+        </span>
+      )
     case 'Late':
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
           Late
-        </span>
-      )
-    case 'Excused':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-          Excused
         </span>
       )
     default:

@@ -20,7 +20,7 @@ type AttendanceRecord = {
   courseId: string
   courseName: string
   sessionDate: string
-  status: 'Present' | 'Absent' | 'Late' | 'Excused'
+  status: 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused'
   markedBy: {
     id: string
     fullName: string
@@ -103,18 +103,19 @@ export function Attendance() {
     }
   }
 
-  const getStatusBadge = (status: 'Present' | 'Absent' | 'Late' | 'Excused') => {
+  const getStatusBadge = (status: 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused' | string) => {
     switch (status) {
       case 'Present':
-        return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Present</span>
+        return <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded font-medium">Present</span>
       case 'Absent':
-        return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Absent</span>
-      case 'Late':
-        return <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Late</span>
+        return <span className="bg-rose-100 text-rose-800 text-xs px-2 py-1 rounded font-medium">Absent</span>
+      case 'Exempt':
       case 'Excused':
-        return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Excused</span>
+        return <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded font-medium">Exempt</span>
+      case 'Late':
+        return <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded font-medium">Late</span>
       default:
-        return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{status}</span>
+        return <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded font-medium">{status}</span>
     }
   }
 

@@ -142,7 +142,7 @@ export async function getStudentAcademicHistory(registerId: number) {
     attendance: (attendanceRes.data ?? []).map((a: any) => ({
       id: String(a.id),
       sessionDate: String(a.session_date),
-      status: a.status as 'Present' | 'Absent' | 'Late' | 'Excused',
+      status: (a.status === 'Excused' ? 'Exempt' : a.status) as 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused',
     })),
     assessments: (assessmentRes.data ?? []).map((r: any) => {
       const assessment = normalizeJoined(r.assessments)

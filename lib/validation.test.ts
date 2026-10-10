@@ -11,7 +11,8 @@ describe('validation schemas', () => {
 
   it('accepts only the supported attendance statuses and ISO session dates', () => {
     const base = { studentId: 1, courseId: 'CRS-01', sessionDate: '2026-03-31' }
-    expect(attendanceSchema.safeParse({ ...base, status: 'Excused' }).success).toBe(true)
+    expect(attendanceSchema.safeParse({ ...base, status: 'Exempt' }).success).toBe(true)
+    expect(attendanceSchema.safeParse({ ...base, status: 'Late' }).success).toBe(false)
     expect(attendanceSchema.safeParse({ ...base, status: 'Tardy' }).success).toBe(false)
     expect(attendanceSchema.safeParse({ ...base, sessionDate: '31/03/2026', status: 'Present' }).success).toBe(false)
   })

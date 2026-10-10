@@ -105,8 +105,12 @@ export function StaffReportsView({
         total: 0,
         present: 0,
       }
-      current.total += 1
-      if (r.status === 'Present' || r.status === 'Late') current.present += 1
+      if (r.status === 'Exempt' || r.status === 'Excused') {
+        // Exempted sessions do not count against student total attendance
+      } else {
+        current.total += 1
+        if (r.status === 'Present' || r.status === 'Late') current.present += 1
+      }
       map.set(r.studentId, current)
     }
 
@@ -396,12 +400,14 @@ export function StaffReportsView({
                         className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                           r.status === 'Present'
                             ? 'bg-emerald-500/15 text-[#1b7a4b]'
-                            : r.status === 'Late'
-                              ? 'bg-amber-500/15 text-[#854d0e]'
-                              : 'bg-rose-500/15 text-[#b53c37]'
+                            : r.status === 'Absent'
+                              ? 'bg-rose-500/15 text-[#b53c37]'
+                              : r.status === 'Exempt' || r.status === 'Excused'
+                                ? 'bg-sky-500/15 text-sky-800'
+                                : 'bg-amber-500/15 text-[#854d0e]'
                         }`}
                       >
-                        {r.status}
+                        {r.status === 'Excused' ? 'Exempt' : r.status}
                       </span>
                     </td>
                   </tr>

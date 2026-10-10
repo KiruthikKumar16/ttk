@@ -23,6 +23,7 @@ import {
   Phone,
   Printer,
   Receipt,
+  ShieldCheck,
   User,
   X,
   XCircle,
@@ -84,7 +85,7 @@ export function StudentDetail({
   courses?: Course[]
   canRecordPayment?: boolean
   role?: Role
-  attendance?: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Late' | 'Excused' }[]
+  attendance?: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused' }[]
   assessments?: {
     id: string
     title: string
@@ -114,10 +115,11 @@ export function StudentDetail({
   // Attendance metrics
   const totalSessions = attendance.length
   const presentSessions = attendance.filter((a) => a.status === 'Present').length
-  const lateSessions = attendance.filter((a) => a.status === 'Late').length
   const absentSessions = attendance.filter((a) => a.status === 'Absent').length
+  const exemptSessions = attendance.filter((a) => a.status === 'Exempt' || a.status === 'Excused').length
+  const countableSessions = totalSessions - exemptSessions
   const attendanceRate =
-    totalSessions > 0 ? Math.round(((presentSessions + lateSessions * 0.5) / totalSessions) * 100) : 0
+    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : (totalSessions > 0 ? 100 : 0)
 
   // Weekly attendance roster & historic week navigation
   const [weekOffset, setWeekOffset] = useState(0)
@@ -153,8 +155,8 @@ export function StudentDetail({
 
     const loggedInWeek = days.map((d) => d.record).filter(Boolean)
     const presentInWeek = loggedInWeek.filter((r) => r?.status === 'Present').length
-    const lateInWeek = loggedInWeek.filter((r) => r?.status === 'Late').length
     const absentInWeek = loggedInWeek.filter((r) => r?.status === 'Absent').length
+    const exemptInWeek = loggedInWeek.filter((r) => r?.status === 'Exempt' || r?.status === 'Excused').length
 
     return {
       weekDays: days,
@@ -163,8 +165,8 @@ export function StudentDetail({
       weekSummary: {
         total: loggedInWeek.length,
         present: presentInWeek,
-        late: lateInWeek,
         absent: absentInWeek,
+        exempt: exemptInWeek,
       },
     }
   }, [attendance, weekOffset])
@@ -714,13 +716,7 @@ export function StudentDetail({
                     Present
                   </span>
                   <strong className="text-2xl font-extrabold text-[#1b7a4b] mt-0.5 block">{presentSessions}</strong>
-                  <span className="text-[10px] text-[#1b7a4b] font-medium">Full sessions</span>
-                </div>
-
-                <div className="p-3.5 rounded-[18px] bg-[var(--warning-bg)] border border-amber-200/60">
-                  <span className="text-[11px] font-semibold text-[#854d0e] uppercase tracking-wider block">Late</span>
-                  <strong className="text-2xl font-extrabold text-[#854d0e] mt-0.5 block">{lateSessions}</strong>
-                  <span className="text-[10px] text-[#854d0e] font-medium">0.5 credit</span>
+                  <span className="text-[10px] text-[#1b7a4b] font-medium">Attended sessions</span>
                 </div>
 
                 <div className="p-3.5 rounded-[18px] bg-[var(--danger-bg)] border border-rose-200/60">
@@ -729,6 +725,14 @@ export function StudentDetail({
                   </span>
                   <strong className="text-2xl font-extrabold text-[#b53c37] mt-0.5 block">{absentSessions}</strong>
                   <span className="text-[10px] text-[#b53c37] font-medium">Missed sessions</span>
+                </div>
+
+                <div className="p-3.5 rounded-[18px] bg-sky-50 border border-sky-200/60">
+                  <span className="text-[11px] font-semibold text-sky-700 uppercase tracking-wider block">
+                    Exempt
+                  </span>
+                  <strong className="text-2xl font-extrabold text-sky-700 mt-0.5 block">{exemptSessions}</strong>
+                  <span className="text-[10px] text-sky-600 font-medium">Approved leave</span>
                 </div>
               </div>
             </div>
@@ -819,17 +823,20 @@ export function StudentDetail({
                             className={`inline-flex items-center gap-1 w-full justify-center px-2 py-1 rounded-md text-[11px] font-bold border ${
                               att.status === 'Present'
                                 ? 'bg-emerald-100/90 text-emerald-800 border-emerald-200'
-                                : att.status === 'Late'
-                                  ? 'bg-amber-100/90 text-amber-800 border-amber-200'
-                                  : att.status === 'Absent'
-                                    ? 'bg-rose-100/90 text-rose-800 border-rose-200'
-                                    : 'bg-indigo-100/90 text-indigo-800 border-indigo-200'
+                                : att.status === 'Absent'
+                                  ? 'bg-rose-100/90 text-rose-800 border-rose-200'
+                                  : att.status === 'Exempt' || att.status === 'Excused'
+                                    ? 'bg-sky-100/90 text-sky-800 border-sky-200'
+                                    : 'bg-amber-100/90 text-amber-800 border-amber-200'
                             }`}
                           >
                             {att.status === 'Present' && <CheckCircle2 size={12} className="shrink-0" />}
-                            {att.status === 'Late' && <Clock size={12} className="shrink-0" />}
                             {att.status === 'Absent' && <XCircle size={12} className="shrink-0" />}
-                            <span>{att.status}</span>
+                            {(att.status === 'Exempt' || att.status === 'Excused') && (
+                              <ShieldCheck size={12} className="shrink-0" />
+                            )}
+                            {att.status === 'Late' && <Clock size={12} className="shrink-0" />}
+                            <span>{att.status === 'Excused' ? 'Exempt' : att.status}</span>
                           </span>
                         ) : day.isFuture ? (
                           <span className="text-[11px] text-slate-400 font-medium italic block text-center py-1">
@@ -857,22 +864,25 @@ export function StudentDetail({
                     </span>
                     <span className="text-slate-300">•</span>
                     <span className="text-emerald-700 font-semibold">{weekSummary.present} Present</span>
-                    {weekSummary.late > 0 && (
-                      <>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-amber-700 font-semibold">{weekSummary.late} Late</span>
-                      </>
-                    )}
                     {weekSummary.absent > 0 && (
                       <>
                         <span className="text-slate-300">•</span>
                         <span className="text-rose-700 font-semibold">{weekSummary.absent} Absent</span>
                       </>
                     )}
+                    {weekSummary.exempt > 0 && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-sky-700 font-semibold">{weekSummary.exempt} Exempt</span>
+                      </>
+                    )}
                   </div>
                   <span className="text-[11px] text-slate-500 font-medium">
-                    {Math.round(((weekSummary.present + weekSummary.late * 0.5) / weekSummary.total) * 100)}% weekly
-                    attendance
+                    {(() => {
+                      const countable = weekSummary.total - weekSummary.exempt
+                      const rate = countable > 0 ? Math.round((weekSummary.present / countable) * 100) : 100
+                      return `${rate}% weekly attendance`
+                    })()}
                   </span>
                 </div>
               ) : (

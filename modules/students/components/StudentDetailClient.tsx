@@ -23,7 +23,7 @@ export function StudentDetailClient({
   gstRate: number
   canRecordPayment: boolean
   role?: Role
-  attendance?: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Late' | 'Excused' }[]
+  attendance?: { id: string; sessionDate: string; status: 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused' }[]
   assessments?: {
     id: string
     title: string

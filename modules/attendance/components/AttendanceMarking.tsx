@@ -18,9 +18,9 @@ import {
   Filter,
 } from 'lucide-react'
 
-type Status = 'Present' | 'Absent' | 'Late' | 'Excused'
+type Status = 'Present' | 'Absent' | 'Exempt'
 type Student = { registerId: number; name: string; status: string | null }
-const statuses: Status[] = ['Present', 'Absent', 'Late', 'Excused']
+const statuses: Status[] = ['Present', 'Absent', 'Exempt']
 
 interface AttendanceMarkingProps {
   courseId: string
@@ -70,15 +70,14 @@ export function AttendanceMarking({
   const [saving, setSaving] = useState<number[]>([])
   const [message, setMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Late' | 'Excused'>(
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Exempt'>(
     'all',
   )
 
   // Compute real-time session statistics
   const presentCount = rows.filter((r) => r.status === 'Present').length
   const absentCount = rows.filter((r) => r.status === 'Absent').length
-  const lateCount = rows.filter((r) => r.status === 'Late').length
-  const excusedCount = rows.filter((r) => r.status === 'Excused').length
+  const exemptCount = rows.filter((r) => r.status === 'Exempt' || r.status === 'Excused').length
   const unmarkedCount = rows.filter((r) => !r.status).length
   const markedCount = rows.length - unmarkedCount
   const completionPct = rows.length > 0 ? Math.round((markedCount / rows.length) * 100) : 0
@@ -139,9 +138,7 @@ export function AttendanceMarking({
           return 'bg-[#1b7a4b] text-white border-[#1b7a4b] shadow-sm font-bold ring-2 ring-emerald-500/30'
         case 'Absent':
           return 'bg-[#b53c37] text-white border-[#b53c37] shadow-sm font-bold ring-2 ring-rose-500/30'
-        case 'Late':
-          return 'bg-[#854d0e] text-white border-[#854d0e] shadow-sm font-bold ring-2 ring-amber-500/30'
-        case 'Excused':
+        case 'Exempt':
           return 'bg-[#0284c7] text-white border-[#0284c7] shadow-sm font-bold ring-2 ring-sky-500/30'
       }
     }
@@ -150,9 +147,7 @@ export function AttendanceMarking({
         return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#1b7a4b] hover:bg-[var(--success-bg)] hover:text-[#1b7a4b] font-medium'
       case 'Absent':
         return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#b53c37] hover:bg-[var(--danger-bg)] hover:text-[#b53c37] font-medium'
-      case 'Late':
-        return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#854d0e] hover:bg-[var(--warning-bg)] hover:text-[#854d0e] font-medium'
-      case 'Excused':
+      case 'Exempt':
         return 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[#0284c7] hover:bg-sky-50 hover:text-[#0284c7] font-medium'
     }
   }
@@ -215,19 +210,14 @@ export function AttendanceMarking({
                     title={`Present: ${presentCount}`}
                   />
                   <div
-                    style={{ width: `${(lateCount / rows.length) * 100}%` }}
-                    className="bg-amber-500 h-full transition-all duration-300"
-                    title={`Late: ${lateCount}`}
-                  />
-                  <div
-                    style={{ width: `${(excusedCount / rows.length) * 100}%` }}
-                    className="bg-sky-500 h-full transition-all duration-300"
-                    title={`Excused: ${excusedCount}`}
-                  />
-                  <div
                     style={{ width: `${(absentCount / rows.length) * 100}%` }}
                     className="bg-rose-500 h-full transition-all duration-300"
                     title={`Absent: ${absentCount}`}
+                  />
+                  <div
+                    style={{ width: `${(exemptCount / rows.length) * 100}%` }}
+                    className="bg-sky-500 h-full transition-all duration-300"
+                    title={`Exempt: ${exemptCount}`}
                   />
                 </>
               )}
@@ -255,14 +245,9 @@ export function AttendanceMarking({
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 text-rose-800 font-semibold border border-rose-200 shadow-2xs">
             Absent: <strong>{absentCount}</strong>
           </span>
-          {lateCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200 shadow-2xs">
-              Late: <strong>{lateCount}</strong>
-            </span>
-          )}
-          {excusedCount > 0 && (
+          {exemptCount > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 text-sky-800 font-semibold border border-sky-200 shadow-2xs">
-              Excused: <strong>{excusedCount}</strong>
+              Exempt: <strong>{exemptCount}</strong>
             </span>
           )}
           {unmarkedCount > 0 && (
@@ -349,6 +334,17 @@ export function AttendanceMarking({
               }`}
             >
               Absent ({absentCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('Exempt')}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                statusFilter === 'Exempt'
+                  ? 'bg-sky-600 text-white font-semibold shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Exempt ({exemptCount})
             </button>
           </div>
         </div>
@@ -490,9 +486,7 @@ export function AttendanceMarking({
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                                   : row.status === 'Absent'
                                     ? 'bg-rose-50 text-rose-700 border border-rose-200/80'
-                                    : row.status === 'Late'
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
-                                      : 'bg-sky-50 text-sky-700 border border-sky-200/80'
+                                    : 'bg-sky-50 text-sky-700 border border-sky-200/80'
                               }`}
                             >
                               <span
@@ -501,12 +495,10 @@ export function AttendanceMarking({
                                     ? 'bg-emerald-500'
                                     : row.status === 'Absent'
                                       ? 'bg-rose-500'
-                                      : row.status === 'Late'
-                                        ? 'bg-amber-500'
-                                        : 'bg-sky-500'
+                                      : 'bg-sky-500'
                                 }`}
                               />
-                              {row.status}
+                              {row.status === 'Excused' ? 'Exempt' : row.status}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-500 border border-slate-200">
@@ -557,12 +549,9 @@ export function AttendanceMarking({
                             } else if (key === 'a') {
                               event.preventDefault()
                               void setStatus(row.registerId, 'Absent')
-                            } else if (key === 'l') {
-                              event.preventDefault()
-                              void setStatus(row.registerId, 'Late')
                             } else if (key === 'e') {
                               event.preventDefault()
-                              void setStatus(row.registerId, 'Excused')
+                              void setStatus(row.registerId, 'Exempt')
                             }
                           }}
                           onClick={() => void setStatus(row.registerId, status)}
@@ -602,12 +591,9 @@ export function AttendanceMarking({
             A
           </kbd>
           <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
-            L
-          </kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-700 shadow-2xs">
             E
           </kbd>
-          <span>for instant status.</span>
+          <span>for instant status (Present, Absent, Exempt).</span>
         </span>
         <span className="text-[11px] text-slate-500">All changes save automatically</span>
       </div>
