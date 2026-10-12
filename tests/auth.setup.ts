@@ -12,7 +12,7 @@ for (const role of ['admin', 'staff'] as const) {
       throw new Error(`E2E_${role.toUpperCase()}_EMAIL and password must be provided by the local test runner.`)
     await page.goto('/login')
     await page.getByLabel('Email address').fill(email)
-    await page.getByLabel('Password').fill(password)
+    await page.getByLabel('Password', { exact: true }).fill(password)
     await page.getByRole('button', { name: 'Sign in' }).click()
     await expect(page).not.toHaveURL(/\/login(?:\?|$)/)
     const storageState = `tests/.auth/${role}.json`
