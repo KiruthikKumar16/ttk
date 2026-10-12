@@ -50,19 +50,29 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-        run: pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN" && pnpm exec vercel build --token="$VERCEL_TOKEN"
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::VERCEL_TOKEN not configured in secrets; skipping preview deployment."
+            exit 0
+          fi
+          pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN" && pnpm exec vercel build --token="$VERCEL_TOKEN"
       - name: Deploy preview
         id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            exit 0
+          fi
           URL="$(pnpm exec vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
       - name: Smoke-test preview deployment
+        if: steps.deploy.outputs.url != ''
         env:
           SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
         run: pnpm exec playwright install --with-deps chromium && pnpm exec playwright test --config=playwright.smoke.config.ts
       - name: Comment preview URL
+        if: steps.deploy.outputs.url != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
@@ -92,7 +102,12 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
-        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" && pnpm exec supabase db push --linked --yes
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "::warning::Staging Supabase credentials not configured in repository secrets; skipping staging deployment."
+            exit 0
+          fi
+          pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" && pnpm exec supabase db push --linked --yes
       - name: Build and deploy staging
         id: deploy
         env:
@@ -108,12 +123,17 @@ jobs:
           APP_ENV: staging
           NEXT_PUBLIC_APP_ENV: staging
         run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::VERCEL_TOKEN not configured in repository secrets; skipping staging deployment."
+            exit 0
+          fi
           pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
           pnpm exec vercel build --token="$VERCEL_TOKEN"
           URL="$(pnpm exec vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           pnpm exec vercel alias set "$URL" "$STAGING_DOMAIN" --token="$VERCEL_TOKEN"
           echo "url=https://$STAGING_DOMAIN" >> "$GITHUB_OUTPUT"
       - name: Smoke-test staging and run browser smoke tests
+        if: steps.deploy.outputs.url != ''
         env:
           SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
           CHECK_READINESS: '1'
