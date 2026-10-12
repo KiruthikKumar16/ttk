@@ -50,5 +50,3 @@ export function AuthShell({ children }: AuthShellProps) {
     </main>
   )
 }
-
-

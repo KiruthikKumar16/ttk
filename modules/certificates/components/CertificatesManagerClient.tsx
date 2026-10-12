@@ -140,12 +140,7 @@ export function CertificatesManagerClient({
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard
-          title="Total Certificates"
-          value={totalCount}
-          subtitle="Official diplomas issued"
-          icon={Award}
-        />
+        <KpiCard title="Total Certificates" value={totalCount} subtitle="Official diplomas issued" icon={Award} />
         <KpiCard
           title="QR Verifiable Records"
           value={verifiableCount}

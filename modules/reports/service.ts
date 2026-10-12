@@ -124,7 +124,8 @@ export async function getStaffAcademicReportData(): Promise<AcademicReportData> 
     return {
       id: String(row.id),
       sessionDate: String(row.session_date),
-      status: (row.status === 'Excused' ? 'Exempt' : row.status) as 'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused',
+      status: (row.status === 'Excused' ? 'Exempt' : row.status) as
+        'Present' | 'Absent' | 'Exempt' | 'Late' | 'Excused',
       studentId: String(row.student_id),
       studentName: String(student?.name ?? 'Unknown'),
       studentRegisterId: Number(student?.register_id ?? 0),

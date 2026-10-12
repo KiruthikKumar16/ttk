@@ -246,16 +246,19 @@ export function DashboardMetrics({
     })
 
     const variantsCount =
-      catCourseNames.length > 0
-        ? catCourseNames.length
-        : courses.filter((c) => c.categoryId === cat.id).length || 1
+      catCourseNames.length > 0 ? catCourseNames.length : courses.filter((c) => c.categoryId === cat.id).length || 1
 
     return {
       id: cat.id,
       name: cat.name,
       duration: cat.duration,
       courseNames: isInternship
-        ? catCourseNames.map((n) => n.replace(/course\s*[-–]\s*/gi, '').replace(/\bcourse\b/gi, 'Track').trim())
+        ? catCourseNames.map((n) =>
+            n
+              .replace(/course\s*[-–]\s*/gi, '')
+              .replace(/\bcourse\b/gi, 'Track')
+              .trim(),
+          )
         : catCourseNames,
       variantsCount,
       studentCount: count,
@@ -391,13 +394,7 @@ export function DashboardMetrics({
         <div id="admin-financial-panel" role="tabpanel" aria-labelledby="admin-dashboard-toggle-financial">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {financialMetrics.map(({ label, value, sub, Icon }) => (
-              <KpiCard
-                key={label}
-                title={label}
-                value={value}
-                subtitle={sub}
-                icon={<Icon size={18} />}
-              />
+              <KpiCard key={label} title={label} value={value} subtitle={sub} icon={<Icon size={18} />} />
             ))}
           </div>
 
@@ -405,7 +402,9 @@ export function DashboardMetrics({
             <div className="panel-header">
               <div>
                 <h2>Course mix</h2>
-                <p className="text-xs text-[var(--mute)] mt-0.5">Program categories, course variants, and enrolled student breakdown</p>
+                <p className="text-xs text-[var(--mute)] mt-0.5">
+                  Program categories, course variants, and enrolled student breakdown
+                </p>
               </div>
               <Link href="/courses" className="text-xs font-semibold text-[var(--g1)] hover:underline">
                 View courses
@@ -437,9 +436,12 @@ export function DashboardMetrics({
                         </span>
                       </span>
                       {row.courseNames && row.courseNames.length > 0 && (
-                        <span className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-1" title={row.courseNames.join(', ')}>
+                        <span
+                          className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-1"
+                          title={row.courseNames.join(', ')}
+                        >
                           {row.isInternship
-                            ? (row.courseNames[0] || 'Industry Internship Track')
+                            ? row.courseNames[0] || 'Industry Internship Track'
                             : `${row.courseNames.slice(0, 2).join(', ')}${row.courseNames.length > 2 ? ` +${row.courseNames.length - 2} more` : ''}`}
                         </span>
                       )}
@@ -461,7 +463,9 @@ export function DashboardMetrics({
             <div className="panel-header">
               <div>
                 <h2>Recent payments</h2>
-                <p className="text-xs text-[var(--mute)] mt-0.5">Latest receipts, invoiced learners, and collected fee amounts</p>
+                <p className="text-xs text-[var(--mute)] mt-0.5">
+                  Latest receipts, invoiced learners, and collected fee amounts
+                </p>
               </div>
               <Link href="/invoices" className="text-xs font-semibold text-[var(--g1)] hover:underline">
                 View all
@@ -507,13 +511,7 @@ export function DashboardMetrics({
           {/* Top Academic KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {staffMetrics.map(({ label, value, sub, Icon }) => (
-              <KpiCard
-                key={label}
-                title={label}
-                value={value}
-                subtitle={sub}
-                icon={<Icon size={18} />}
-              />
+              <KpiCard key={label} title={label} value={value} subtitle={sub} icon={<Icon size={18} />} />
             ))}
           </div>
 
@@ -536,8 +534,13 @@ export function DashboardMetrics({
                 style={{ background: 'var(--g3)' }}
                 aria-hidden="true"
               />
-              <CalendarDays size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
-              <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Mark / View Attendance</span>
+              <CalendarDays
+                size={14}
+                className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+              />
+              <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
+                Mark / View Attendance
+              </span>
             </Link>
 
             <Link
@@ -557,7 +560,10 @@ export function DashboardMetrics({
                 style={{ background: 'var(--g3)' }}
                 aria-hidden="true"
               />
-              <ClipboardCheck size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <ClipboardCheck
+                size={14}
+                className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+              />
               <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
                 Assessments ({academicData?.assessmentCount ?? 0})
               </span>
@@ -580,7 +586,10 @@ export function DashboardMetrics({
                 style={{ background: 'var(--g3)' }}
                 aria-hidden="true"
               />
-              <FolderOpen size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <FolderOpen
+                size={14}
+                className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+              />
               <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
                 Learning Materials ({academicData?.materialsCount ?? 0})
               </span>
@@ -604,7 +613,10 @@ export function DashboardMetrics({
                   style={{ background: 'var(--g3)' }}
                   aria-hidden="true"
                 />
-                <Plus size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+                <Plus
+                  size={14}
+                  className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+                />
                 <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Add Student</span>
               </Link>
             )}

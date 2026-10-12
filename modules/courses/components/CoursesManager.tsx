@@ -462,7 +462,11 @@ export function CoursesManager({
         </div>
 
         {viewMode === 'table' ? (
-          <div className="overflow-x-auto w-full rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs" role="region" aria-label="Course list">
+          <div
+            className="overflow-x-auto w-full rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs"
+            role="region"
+            aria-label="Course list"
+          >
             <table className="w-full min-w-[760px] text-left text-xs" style={{ whiteSpace: 'normal' }}>
               <thead className="bg-[var(--panel)] border-b border-[var(--border)] text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
                 <tr>
@@ -750,50 +754,50 @@ export function CoursesManager({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
           <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full max-w-lg my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] shrink-0">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-[var(--text)]">
-                      {editingCourse ? 'Edit Course' : 'Add New Course'}
-                    </h2>
-                    {editingCourse?.categoryName && <CategoryBadge categoryName={editingCourse.categoryName} />}
-                  </div>
-                  <p className="text-xs text-[var(--mute)] mt-0.5">
-                    {editingCourse
-                      ? `Modify curriculum pricing, duration tier, and course settings for ${editingCourse.name}.`
-                      : 'Configure curriculum tuition fee, GST pricing mode, duration tier, and details.'}
-                  </p>
-                </div>
+              <div>
                 <div className="flex items-center gap-2">
-                  {editingCourse && (
-                    <Link
-                      href={`/courses/${encodeURIComponent(editingCourse.id)}/materials`}
-                      className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] hover:bg-[var(--card)] transition-colors"
-                      title="Manage course materials and syllabus"
-                    >
-                      <BookOpen size={13} />
-                      Materials
-                      <ArrowUpRight size={12} />
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
-                  >
-                    <X size={18} />
-                  </button>
+                  <h2 className="text-lg font-bold text-[var(--text)]">
+                    {editingCourse ? 'Edit Course' : 'Add New Course'}
+                  </h2>
+                  {editingCourse?.categoryName && <CategoryBadge categoryName={editingCourse.categoryName} />}
                 </div>
+                <p className="text-xs text-[var(--mute)] mt-0.5">
+                  {editingCourse
+                    ? `Modify curriculum pricing, duration tier, and course settings for ${editingCourse.name}.`
+                    : 'Configure curriculum tuition fee, GST pricing mode, duration tier, and details.'}
+                </p>
               </div>
+              <div className="flex items-center gap-2">
+                {editingCourse && (
+                  <Link
+                    href={`/courses/${encodeURIComponent(editingCourse.id)}/materials`}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] hover:bg-[var(--card)] transition-colors"
+                    title="Manage course materials and syllabus"
+                  >
+                    <BookOpen size={13} />
+                    Materials
+                    <ArrowUpRight size={12} />
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
 
-              {formError && (
-                <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-[#b53c37] flex items-center gap-2 shrink-0">
-                  <AlertCircle size={16} />
-                  <span>{formError}</span>
-                </div>
-              )}
+            {formError && (
+              <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-[#b53c37] flex items-center gap-2 shrink-0">
+                <AlertCircle size={16} />
+                <span>{formError}</span>
+              </div>
+            )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
                   <label className="block text-xs font-bold text-[var(--text)] mb-1">
                     Course Name <span className="text-[#b53c37]">*</span>
@@ -997,152 +1001,151 @@ export function CoursesManager({
                     className="w-full px-3.5 py-2.5 border border-[var(--border)] rounded-[18px] text-xs text-[var(--text)] bg-[var(--panel)] focus:outline-none focus:ring-1 focus:ring-[var(--g1)]"
                   />
                 </div>
+              </div>
 
-                </div>
-
-                <div className="flex items-center justify-between gap-3 p-4 px-6 border-t border-[var(--border)] bg-[var(--card)] shrink-0">
-                  <div>
-                    {editingCourse && canDelete && (
-                      <button
-                        type="button"
-                        onClick={() => openSecurityDeleteModal(editingCourse)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#b53c37] hover:bg-rose-500/10 border border-rose-500/20 transition-colors cursor-pointer"
-                        disabled={submitting}
-                      >
-                        <Trash2 size={14} />
-                        Delete Course
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between gap-3 p-4 px-6 border-t border-[var(--border)] bg-[var(--card)] shrink-0">
+                <div>
+                  {editingCourse && canDelete && (
                     <button
                       type="button"
-                      onClick={closeModal}
+                      onClick={() => openSecurityDeleteModal(editingCourse)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#b53c37] hover:bg-rose-500/10 border border-rose-500/20 transition-colors cursor-pointer"
                       disabled={submitting}
-                      className="px-4 py-2 rounded-full text-xs font-semibold text-[var(--text)] bg-[var(--panel)] border border-[var(--border)] hover:bg-[var(--card)] transition-colors cursor-pointer"
                     >
-                      Cancel
+                      <Trash2 size={14} />
+                      Delete Course
                     </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="px-5 py-2 rounded-full text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
-                      style={{ background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }}
-                    >
-                      {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
-                    </button>
-                  </div>
+                  )}
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Security Deletion Modal with Course Name Confirmation */}
-        {deleteConfirmOpen && deleteConfirmCourse && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-60 overflow-y-auto animate-in fade-in duration-150">
-            <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-rose-500/20 w-full max-w-md my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
-              <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-rose-500/20 text-[#b53c37] flex items-center justify-center shrink-0">
-                    <ShieldAlert size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-[var(--text)]">Delete Course</h3>
-                    <span className="text-[11px] font-bold tracking-wider uppercase text-[#b53c37]">
-                      Destructive & Cascading Action
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeSecurityDeleteModal}
-                  disabled={deleting}
-                  className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4 overflow-y-auto flex-1">
-                <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs space-y-2 text-amber-900">
-                  <div className="flex items-center gap-2 font-semibold text-amber-800">
-                    <AlertTriangle size={15} className="shrink-0 text-amber-600" />
-                    <span>Important Data Archival & Impact Warning</span>
-                  </div>
-                  <p className="leading-relaxed">
-                    Deleting <strong className="text-gray-900 font-semibold">{deleteConfirmCourse.name}</strong> will
-                    also cascade:
-                  </p>
-                  <ul className="list-disc pl-4 space-y-1 text-amber-800/90 leading-normal">
-                    <li>
-                      Disassociates or removes all linked <strong>course materials</strong> and uploaded files.
-                    </li>
-                    <li>
-                      Unlinks <strong>attendance records</strong>, session progress, and trainer allocations.
-                    </li>
-                    <li>
-                      Removes linked <strong>assessment tests</strong> and student performance evaluations.
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    To confirm deletion, please type the course name:
-                  </label>
-                  <div className="mb-2 p-2 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs font-semibold text-gray-800 select-all text-center">
-                    {deleteConfirmCourse.name}
-                  </div>
-                  <input
-                    type="text"
-                    value={deleteInputName}
-                    onChange={(e) => {
-                      setDeleteInputName(e.target.value)
-                      if (deleteError) setDeleteError('')
-                    }}
-                    placeholder="Type the exact course name here"
-                    disabled={deleting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
-                    autoFocus
-                  />
-                  <div className="mt-1.5 flex items-center justify-between text-xs">
-                    {deleteInputName.trim().length === 0 ? (
-                      <span className="text-gray-400">Course name required to proceed</span>
-                    ) : isDeleteNameMatched ? (
-                      <span className="text-emerald-600 font-medium flex items-center gap-1">
-                        <CheckCircle2 size={13} /> Name matched. You may proceed.
-                      </span>
-                    ) : (
-                      <span className="text-amber-600">Course name does not match yet</span>
-                    )}
-                  </div>
-                </div>
-
-                {deleteError && (
-                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
-                    <AlertCircle size={15} className="shrink-0" />
-                    <span>{deleteError}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                  <Button type="button" variant="outline" onClick={closeSecurityDeleteModal} disabled={deleting}>
-                    Cancel
-                  </Button>
-                  <Button
+                <div className="flex items-center gap-2.5">
+                  <button
                     type="button"
-                    onClick={handleConfirmDelete}
-                    disabled={!isDeleteNameMatched || deleting}
-                    className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={closeModal}
+                    disabled={submitting}
+                    className="px-4 py-2 rounded-full text-xs font-semibold text-[var(--text)] bg-[var(--panel)] border border-[var(--border)] hover:bg-[var(--card)] transition-colors cursor-pointer"
                   >
-                    {deleting ? 'Deleting & Archiving...' : 'Permanently Delete Course'}
-                  </Button>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-5 py-2 rounded-full text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, var(--g1), var(--g1b))' }}
+                  >
+                    {submitting ? 'Saving...' : editingCourse ? 'Save Changes' : 'Create Course'}
+                  </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Security Deletion Modal with Course Name Confirmation */}
+      {deleteConfirmOpen && deleteConfirmCourse && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-60 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-[var(--card)] rounded-[26px] shadow-2xl border border-rose-500/20 w-full max-w-md my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-rose-500/20 text-[#b53c37] flex items-center justify-center shrink-0">
+                  <ShieldAlert size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--text)]">Delete Course</h3>
+                  <span className="text-[11px] font-bold tracking-wider uppercase text-[#b53c37]">
+                    Destructive & Cascading Action
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeSecurityDeleteModal}
+                disabled={deleting}
+                className="text-[var(--mute)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--panel)] transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs space-y-2 text-amber-900">
+                <div className="flex items-center gap-2 font-semibold text-amber-800">
+                  <AlertTriangle size={15} className="shrink-0 text-amber-600" />
+                  <span>Important Data Archival & Impact Warning</span>
+                </div>
+                <p className="leading-relaxed">
+                  Deleting <strong className="text-gray-900 font-semibold">{deleteConfirmCourse.name}</strong> will also
+                  cascade:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-amber-800/90 leading-normal">
+                  <li>
+                    Disassociates or removes all linked <strong>course materials</strong> and uploaded files.
+                  </li>
+                  <li>
+                    Unlinks <strong>attendance records</strong>, session progress, and trainer allocations.
+                  </li>
+                  <li>
+                    Removes linked <strong>assessment tests</strong> and student performance evaluations.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  To confirm deletion, please type the course name:
+                </label>
+                <div className="mb-2 p-2 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs font-semibold text-gray-800 select-all text-center">
+                  {deleteConfirmCourse.name}
+                </div>
+                <input
+                  type="text"
+                  value={deleteInputName}
+                  onChange={(e) => {
+                    setDeleteInputName(e.target.value)
+                    if (deleteError) setDeleteError('')
+                  }}
+                  placeholder="Type the exact course name here"
+                  disabled={deleting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+                  autoFocus
+                />
+                <div className="mt-1.5 flex items-center justify-between text-xs">
+                  {deleteInputName.trim().length === 0 ? (
+                    <span className="text-gray-400">Course name required to proceed</span>
+                  ) : isDeleteNameMatched ? (
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 size={13} /> Name matched. You may proceed.
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Course name does not match yet</span>
+                  )}
+                </div>
+              </div>
+
+              {deleteError && (
+                <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                <Button type="button" variant="outline" onClick={closeSecurityDeleteModal} disabled={deleting}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={!isDeleteNameMatched || deleting}
+                  className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? 'Deleting & Archiving...' : 'Permanently Delete Course'}
+                </Button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </>
   )
 }

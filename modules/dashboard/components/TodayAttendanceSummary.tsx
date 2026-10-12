@@ -77,35 +77,17 @@ export function TodayAttendanceSummary({
         <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
           {/* Donut Pattern Chart (inspired by c-chart-21) */}
           <div className="md:col-span-5 flex flex-col items-center justify-center relative">
-            <ChartContainer
-              config={chartConfig}
-              className="mx-auto aspect-square w-full max-w-[170px] max-h-[170px]"
-            >
+            <ChartContainer config={chartConfig} className="mx-auto aspect-square w-full max-w-[170px] max-h-[170px]">
               <PieChart accessibilityLayer>
                 <defs>
                   {/* Present Pattern: Subtle diagonal hatch on emerald */}
-                  <pattern
-                    id="attendance-present-pattern"
-                    patternUnits="userSpaceOnUse"
-                    width="6"
-                    height="6"
-                  >
+                  <pattern id="attendance-present-pattern" patternUnits="userSpaceOnUse" width="6" height="6">
                     <rect width="6" height="6" fill="#10b981" opacity="0.25" />
-                    <path
-                      d="M0,6 L6,0 M-2,2 L2,-2 M4,8 L8,4"
-                      stroke="#10b981"
-                      strokeWidth="1.5"
-                      opacity="0.95"
-                    />
+                    <path d="M0,6 L6,0 M-2,2 L2,-2 M4,8 L8,4" stroke="#10b981" strokeWidth="1.5" opacity="0.95" />
                   </pattern>
 
                   {/* Absent Pattern: Dot matrix on rose */}
-                  <pattern
-                    id="attendance-absent-pattern"
-                    patternUnits="userSpaceOnUse"
-                    width="5"
-                    height="5"
-                  >
+                  <pattern id="attendance-absent-pattern" patternUnits="userSpaceOnUse" width="5" height="5">
                     <rect width="5" height="5" fill="#f43f5e" opacity="0.2" />
                     <circle cx="2.5" cy="2.5" r="1.3" fill="#f43f5e" opacity="0.9" />
                   </pattern>
@@ -124,10 +106,7 @@ export function TodayAttendanceSummary({
                           return (
                             <div className="flex w-full items-center justify-between gap-3">
                               <div className="flex items-center gap-1.5">
-                                <span
-                                  className="h-2.5 w-2.5 rounded-[2px]"
-                                  style={{ backgroundColor: color }}
-                                />
+                                <span className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: color }} />
                                 <span className="text-muted-foreground font-medium">{label}</span>
                               </div>
                               <span className="font-semibold tabular-nums text-foreground">

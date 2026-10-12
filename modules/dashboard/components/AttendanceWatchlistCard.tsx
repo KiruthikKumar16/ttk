@@ -3,13 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  AlertTriangle,
-  ArrowRight,
-  ChevronDown,
-  Phone,
-  X,
-} from 'lucide-react'
+import { AlertTriangle, ArrowRight, ChevronDown, Phone, X } from 'lucide-react'
 import { ModernTable } from '@/components/ui/ModernTable'
 
 export interface WatchlistStudent {

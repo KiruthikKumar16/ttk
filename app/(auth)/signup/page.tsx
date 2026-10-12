@@ -267,7 +267,10 @@ export default function SignupPage() {
       <div className="w-full max-w-md mx-auto">
         {/* Form Header */}
         <div className="mb-4 text-center">
-          <h1 id="signup-title" className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1
+            id="signup-title"
+            className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-tight"
+          >
             {isDetectedAdmin
               ? 'Administrator Registration'
               : activeTab === 'otp'
@@ -282,7 +285,10 @@ export default function SignupPage() {
         </div>
 
         {/* Tab Switcher: Staff Request vs Invite */}
-        <div className="p-1 rounded-xl bg-slate-100/90 border border-slate-200/90 flex gap-1 mb-3.5 sm:mb-4" role="tablist">
+        <div
+          className="p-1 rounded-xl bg-slate-100/90 border border-slate-200/90 flex gap-1 mb-3.5 sm:mb-4"
+          role="tablist"
+        >
           <button
             type="button"
             role="tab"
@@ -317,10 +323,7 @@ export default function SignupPage() {
           {activeTab === 'otp' && (
             <div className="p-3.5 rounded-2xl border-2 border-emerald-300 bg-emerald-50/40 transition-all">
               <div className="flex items-center justify-between mb-1.5">
-                <label
-                  htmlFor="passcode"
-                  className="text-xs font-bold text-slate-900 uppercase tracking-wider"
-                >
+                <label htmlFor="passcode" className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                   Invite Code
                 </label>
                 {isFromUrl && (
@@ -351,7 +354,8 @@ export default function SignupPage() {
                     <div className="p-2.5 rounded-xl bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-950 flex items-center gap-2">
                       <Check size={15} className="text-emerald-800 shrink-0" aria-hidden="true" />
                       <span>
-                        Valid {verifiedCode.role === 'admin' ? 'Administrator' : 'Staff'} Code — Instant activation granted!
+                        Valid {verifiedCode.role === 'admin' ? 'Administrator' : 'Staff'} Code — Instant activation
+                        granted!
                       </span>
                     </div>
                   ) : (
@@ -580,7 +584,10 @@ export default function SignupPage() {
           >
             {loading ? (
               <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  aria-hidden="true"
+                />
                 <span>{activeTab === 'otp' ? 'Activating account...' : 'Submitting request...'}</span>
               </>
             ) : isDetectedAdmin ? (
@@ -603,4 +610,3 @@ export default function SignupPage() {
     </AuthShell>
   )
 }
-

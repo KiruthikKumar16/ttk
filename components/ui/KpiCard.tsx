@@ -86,9 +86,7 @@ export function KpiCard({
     <div
       onClick={onClick}
       className={`group relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-5 backdrop-blur-[var(--card-glass-blur,18px)] transition-[transform,border-color] duration-200 ease-out ${
-        highlightOnHover
-          ? 'hover:-translate-y-1 hover:border-transparent'
-          : 'hover:-translate-y-0.5'
+        highlightOnHover ? 'hover:-translate-y-1 hover:border-transparent' : 'hover:-translate-y-0.5'
       } ${onClick ? 'cursor-pointer' : ''} ${className}`}
       style={{
         boxShadow: 'var(--shadow-card)',
@@ -155,9 +153,7 @@ export function KpiCard({
         {badge && (
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all duration-300 ${
-              highlightOnHover
-                ? 'group-hover:bg-white/20 group-hover:text-white group-hover:backdrop-blur-md'
-                : ''
+              highlightOnHover ? 'group-hover:bg-white/20 group-hover:text-white group-hover:backdrop-blur-md' : ''
             } ${
               badge.variant === 'success'
                 ? 'bg-[var(--success-bg)] text-[#1b7a4b]'

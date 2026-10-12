@@ -173,10 +173,10 @@ export function computeCanvasGradient(accentHex: string, theme: ThemeMode, confi
     return `radial-gradient(circle at 85% 15%, rgba(${r}, ${g}, ${b}, ${(0.48 * k).toFixed(3)}) 0%, rgba(${r}, ${g}, ${b}, ${(0.14 * k).toFixed(3)}) 48%, rgba(255, 255, 255, 0.98) 85%)`
   }
   if (config.style === 'mesh' || config.directionPreset === 'mesh') {
-    return `radial-gradient(at 90% 12%, rgba(${r}, ${g}, ${b}, ${(0.50 * k).toFixed(3)}) 0px, transparent 55%), radial-gradient(at 10% 88%, rgba(${r2}, ${g2}, ${b2}, ${(0.26 * k).toFixed(3)}) 0px, transparent 50%), linear-gradient(${config.angle}deg, rgba(255, 255, 255, 0.98) 0%, rgba(${r}, ${g}, ${b}, ${(0.18 * k).toFixed(3)}) 100%)`
+    return `radial-gradient(at 90% 12%, rgba(${r}, ${g}, ${b}, ${(0.5 * k).toFixed(3)}) 0px, transparent 55%), radial-gradient(at 10% 88%, rgba(${r2}, ${g2}, ${b2}, ${(0.26 * k).toFixed(3)}) 0px, transparent 50%), linear-gradient(${config.angle}deg, rgba(255, 255, 255, 0.98) 0%, rgba(${r}, ${g}, ${b}, ${(0.18 * k).toFixed(3)}) 100%)`
   }
   // linear
-  return `linear-gradient(${config.angle}deg, rgba(255, 255, 255, 0.98) 0%, rgba(${r}, ${g}, ${b}, ${(0.10 * k).toFixed(3)}) 38%, rgba(${r}, ${g}, ${b}, ${(0.46 * k).toFixed(3)}) 100%)`
+  return `linear-gradient(${config.angle}deg, rgba(255, 255, 255, 0.98) 0%, rgba(${r}, ${g}, ${b}, ${(0.1 * k).toFixed(3)}) 38%, rgba(${r}, ${g}, ${b}, ${(0.46 * k).toFixed(3)}) 100%)`
 }
 
 export function computeGlassmorphismTokens(theme: ThemeMode, config: GradientConfig) {

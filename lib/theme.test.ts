@@ -3,11 +3,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   DEFAULT_THEME,
   DEFAULT_ACCENT,
+  DEFAULT_GRADIENT_CONFIG,
   ACCENT_SWATCHES,
   generatePalette,
   getStoredTheme,
   getStoredAccent,
   applyTheme,
+  computeGlassmorphismTokens,
+  applyGradientOnly,
+  applyGlassmorphismOnly,
 } from './theme'
 
 describe('Theme utilities', () => {
@@ -95,5 +99,25 @@ describe('Theme utilities', () => {
 
     expect(localStorage.getItem('thoorigai_theme')).toBe('dark')
     expect(localStorage.getItem('thoorigai_accent')).toBe('#4f46e5')
+  })
+
+  it('computes glassmorphism tokens for dark and light modes', () => {
+    const darkGlass = computeGlassmorphismTokens('dark', DEFAULT_GRADIENT_CONFIG)
+    expect(darkGlass.cardBg).toContain('rgba')
+    expect(darkGlass.cardBlur).toBe(`${DEFAULT_GRADIENT_CONFIG.glassBlur}px`)
+    expect(darkGlass.canvasColor).toBe('#090e0c')
+
+    const lightGlass = computeGlassmorphismTokens('light', DEFAULT_GRADIENT_CONFIG)
+    expect(lightGlass.cardBg).toContain('rgba')
+    expect(lightGlass.cardBlur).toBe(`${DEFAULT_GRADIENT_CONFIG.glassBlur}px`)
+    expect(lightGlass.canvasColor).toBe('#ffffff')
+  })
+
+  it('applies gradient and glassmorphism directly to DOM', () => {
+    applyGradientOnly('#1f7d52', 'light', DEFAULT_GRADIENT_CONFIG)
+    expect(document.documentElement.style.getPropertyValue('--bg-canvas-gradient')).toBeTruthy()
+
+    applyGlassmorphismOnly('light', '#1f7d52', DEFAULT_GRADIENT_CONFIG)
+    expect(document.documentElement.style.getPropertyValue('--card-glass-bg')).toBeTruthy()
   })
 })

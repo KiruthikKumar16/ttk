@@ -103,11 +103,17 @@ export function ConfirmDialog({
             </div>
 
             <div className="flex-1 min-w-0">
-              <h2 id="confirm-dialog-title" className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+              <h2
+                id="confirm-dialog-title"
+                className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight"
+              >
                 {title}
               </h2>
               {description && (
-                <p id="confirm-dialog-description" className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p
+                  id="confirm-dialog-description"
+                  className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
+                >
                   {description}
                 </p>
               )}

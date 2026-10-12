@@ -119,7 +119,7 @@ export function StudentDetail({
   const exemptSessions = attendance.filter((a) => a.status === 'Exempt' || a.status === 'Excused').length
   const countableSessions = totalSessions - exemptSessions
   const attendanceRate =
-    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : (totalSessions > 0 ? 100 : 0)
+    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : totalSessions > 0 ? 100 : 0
 
   // Weekly attendance roster & historic week navigation
   const [weekOffset, setWeekOffset] = useState(0)
@@ -728,9 +728,7 @@ export function StudentDetail({
                 </div>
 
                 <div className="p-3.5 rounded-[18px] bg-sky-50 border border-sky-200/60">
-                  <span className="text-[11px] font-semibold text-sky-700 uppercase tracking-wider block">
-                    Exempt
-                  </span>
+                  <span className="text-[11px] font-semibold text-sky-700 uppercase tracking-wider block">Exempt</span>
                   <strong className="text-2xl font-extrabold text-sky-700 mt-0.5 block">{exemptSessions}</strong>
                   <span className="text-[10px] text-sky-600 font-medium">Approved leave</span>
                 </div>

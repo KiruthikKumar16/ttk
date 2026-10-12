@@ -1,17 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
-import {
-  X,
-  Sun,
-  Moon,
-  RotateCcw,
-  Check,
-  Sparkles,
-  Layers,
-  Compass,
-  Flame,
-} from 'lucide-react'
+import { X, Sun, Moon, RotateCcw, Check, Sparkles, Layers, Compass, Flame } from 'lucide-react'
 import { useTheme } from '@/lib/ThemeContext'
 import {
   ACCENT_SWATCHES,
@@ -429,9 +419,7 @@ export function SettingsDrawer() {
                 {directionOptions.map((opt) => {
                   const isActive =
                     gradientConfig.directionPreset === opt.preset ||
-                    (opt.style === 'linear' &&
-                      gradientConfig.style === 'linear' &&
-                      gradientConfig.angle === opt.angle)
+                    (opt.style === 'linear' && gradientConfig.style === 'linear' && gradientConfig.angle === opt.angle)
                   return (
                     <button
                       key={opt.label}

@@ -36,7 +36,7 @@ export function ModernTable({
   const [hoverRow, setHoverRow] = useState<number>(-1)
 
   const normalizedCols: ColumnDef[] = columns.map((col) =>
-    typeof col === 'string' ? { header: col, align: 'left' } : col
+    typeof col === 'string' ? { header: col, align: 'left' } : col,
   )
 
   return (
@@ -81,7 +81,7 @@ export function ModernTable({
                 const rowId = isArrayRow ? ri : (rowItem.id ?? ri)
                 const onClick = isArrayRow ? undefined : rowItem.onClick
                 const title = isArrayRow ? undefined : rowItem.title
-                const customClassName = isArrayRow ? '' : (rowItem.className || '')
+                const customClassName = isArrayRow ? '' : rowItem.className || ''
 
                 const isHovered = hoverRow === ri
 
@@ -96,9 +96,7 @@ export function ModernTable({
                     } ${ri < rows.length - 1 ? 'border-b border-[var(--border)]' : ''} ${customClassName}`}
                     style={{
                       backgroundColor: isHovered ? 'var(--g4)' : 'transparent',
-                      boxShadow: isHovered
-                        ? 'inset 4px 0 0 0 var(--g1)'
-                        : 'none',
+                      boxShadow: isHovered ? 'inset 4px 0 0 0 var(--g1)' : 'none',
                     }}
                     title={title}
                   >
@@ -129,10 +127,7 @@ export function ModernTable({
               })
             ) : (
               <tr>
-                <td
-                  colSpan={normalizedCols.length}
-                  className="py-8 text-center text-xs text-[var(--mute)]"
-                >
+                <td colSpan={normalizedCols.length} className="py-8 text-center text-xs text-[var(--mute)]">
                   {emptyMessage}
                 </td>
               </tr>

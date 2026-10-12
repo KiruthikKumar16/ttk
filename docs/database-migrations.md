@@ -4,12 +4,28 @@ SQL in `supabase/migrations/` is the schema source of truth. Use forward-only mi
 
 ## Observed remote status
 
-The latest migration push transcript supplied by the project owner reported a successful cloud push through `20260929024205_date_range_reports.sql`. That is historical user-provided evidence, not a live database check. This checkout contains four later migrations that were added after that transcript and should be treated as pending until `supabase migration list --linked` confirms otherwise:
+The latest migration push transcript supplied by the project owner reported a successful cloud push through `20260929024205_date_range_reports.sql`. That is historical user-provided evidence, not a live database check. This checkout contains 20 later migrations that were added after that transcript and should be treated as pending until `supabase migration list --linked` confirms otherwise:
 
 - `20260929092557_provision_course_materials_storage.sql`
 - `20260929114233_observability_readiness_and_audit_correlation.sql`
 - `20260929133609_scale_cursor_indexes.sql`
 - `20260929145735_grant_server_cache_reads.sql`
+- `20260930031537_fix_auth_user_profile_trigger.sql`
+- `20260930104500_disable_self_registration_pending_profile_role.sql`
+- `20260930113000_create_brand_settings.sql`
+- `20260930123000_create_course_categories.sql`
+- `20260930140000_consolidate_trainer_into_staff.sql`
+- `20260930150000_update_brand_urls_to_vercel.sql`
+- `20261001140000_create_invite_codes.sql`
+- `20261001150000_create_skill_tags.sql`
+- `20261001160000_create_notifications.sql`
+- `20261001170000_add_payment_type_and_instance.sql`
+- `20261002120000_fix_public_verify_document_reference_lookup.sql`
+- `20261003121800_comprehensive_audit_logging.sql`
+- `20261003184500_add_user_contact_details_and_metadata.sql`
+- `20261004100000_add_google_forms_to_assessments.sql`
+- `20261005150000_fix_service_role_profile_role_checks.sql`
+- `20261010110000_attendance_exempt_status.sql`
 
 The older migration files include corrections made before the reported push. Do not edit any migration already recorded in the shared project's migration history; add a new migration instead. Never use `migration repair` to hide a schema mismatch without a reviewed recovery plan.
 

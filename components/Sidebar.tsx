@@ -206,7 +206,6 @@ export function Sidebar({
           </button>
         </div>
 
-
         {/* Account Info */}
         <div className="account mt-3 pt-3 border-t border-[var(--border)] min-w-0 overflow-hidden">
           <div className="avatar shrink-0">{role.slice(0, 1).toUpperCase()}</div>

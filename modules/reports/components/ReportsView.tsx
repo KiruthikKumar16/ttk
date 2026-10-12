@@ -40,12 +40,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Button } from '@/components/ui/button'
 import type { Payment, Student, Course, CourseCategory } from '@/lib/types'
 import { money } from '@/lib/formatters'
@@ -180,9 +175,7 @@ function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollment
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-[var(--mute)]">
               <span>Total Cohort:</span>
-              <span className="text-base font-bold font-mono text-[var(--ink)] tabular-nums">
-                {totalStudents}
-              </span>
+              <span className="text-base font-bold font-mono text-[var(--ink)] tabular-nums">{totalStudents}</span>
               <span className="text-xs">std</span>
             </div>
           )}
@@ -194,9 +187,7 @@ function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollment
         {/* Dashed background guidelines */}
         <div className="absolute inset-x-0 top-4 bottom-8 flex flex-col justify-between pointer-events-none">
           <div className="border-b border-dashed border-[var(--border)] w-full relative">
-            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
-              {maxValue} std
-            </span>
+            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">{maxValue} std</span>
           </div>
           <div className="border-b border-dashed border-[var(--border)] w-full relative">
             <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
@@ -204,9 +195,7 @@ function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollment
             </span>
           </div>
           <div className="border-b border-dashed border-[var(--border)] w-full relative">
-            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">
-              0
-            </span>
+            <span className="absolute right-0 -top-4 text-[10px] font-mono text-[var(--mute)]">0</span>
           </div>
         </div>
 
@@ -216,8 +205,7 @@ function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollment
             const heightPx = Math.max(22, Math.round((item.count / maxValue) * 105))
             const isHovered = hoveredIndex === index
             const isAnyHovered = hoveredIndex !== null
-            const isNeighbor =
-              hoveredIndex !== null && (index === hoveredIndex - 1 || index === hoveredIndex + 1)
+            const isNeighbor = hoveredIndex !== null && (index === hoveredIndex - 1 || index === hoveredIndex + 1)
 
             return (
               <div
@@ -251,11 +239,7 @@ function CourseEnrollmentChart({ courseCounts, totalStudents }: CourseEnrollment
                           : 'linear-gradient(180deg, var(--g1) 0%, var(--g3) 100%)',
                     opacity: isHovered ? 1 : isNeighbor ? 0.6 : isAnyHovered ? 0.2 : 0.85,
                     boxShadow: isHovered ? '0 0 16px var(--g4)' : 'none',
-                    transform: isHovered
-                      ? 'scaleX(1.15) scaleY(1.03)'
-                      : isNeighbor
-                        ? 'scaleX(1.05)'
-                        : 'scaleX(1)',
+                    transform: isHovered ? 'scaleX(1.15) scaleY(1.03)' : isNeighbor ? 'scaleX(1.05)' : 'scaleX(1)',
                   }}
                 />
 
@@ -343,10 +327,7 @@ function PaymentClearanceChart({
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-4 sm:p-5 items-center">
       {/* Padded Donut Chart with Centered Clearance Ratio */}
       <div className="md:col-span-5 relative flex items-center justify-center">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[220px] w-full"
-        >
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[220px] w-full">
           <PieChart>
             <ChartTooltip
               content={
@@ -508,9 +489,7 @@ function PaymentClearanceChart({
               </div>
               <div>
                 <h4 className="text-xs font-bold text-[var(--ink)]">Pending Dues</h4>
-                <p className="text-[10px] text-[var(--mute)]">
-                  {money(outstanding)} due
-                </p>
+                <p className="text-[10px] text-[var(--mute)]">{money(outstanding)} due</p>
               </div>
             </div>
             <div className="text-right">
@@ -802,9 +781,7 @@ function GenderDemographicsChart({
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-all inline-block"
                 style={{
                   background:
-                    activeGender === 'Male'
-                      ? 'var(--g1)'
-                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                    activeGender === 'Male' ? 'var(--g1)' : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
                   color: activeGender === 'Male' ? '#fff' : 'var(--g1b)',
                   borderColor: activeGender === 'Male' ? 'var(--g1)' : 'var(--g5)',
                 }}
@@ -842,16 +819,10 @@ type PaymentMethodTotalsProps = {
   revenue: number
 }
 
-function PaymentMethodTotalsChart({
-  paymentChartData,
-  paymentChartConfig,
-  revenue,
-}: PaymentMethodTotalsProps) {
+function PaymentMethodTotalsChart({ paymentChartData, paymentChartConfig, revenue }: PaymentMethodTotalsProps) {
   const [activeMethod, setActiveMethod] = useState<string | null>(null)
 
-  const activeItem = activeMethod
-    ? paymentChartData.find((item) => item.method === activeMethod)
-    : null
+  const activeItem = activeMethod ? paymentChartData.find((item) => item.method === activeMethod) : null
 
   if (paymentChartData.length === 0) {
     return <p className="empty-note">No payments recorded in selected period.</p>
@@ -879,16 +850,10 @@ function PaymentMethodTotalsChart({
                           className="h-2.5 w-2.5 rounded-full shrink-0"
                           style={{ background: item.payload?.fill || 'var(--g1)' }}
                         />
-                        <span className="font-semibold text-[var(--ink)]">
-                          {item.payload?.method || name}
-                        </span>
-                        <span className="text-[10px] text-[var(--mute)]">
-                          ({item.payload?.count ?? 1} tx)
-                        </span>
+                        <span className="font-semibold text-[var(--ink)]">{item.payload?.method || name}</span>
+                        <span className="text-[10px] text-[var(--mute)]">({item.payload?.count ?? 1} tx)</span>
                       </div>
-                      <span className="font-bold text-[var(--ink)] font-mono">
-                        {money(Number(value))}
-                      </span>
+                      <span className="font-bold text-[var(--ink)] font-mono">{money(Number(value))}</span>
                     </div>
                   )}
                 />
@@ -930,12 +895,7 @@ function PaymentMethodTotalsChart({
                 content={({ viewBox }) => {
                   if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
                     return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
+                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) - 2}
@@ -1003,20 +963,14 @@ function PaymentMethodTotalsChart({
                 >
                   {item.method}
                 </strong>
-                <span className="text-[10px] text-[var(--mute)] shrink-0 font-medium font-mono">
-                  ({item.count} tx)
-                </span>
+                <span className="text-[10px] text-[var(--mute)] shrink-0 font-medium font-mono">({item.count} tx)</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-bold font-mono text-[var(--ink)]">
-                  {money(item.amount)}
-                </span>
+                <span className="text-xs font-bold font-mono text-[var(--ink)]">{money(item.amount)}</span>
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all"
                   style={{
-                    background: isHovered
-                      ? item.fill
-                      : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
+                    background: isHovered ? item.fill : 'linear-gradient(135deg, var(--g4) 0%, var(--panel) 100%)',
                     color: isHovered ? '#fff' : 'var(--g1b)',
                     borderColor: isHovered ? item.fill : 'var(--g5)',
                   }}
@@ -1250,14 +1204,7 @@ export function ReportsView({
     URL.revokeObjectURL(url)
   }
 
-  const themeGradientFills = [
-    'var(--g1)',
-    'var(--g2)',
-    'var(--g3)',
-    'var(--g1b)',
-    'var(--g2b)',
-    'var(--g5)',
-  ]
+  const themeGradientFills = ['var(--g1)', 'var(--g2)', 'var(--g3)', 'var(--g1b)', 'var(--g2b)', 'var(--g5)']
 
   const paymentChartData = useMemo(() => {
     return Object.entries(methods)
@@ -1567,10 +1514,7 @@ export function ReportsView({
                       />
                     }
                   />
-                  <PolarAngleAxis
-                    dataKey="channel"
-                    tick={{ fill: 'var(--ink)', fontSize: 11, fontWeight: 600 }}
-                  />
+                  <PolarAngleAxis dataKey="channel" tick={{ fill: 'var(--ink)', fontSize: 11, fontWeight: 600 }} />
                   <PolarGrid stroke="var(--mute)" strokeOpacity={0.35} strokeWidth={1.2} />
                   <Radar
                     name="Students"
@@ -1601,25 +1545,15 @@ export function ReportsView({
             <p className="empty-note">No payment velocity data in this period.</p>
           ) : (
             <div className="p-3 sm:p-5 flex flex-col gap-3">
-              <ChartContainer
-                config={velocityChartConfig}
-                className="aspect-auto h-[240px] w-full"
-              >
-                <AreaChart
-                  data={velocityChartData}
-                  margin={{ top: 12, right: 16, left: 10, bottom: 0 }}
-                >
+              <ChartContainer config={velocityChartConfig} className="aspect-auto h-[240px] w-full">
+                <AreaChart data={velocityChartData} margin={{ top: 12, right: 16, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="velocityFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--g1)" stopOpacity={0.35} />
                       <stop offset="95%" stopColor="var(--g1)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="var(--border)"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="date"
                     tickLine={false}
@@ -1644,9 +1578,7 @@ export function ReportsView({
                         formatter={(value) => (
                           <div className="flex w-full items-center justify-between gap-3 text-xs">
                             <span className="text-[var(--mute)]">Inflow:</span>
-                            <span className="font-bold text-[var(--ink)] font-mono">
-                              {money(Number(value))}
-                            </span>
+                            <span className="font-bold text-[var(--ink)] font-mono">{money(Number(value))}</span>
                           </div>
                         )}
                         labelFormatter={(_, payload) => (

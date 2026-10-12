@@ -85,7 +85,10 @@ export function StaffDashboardView({
               style={{ background: 'var(--g3)' }}
               aria-hidden="true"
             />
-            <CalendarDays size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+            <CalendarDays
+              size={14}
+              className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+            />
             <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Mark Attendance</span>
           </Link>
 
@@ -106,8 +109,13 @@ export function StaffDashboardView({
               style={{ background: 'var(--g3)' }}
               aria-hidden="true"
             />
-            <ClipboardCheck size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
-            <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Assessments ({assessmentCount})</span>
+            <ClipboardCheck
+              size={14}
+              className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+            />
+            <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
+              Assessments ({assessmentCount})
+            </span>
           </Link>
 
           <Link
@@ -127,8 +135,13 @@ export function StaffDashboardView({
               style={{ background: 'var(--g3)' }}
               aria-hidden="true"
             />
-            <FolderOpen size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
-            <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Upload Materials</span>
+            <FolderOpen
+              size={14}
+              className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+            />
+            <span className="relative z-10 transition-colors duration-200 group-hover:text-white">
+              Upload Materials
+            </span>
           </Link>
 
           {canCreateStudent && (
@@ -149,7 +162,10 @@ export function StaffDashboardView({
                 style={{ background: 'var(--g3)' }}
                 aria-hidden="true"
               />
-              <Plus size={14} className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white" />
+              <Plus
+                size={14}
+                className="relative z-10 text-[var(--g1)] transition-colors duration-200 group-hover:text-white"
+              />
               <span className="relative z-10 transition-colors duration-200 group-hover:text-white">Add Student</span>
             </Link>
           )}
@@ -291,7 +307,9 @@ export function StaffDashboardView({
         <div className="panel-header">
           <div>
             <h2>Course mix</h2>
-            <p className="text-xs text-[var(--mute)] mt-0.5">Curriculum categories, course variants, and enrolled student breakdown</p>
+            <p className="text-xs text-[var(--mute)] mt-0.5">
+              Curriculum categories, course variants, and enrolled student breakdown
+            </p>
           </div>
           <Link href="/courses" className="text-xs font-semibold text-[var(--g1)] hover:underline">
             View courses
@@ -309,7 +327,12 @@ export function StaffDashboardView({
               const isInternship = row.name.toLowerCase().includes('internship')
               const variantsCount = row.courseNames?.length || 1
               const cleanCourseNames = isInternship
-                ? row.courseNames?.map((n) => n.replace(/course\s*[-–]\s*/gi, '').replace(/\bcourse\b/gi, 'Track').trim())
+                ? row.courseNames?.map((n) =>
+                    n
+                      .replace(/course\s*[-–]\s*/gi, '')
+                      .replace(/\bcourse\b/gi, 'Track')
+                      .trim(),
+                  )
                 : row.courseNames
 
               return {
@@ -330,9 +353,12 @@ export function StaffDashboardView({
                       </span>
                     </span>
                     {cleanCourseNames && cleanCourseNames.length > 0 && (
-                      <span className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-1" title={cleanCourseNames.join(', ')}>
+                      <span
+                        className="text-[11px] text-[var(--mute)] truncate max-w-xs mt-1"
+                        title={cleanCourseNames.join(', ')}
+                      >
                         {isInternship
-                          ? (cleanCourseNames[0] || 'Industry Internship Track')
+                          ? cleanCourseNames[0] || 'Industry Internship Track'
                           : `${cleanCourseNames.slice(0, 2).join(', ')}${cleanCourseNames.length > 2 ? ` +${cleanCourseNames.length - 2} more` : ''}`}
                       </span>
                     )}

@@ -19,7 +19,12 @@
 
   /* Surfaces & Backgrounds */
   --bg: #cbd5e1;
-  --bg-canvas-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(31, 125, 82, 0.05) 38%, rgba(31, 125, 82, 0.22) 100%);
+  --bg-canvas-gradient: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(31, 125, 82, 0.05) 38%,
+    rgba(31, 125, 82, 0.22) 100%
+  );
   --bg-canvas-color: #ffffff;
   --shell: #ffffff;
   --panel: rgba(255, 255, 255, 0.74);
@@ -28,7 +33,9 @@
   --card-glass-bg: rgba(255, 255, 255, 0.74);
   --card-glass-blur: 18px;
   --card-glass-border: rgba(255, 255, 255, 0.75);
-  --card-glass-shadow: 0 14px 34px -8px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+  --card-glass-shadow:
+    0 14px 34px -8px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
   --sidebar-glass-bg: rgba(255, 255, 255, 0.78);
   --topbar-glass-bg: rgba(255, 255, 255, 0.78);
 
@@ -137,7 +144,7 @@
 
   /* Deep green-black surfaces */
   --bg: #070b09;
-  --bg-canvas-gradient: linear-gradient(135deg, #090e0c 0%, rgba(31, 125, 82, 0.07) 42%, rgba(31, 125, 82, 0.20) 100%);
+  --bg-canvas-gradient: linear-gradient(135deg, #090e0c 0%, rgba(31, 125, 82, 0.07) 42%, rgba(31, 125, 82, 0.2) 100%);
   --bg-canvas-color: #090e0c;
   --shell: #0e1713;
   --panel: rgba(18, 28, 22, 0.65);
@@ -1315,13 +1322,16 @@ th {
   padding: 10px 14px;
   transition: color 0.15s ease-out;
 }
-th.align-right, th.text-right {
+th.align-right,
+th.text-right {
   text-align: right !important;
 }
-th.align-center, th.text-center {
+th.align-center,
+th.text-center {
   text-align: center !important;
 }
-th.align-left, th.text-left {
+th.align-left,
+th.text-left {
   text-align: left !important;
 }
 th:first-child {
@@ -1339,13 +1349,16 @@ td {
   transition: all 0.15s var(--ease-smooth);
   vertical-align: middle;
 }
-td.align-right, td.text-right {
+td.align-right,
+td.text-right {
   text-align: right !important;
 }
-td.align-center, td.text-center {
+td.align-center,
+td.text-center {
   text-align: center !important;
 }
-td.align-left, td.text-left {
+td.align-left,
+td.text-left {
   text-align: left !important;
 }
 td:first-child {

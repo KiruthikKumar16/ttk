@@ -11,21 +11,10 @@ export interface TableProps {
   emptyMessage?: string
 }
 
-export function Table({
-  columns,
-  rows,
-  className = '',
-  children,
-  emptyMessage = 'No records found.',
-}: TableProps) {
+export function Table({ columns, rows, className = '', children, emptyMessage = 'No records found.' }: TableProps) {
   if (columns) {
     return (
-      <ModernTable
-        columns={columns}
-        rows={rows}
-        className={className}
-        emptyMessage={emptyMessage}
-      >
+      <ModernTable columns={columns} rows={rows} className={className} emptyMessage={emptyMessage}>
         {children}
       </ModernTable>
     )

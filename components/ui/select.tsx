@@ -33,13 +33,7 @@ export interface SelectProps {
   children: React.ReactNode
 }
 
-export function Select({
-  value = '',
-  onValueChange,
-  className = '',
-  disabled = false,
-  children,
-}: SelectProps) {
+export function Select({ value = '', onValueChange, className = '', disabled = false, children }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [itemsMap, setItemsMap] = useState<Record<string, string>>({})
   const containerRef = useRef<HTMLDivElement>(null)
@@ -121,7 +115,7 @@ export function SelectTrigger({ children, className = '', disabled, ...props }: 
       aria-expanded={context.isOpen}
       className={cn(
         'flex w-full items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 transition-all cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--g1)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs',
-        className
+        className,
       )}
       {...props}
     >
@@ -145,14 +139,14 @@ export function SelectValue({
 }) {
   const context = useSelectContext()
   const hasValue = context.value !== '' && context.value !== undefined && context.value !== null
-  const display = hasValue ? (context.selectedLabel || context.value) : null
+  const display = hasValue ? context.selectedLabel || context.value : null
 
   return (
     <span
       className={cn(
         'block truncate text-left',
         display ? 'text-slate-800 font-medium' : 'text-slate-400 font-normal',
-        className
+        className,
       )}
     >
       {display ?? children ?? placeholder}
@@ -175,7 +169,7 @@ export function SelectContent({ className = '', children }: SelectContentProps) 
       className={cn(
         'absolute left-0 right-0 top-full mt-1.5 z-50 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg backdrop-blur-md',
         !isOpen && 'hidden',
-        className
+        className,
       )}
     >
       {children}
@@ -220,7 +214,7 @@ export function SelectItem({ value, children, className = '', disabled = false }
           ? 'bg-[var(--g4)] text-[var(--g1)] font-semibold'
           : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
         disabled && 'pointer-events-none opacity-50 cursor-not-allowed',
-        className
+        className,
       )}
       onClick={(e) => {
         e.stopPropagation()

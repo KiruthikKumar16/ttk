@@ -70,9 +70,7 @@ export function AttendanceMarking({
   const [saving, setSaving] = useState<number[]>([])
   const [message, setMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Exempt'>(
-    'all',
-  )
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unmarked' | 'Present' | 'Absent' | 'Exempt'>('all')
 
   // Compute real-time session statistics
   const presentCount = rows.filter((r) => r.status === 'Present').length

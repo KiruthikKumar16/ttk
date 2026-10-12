@@ -69,7 +69,7 @@ export function StudentPrintDossier({
   const exemptSessions = attendance.filter((a) => a.status === 'Exempt' || a.status === 'Excused').length
   const countableSessions = totalSessions - exemptSessions
   const attendanceRate =
-    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : (totalSessions > 0 ? 100 : 0)
+    countableSessions > 0 ? Math.round((presentSessions / countableSessions) * 100) : totalSessions > 0 ? 100 : 0
 
   // Assessment metrics
   const totalEvaluations = assessments.length

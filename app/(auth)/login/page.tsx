@@ -91,7 +91,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md mx-auto">
         {/* Form Header */}
         <div className="mb-6 text-center">
-          <h1 id="login-title" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1
+            id="login-title"
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight"
+          >
             Sign in to {brand.displayName}
           </h1>
           <p className="mt-1.5 text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
@@ -103,10 +106,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" aria-labelledby="login-title">
           {/* Email Field */}
           <div>
-            <label
-              htmlFor="email"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5"
-            >
+            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
               Email address
             </label>
             <div className="relative">
@@ -206,7 +206,10 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  aria-hidden="true"
+                />
                 <span>Signing in...</span>
               </>
             ) : (
@@ -234,4 +237,3 @@ export default function LoginPage() {
     </AuthShell>
   )
 }
-

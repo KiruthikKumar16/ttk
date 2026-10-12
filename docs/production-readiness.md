@@ -32,7 +32,7 @@ Set environment values only in the relevant Vercel/GitHub Environment. Keep `SUP
 1. Resolve the legal/business decisions in `docs/release/v1.0.0-checklist.md`.
 2. Review all uncommitted changes, secret-scan the complete repository, and create a clean commit on the release branch.
 3. From a clean checkout, run the exact commands in the release checklist twice and retain both outputs.
-4. On an isolated staging Supabase project, reconcile migration history, dry-run the four pending migrations, apply them, and run pgTAP plus the full authenticated smoke/E2E set.
+4. On an isolated staging Supabase project, reconcile migration history, dry-run the pending forward migrations, apply them, and run pgTAP plus the full authenticated smoke/E2E set.
 5. Verify that course materials and invoice cache buckets are private and that storage reads/writes are authorized.
 6. Verify Sentry delivery and alert routing, perform and time a restore drill, then capture the actual backup/PITR marker.
 7. Run the 100-user k6 profile against target-volume synthetic data; retain p95/p99, error rate, `EXPLAIN ANALYZE`, LCP, and client bundle reports.

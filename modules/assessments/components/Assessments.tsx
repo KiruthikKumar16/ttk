@@ -698,9 +698,7 @@ export function Assessments({
                           )
                         })()}
                         {courses.length === 0 && (
-                          <div className="px-3 py-3 text-xs text-slate-400 text-center">
-                            No courses available
-                          </div>
+                          <div className="px-3 py-3 text-xs text-slate-400 text-center">No courses available</div>
                         )}
                       </SelectContent>
                     </Select>

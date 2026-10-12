@@ -3,17 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { AuthShell } from '@/components/auth/AuthShell'
-import {
-  Clock,
-  ShieldAlert,
-  KeyRound,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-} from 'lucide-react'
+import { Clock, ShieldAlert, KeyRound, CheckCircle2, AlertCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react'
 
 export default function PendingApprovalPage() {
   const [showRedeem, setShowRedeem] = useState(false)
@@ -108,7 +98,8 @@ export default function PendingApprovalPage() {
 
           <p className="text-xs sm:text-sm text-slate-700 mb-6 leading-relaxed">
             Your invite code was successfully redeemed. Your account is now fully active as{' '}
-            <strong className="text-slate-900 font-bold uppercase">{activatedRole}</strong>. You can sign in immediately.
+            <strong className="text-slate-900 font-bold uppercase">{activatedRole}</strong>. You can sign in
+            immediately.
           </p>
 
           <Link
@@ -140,8 +131,8 @@ export default function PendingApprovalPage() {
         </h1>
 
         <p className="text-xs sm:text-sm text-slate-700 mb-5 leading-relaxed font-normal">
-          Your account was filed successfully, but has not yet been approved by an academy administrator. For security and
-          privacy reasons, access to classroom data and students is restricted until verified.
+          Your account was filed successfully, but has not yet been approved by an academy administrator. For security
+          and privacy reasons, access to classroom data and students is restricted until verified.
         </p>
 
         {/* Self-Activation Accordion / Form */}
@@ -163,11 +154,14 @@ export default function PendingApprovalPage() {
           {showRedeem && (
             <form onSubmit={handleRedeem} className="mt-4 space-y-3.5 pt-3 border-t border-emerald-200/80">
               <p className="text-xs text-slate-700 leading-relaxed font-normal">
-                Enter your registered email, password, and the invite code received from your administrator to skip the queue.
+                Enter your registered email, password, and the invite code received from your administrator to skip the
+                queue.
               </p>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">Email address</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                  Email address
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Mail size={15} aria-hidden="true" />
@@ -184,7 +178,9 @@ export default function PendingApprovalPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">Password</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                  Password
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Lock size={15} aria-hidden="true" />
@@ -209,7 +205,9 @@ export default function PendingApprovalPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">Invite Code / OTP</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                  Invite Code / OTP
+                </label>
                 <input
                   type="text"
                   required
