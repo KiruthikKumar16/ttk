@@ -145,7 +145,7 @@ export function SelectValue({
     <span
       className={cn(
         'block truncate text-left',
-        display ? 'text-slate-800 font-medium' : 'text-slate-400 font-normal',
+        display ? 'text-slate-800 font-medium' : 'text-slate-600 font-normal',
         className,
       )}
     >
