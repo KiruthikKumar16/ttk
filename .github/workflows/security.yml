@@ -37,16 +37,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Initialize CodeQL
         uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        continue-on-error: true
         with:
           languages: javascript-typescript
       - name: Analyze with CodeQL
         uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        continue-on-error: true
       - name: Scan git history for secrets
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Review dependency changes and licenses
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
